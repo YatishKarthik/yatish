@@ -5,7 +5,7 @@ import { Num } from '../ui/Num';
 
 function Bar({ label, path, colour = '#eef0f2' }: { label: string; path: string; colour?: string }) {
   return (
-    <div className="grid grid-cols-[84px_1fr_36px] items-center gap-2">
+    <div className="grid grid-cols-[124px_1fr_36px] items-center gap-2">
       <span className="caps">{label}</span>
       <BarFill path={path} colour={colour} />
       <Num path={path} className="text-right text-sm" />
@@ -15,8 +15,8 @@ function Bar({ label, path, colour = '#eef0f2' }: { label: string; path: string;
 function BarFill({ path, colour }: { path: string; colour: string }) {
   const v = getPath(useStore((s) => s.data), path);
   return (
-    <span className="h-2 rounded-full bg-line" aria-hidden>
-      <span className="block h-2 rounded-full" style={{ width: `${typeof v === 'number' ? Math.min(100, Math.max(0, v)) : 0}%`, background: colour }} />
+    <span className="h-1 bg-line" aria-hidden>
+      <span className="block h-1" style={{ width: `${typeof v === 'number' ? Math.min(100, Math.max(0, v)) : 0}%`, background: colour }} />
     </span>
   );
 }
@@ -45,10 +45,10 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
       <div>
         <p className="caps mb-1">Within-planet percentiles · Earth vs Mars</p>
         <div className="space-y-1.5">
-          <Bar label="Swing ⊕" path={`sites.${si}.features.amplitude_pct`} colour="#6ea8ff" />
-          <Bar label="Swing ♂" path={`targets.${ti}.features.amplitude_pct`} colour="#f2b599" />
-          <Bar label="Inertia ⊕" path={`sites.${si}.features.ati_star_pct`} colour="#6ea8ff" />
-          <Bar label="Inertia ♂" path={`targets.${ti}.features.ati_star_pct`} colour="#f2b599" />
+          <Bar label="Swing · Earth" path={`sites.${si}.features.amplitude_pct`} colour="#6ea8ff" />
+          <Bar label="Swing · Mars" path={`targets.${ti}.features.amplitude_pct`} colour="#f2b599" />
+          <Bar label="Inertia · Earth" path={`sites.${si}.features.ati_star_pct`} colour="#6ea8ff" />
+          <Bar label="Inertia · Mars" path={`targets.${ti}.features.ati_star_pct`} colour="#f2b599" />
         </div>
       </div>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">

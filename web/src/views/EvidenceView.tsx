@@ -22,7 +22,7 @@ export function EvidenceView() {
   const posMin = v.positive_min_closeness, negMax = v.negative_max_closeness;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
+    <div className="mx-auto max-w-5xl space-y-5 px-5 py-5">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="display text-xl">Evidence</h1>
         <span className="stamp !rotate-0" style={{ color: v.passed ? '#3fb950' : '#f85149', borderColor: 'currentColor' }} title="sites.json → validation.passed">

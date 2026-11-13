@@ -8,8 +8,8 @@ export function PermitCard({ scenario, verdict, siteId, defaultOpen = false }: {
   const [open, setOpen] = useState(defaultOpen);
   const p = PERMIT[verdict.level];
   return (
-    <div className="rounded border border-line bg-paper p-1">
-      <div className="rounded-sm border border-dashed border-line p-3">
+    <div className="rounded-[10px] border border-line bg-paper p-1">
+      <div className="rounded-[8px] border border-dashed border-line p-3">
         <button type="button" className="flex w-full flex-col items-start gap-2 text-left" aria-expanded={open} onClick={() => setOpen(!open)}>
           <span className="flex w-full items-center justify-between gap-2">
             <span className="stamp" style={{ color: p.colour, borderColor: p.colour }}>{p.word}</span>

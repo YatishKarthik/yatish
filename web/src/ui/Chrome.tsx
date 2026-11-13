@@ -16,7 +16,7 @@ export function Chrome({ children }: { children: ReactNode }) {
   );
   return (
     <div className="flex min-h-full flex-col">
-      <header className="hide-in-director flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-panel px-4 py-2">
+      <header className="hide-in-director flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line bg-panel px-5 py-2">
         <NavLink to={{ pathname: '/', hash: `#t=${target}` }} className="display text-sm">Thermal&nbsp;Twin</NavLink>
         <nav className="flex gap-1" aria-label="Views">
           {link('/', 'Sol')}{link('/evidence', 'Evidence')}{link('/method', 'Method')}

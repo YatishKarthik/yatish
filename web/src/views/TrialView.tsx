@@ -25,7 +25,7 @@ function Profile({ world, heights, result, lengthM }: { world: World; heights: F
   const done = t >= result.duration;
   return (
     <div className="panel p-3">
-      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 font-mono text-sm">
+      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-5 font-mono text-sm">
         <span style={{ color: colour }}>{world.toUpperCase()}</span>
         <span>slip {(st.slip * 100).toFixed(0)}%</span>
         <span>speed {st.speed.toFixed(2)} m/s</span>
@@ -99,13 +99,13 @@ export function TrialView() {
   return (
     <div className="flex flex-col gap-3 p-3">
       <div className="hide-in-director flex flex-wrap items-center gap-3">
-        <Link to={withTarget(`/seam/${site.id}`)} className="btn">← Back to the seam</Link>
+        <Link to={withTarget(`/seam/${site.id}`)} className="btn">Back to the seam</Link>
         <h1 className="display text-sm">Rover trial · {site.name} vs {target.name}</h1>
       </div>
       <div className={`viewport ${director ? 'h-[60vh]' : 'h-[44vh] min-h-[280px]'}`}>
         {tiles && run
           ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode="split" earthLabel={site.name} marsLabel={target.name} trial={run} />
-          : <div className="flex h-full items-center justify-center px-4 text-center font-mono text-sm text-dim">
+          : <div className="flex h-full items-center justify-center px-5 text-center font-mono text-sm text-dim">
               {tiles && !friction ? 'meta.friction is missing from sites.json, so the trial cannot run. See the driving permit for the rule-engine result.' : 'Loading terrain…'}
             </div>}
         <Hud extra="Click the terrain to move the nearest end of the path · rover drawn oversize" />

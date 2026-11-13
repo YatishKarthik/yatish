@@ -152,7 +152,7 @@ function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel:
             onDoubleClick={() => useStore.getState().set({ seam: 0.5 })}
             onKeyDown={(e) => { if (e.key === 'ArrowLeft') nudge(-0.05); if (e.key === 'ArrowRight') nudge(0.05); }}
           >
-            ⟷
+            <span aria-hidden className="flex gap-[3px]"><i className="block h-3 w-px bg-current" /><i className="block h-3 w-px bg-current" /><i className="block h-3 w-px bg-current" /></span>
           </button>
           <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-mars">MARS · {marsLabel}</span>
         </div>

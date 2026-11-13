@@ -25,7 +25,7 @@ export function MethodView() {
   const data = useStore((s) => s.data)!;
   const m = data.meta;
   return (
-    <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
+    <div className="mx-auto max-w-5xl space-y-5 px-5 py-5">
       <h1 className="display text-xl">Method</h1>
 
       <section className="panel p-3" aria-label="Pipeline">

@@ -13,7 +13,7 @@ export function Ribbon({ curve, source, swingPct, label }: { curve: number[]; so
         {curve.map((v, i) => {
           const shown = !twoPoint || i === 1 || i === 13;
           return (
-            <div key={i} className="flex-1 first:rounded-l-full last:rounded-r-full"
+            <div key={i} className="flex-1"
               style={shown ? { background: tempColour(v) } : { border: '1px dashed #23272e' }} />
           );
         })}

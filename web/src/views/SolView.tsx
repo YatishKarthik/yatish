@@ -20,28 +20,28 @@ export function SolView() {
   const cats = ['all', ...new Set(data.sites.map((s) => s.catalogue.status))];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-      <div>
-        <p className="caps mb-2 rise">Earth analogs for Mars · matched by how the ground behaves</p>
-        <h1 className="display rise text-xl md:text-2xl">One sol<span className="text-accent"> / </span>two worlds</h1>
-        <p className="rise mt-3 max-w-2xl text-dim" style={{ animationDelay: '100ms' }}>Each band is a site's day: 24 hours of ground temperature, left to right. Pick a Mars target, then look for Earth bands with the same shape.</p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-5 px-5 py-5">
+      <h1 className="sr-only">Thermal Twin: choose a Mars target and compare Earth sites by their thermal day</h1>
 
-      <section aria-label="Mars targets" className="grid gap-3 sm:grid-cols-3">
+      <section aria-label="Mars targets" className="space-y-1">
+        <div className="flex items-baseline justify-between">
+          <h2 className="display text-sm">Mars targets</h2>
+          <span className="caps">one band = one day of ground temperature, 00 to 24 h</span>
+        </div>
         {data.targets.map((t) => {
           const ti = targetIndex(data, t.id), on = t.id === target.id;
           return (
             <button key={t.id} type="button" aria-pressed={on} onClick={() => setTarget(t.id)}
-              className={`panel row flex flex-col gap-2 p-3 text-left ${on ? '!border-accent' : ''}`}>
+              className={`panel row grid w-full grid-cols-[1fr] items-center gap-x-5 gap-y-1 border-l-2 px-3 py-2 text-left md:grid-cols-[220px_1fr_150px] ${on ? '!border-l-accent' : ''}`}>
               <span className="flex items-center gap-3">
-                {t.satellite_tile && <img src={asset(t.satellite_tile)} alt="" width={48} height={48} className="h-12 w-12 rounded-sm object-cover" />}
+                {t.satellite_tile && <img src={asset(t.satellite_tile)} alt="" width={40} height={40} className="h-10 w-10 object-cover" />}
                 <span>
-                  <span className="display block text-sm">{t.name}</span>
-                  <span className="caps !normal-case">{t.why}</span>
+                  <span className="block font-semibold">{t.name}</span>
+                  <span className="block text-sm text-dim">{t.why}</span>
                 </span>
               </span>
               <Ribbon curve={t.curve} source={t.curve_source} swingPct={t.features.amplitude_pct} label={`${t.name} thermal day`} />
-              <span className="caps">{resolutionLabel(t)} · swing P<Num path={`targets.${ti}.features.amplitude_pct`} /></span>
+              <span className="caps md:text-right">{resolutionLabel(t)} · swing P<Num path={`targets.${ti}.features.amplitude_pct`} /></span>
             </button>
           );
         })}
@@ -58,14 +58,14 @@ export function SolView() {
             <Seg label="Filter by catalogue status" value={cat} onChange={setCat} options={cats.map((c) => ({ value: c, label: c }))} /></span>
         </div>
 
-        <div className="panel grid grid-cols-[1fr] gap-x-4 px-3 py-2 md:grid-cols-[220px_1fr_150px]">
+        <div className="panel grid grid-cols-[1fr] gap-x-5 px-3 py-2 md:grid-cols-[220px_1fr_150px]">
           <span className="caps self-center !text-mars">Reference · {target.name}</span>
           <div><Ribbon curve={target.curve} source={target.curve_source} swingPct={target.features.amplitude_pct} label="Target thermal day" /><RibbonAxis /></div>
           <span className="caps self-center md:text-right">local solar time</span>
         </div>
 
         {ranked.length === 0 && (
-          <div className="panel p-4 text-dim">No sites match these filters. <button type="button" className="btn ml-2" onClick={() => { setCls('all'); setCat('all'); }}>Clear filters</button></div>
+          <div className="panel p-5 text-dim">No sites match these filters. <button type="button" className="btn ml-2" onClick={() => { setCls('all'); setCat('all'); }}>Clear filters</button></div>
         )}
         <ol className="space-y-2">
           {ranked.map((s, rank) => {
@@ -73,16 +73,15 @@ export function SolView() {
             return (
               <li key={`${target.id}-${s.id}`} className="rise" style={{ animationDelay: `${rank * 50}ms` }}>
                 <Link to={withTarget(`/seam/${s.id}`)}
-                  className={`panel row grid grid-cols-[1fr] items-center gap-x-4 gap-y-1 px-3 py-3 md:grid-cols-[220px_1fr_150px] ${s.mock ? 'mock' : ''}`}>
+                  className={`panel row grid grid-cols-[1fr] items-center gap-x-5 gap-y-1 px-3 py-3 md:grid-cols-[220px_1fr_150px] ${s.mock ? 'mock' : ''}`}>
                   <span>
                     <span className="block font-semibold"><span className="mr-2 font-mono text-sm font-normal text-dim">{String(rank + 1).padStart(2, '0')}</span>{s.name}</span>
                     <span className="caps !normal-case">{s.region}</span>
-                    <span className="mt-1 flex flex-wrap gap-1">
-                      <span className="chip">{s.class.name}</span>
-                      <span className="chip">{s.catalogue.status}</span>
-                      {s.kind === 'negative_control' && <span className="chip !text-denied">decoy</span>}
-                      {s.kind === 'positive_control' && <span className="chip !text-permit">known analog</span>}
-                      {s.mock && <span className="chip !text-amber">mock</span>}
+                    <span className="caps mt-1 block">
+                      {s.class.name} · {s.catalogue.status}
+                      {s.kind === 'negative_control' && s.catalogue.status !== 'decoy' && <span className="text-denied"> · decoy</span>}
+                      {s.kind === 'positive_control' && <span className="text-permit"> · known analog</span>}
+                      {s.mock && <span className="text-amber"> · mock</span>}
                     </span>
                   </span>
                   <span>
@@ -100,10 +99,10 @@ export function SolView() {
         </ol>
       </section>
 
-      <section aria-label="Legend" className="panel flex flex-wrap items-center gap-x-6 gap-y-2 p-3 text-sm text-dim">
+      <section aria-label="Legend" className="panel flex flex-wrap items-center gap-x-5 gap-y-2 p-3 text-sm text-dim">
         <span className="flex items-center gap-2">
           <span className="caps">coolest</span>
-          <span className="h-2 w-40 rounded-full" style={{ background: `linear-gradient(90deg, ${[0, 0.25, 0.5, 0.75, 1].map(tempColour).join(',')})` }} />
+          <span className="h-1 w-40" style={{ background: `linear-gradient(90deg, ${[0, 0.25, 0.5, 0.75, 1].map(tempColour).join(',')})` }} />
           <span className="caps">warmest of that site's day</span>
         </span>
         <span>Band thickness: size of the day–night swing, as a percentile within its own planet.</span>

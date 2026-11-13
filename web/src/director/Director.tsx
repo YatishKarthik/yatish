@@ -66,8 +66,8 @@ export function Director() {
 
   if (!director || !caption) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-      <p key={caption} className="display rise border border-line bg-page px-6 py-3 text-center text-lg">{caption}</p>
+    <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 flex justify-center px-5">
+      <p key={caption} className="display rise border border-line bg-page px-5 py-3 text-center text-lg">{caption}</p>
     </div>
   );
 }
