@@ -28,11 +28,14 @@ To re-shoot the submission figures into `report/figures/`: `npm run build && nod
 
 ## Real terrain and imagery
 
-`node scripts/fetch-real.mjs` downloads real ground for the 3D tiles from open data on AWS, then `npm run mock` rebuilds `sites.json` around it:
+`node scripts/fetch-real.mjs` downloads real ground for the 3D tiles from open data on AWS (it skips tiles already present), then `npm run mock` rebuilds `sites.json` around it:
 
 - Earth elevation: Copernicus DEM GLO-30 (© DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA).
 - Earth imagery: Sentinel-2 L2A true colour (contains modified Copernicus Sentinel data, 2023).
 - Mars elevation and imagery: USGS Astrogeology CTX stereo DTMs and orthoimages (NASA/JPL/MSSS/USGS).
+- Moon elevation and imagery: USGS Astrogeology stereo DTMs and orthoimages from the Kaguya Terrain Camera (JAXA/SELENE, USGS).
+
+Locations are listed in `scripts/locations.json`: 60 Earth sites, 10 Mars targets and 10 Moon targets. A location with no usable data is skipped, so the list holds a few spares.
 
 The system view's global maps in `public/textures/` are NASA Blue Marble (Earth), the Viking MDIM2.1 colour mosaic (Mars, NASA/JPL/USGS) and the LRO WAC global mosaic (Moon, NASA/GSFC/ASU); Mars and Moon were downloaded from NASA Trek.
 

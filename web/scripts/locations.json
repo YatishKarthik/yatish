@@ -1,0 +1,995 @@
+{
+ "earth": [
+  {
+   "id": "liwa_dunes",
+   "name": "Liwa dunes",
+   "region": "Abu Dhabi, UAE",
+   "lat": 23.02,
+   "lon": 53.8,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "wadi_gravel_oman",
+   "name": "Wadi gravel plain",
+   "region": "Ad Dakhiliyah, Oman",
+   "lat": 22.3,
+   "lon": 57.6,
+   "cls": "gravel",
+   "kind": "candidate"
+  },
+  {
+   "id": "sabkha_matti",
+   "name": "Sabkhat Matti",
+   "region": "Al Dhafra, UAE",
+   "lat": 23.4,
+   "lon": 52.3,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "hajar_ridge",
+   "name": "Hajar ridge",
+   "region": "Hajar mountains, Oman",
+   "lat": 23.05,
+   "lon": 58.45,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "farm_liwa",
+   "name": "Irrigated farms",
+   "region": "Liwa oasis, UAE",
+   "lat": 23.13,
+   "lon": 53.78,
+   "cls": "crust",
+   "kind": "negative_control"
+  },
+  {
+   "id": "rub_al_khali",
+   "name": "Rub' al Khali",
+   "region": "Saudi Arabia",
+   "lat": 20.5,
+   "lon": 51,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "umm_as_samim",
+   "name": "Umm as Samim",
+   "region": "Oman",
+   "lat": 21.5,
+   "lon": 55.9,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "wahiba_sands",
+   "name": "Wahiba Sands",
+   "region": "Oman",
+   "lat": 22,
+   "lon": 58.8,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "harrat_khaybar",
+   "name": "Harrat Khaybar",
+   "region": "Saudi Arabia",
+   "lat": 25.7,
+   "lon": 39.95,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "wadi_rum",
+   "name": "Wadi Rum",
+   "region": "Jordan",
+   "lat": 29.55,
+   "lon": 35.4,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "jebel_hafeet",
+   "name": "Jebel Hafeet",
+   "region": "Al Ain, UAE",
+   "lat": 24.06,
+   "lon": 55.78,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "al_wathba",
+   "name": "Al Wathba plain",
+   "region": "Abu Dhabi, UAE",
+   "lat": 24.17,
+   "lon": 54.6,
+   "cls": "gravel",
+   "kind": "candidate"
+  },
+  {
+   "id": "dallol",
+   "name": "Dallol",
+   "region": "Danakil, Ethiopia",
+   "lat": 14.24,
+   "lon": 40.3,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "erta_ale",
+   "name": "Erta Ale",
+   "region": "Afar, Ethiopia",
+   "lat": 13.6,
+   "lon": 40.67,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "sossusvlei",
+   "name": "Sossusvlei",
+   "region": "Namib, Namibia",
+   "lat": -24.73,
+   "lon": 15.3,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "etosha_pan",
+   "name": "Etosha pan",
+   "region": "Namibia",
+   "lat": -18.8,
+   "lon": 16.3,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "emi_koussi",
+   "name": "Emi Koussi",
+   "region": "Tibesti, Chad",
+   "lat": 19.8,
+   "lon": 18.55,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "richat",
+   "name": "Richat structure",
+   "region": "Mauritania",
+   "lat": 21.12,
+   "lon": -11.4,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "erg_chebbi",
+   "name": "Erg Chebbi",
+   "region": "Morocco",
+   "lat": 31.15,
+   "lon": -4.02,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "tassili",
+   "name": "Tassili n'Ajjer",
+   "region": "Algeria",
+   "lat": 25.5,
+   "lon": 9,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "white_desert",
+   "name": "White Desert",
+   "region": "Egypt",
+   "lat": 27.3,
+   "lon": 28,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "gilf_kebir",
+   "name": "Gilf Kebir",
+   "region": "Egypt",
+   "lat": 23.5,
+   "lon": 25.9,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "chott_el_jerid",
+   "name": "Chott el Jerid",
+   "region": "Tunisia",
+   "lat": 33.7,
+   "lon": 8.4,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "atacama_yungay",
+   "name": "Yungay",
+   "region": "Atacama, Chile",
+   "lat": -24.08,
+   "lon": -69.92,
+   "cls": "crust",
+   "kind": "positive_control"
+  },
+  {
+   "id": "salar_de_atacama",
+   "name": "Salar de Atacama",
+   "region": "Chile",
+   "lat": -23.5,
+   "lon": -68.25,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "uyuni",
+   "name": "Salar de Uyuni",
+   "region": "Bolivia",
+   "lat": -20.2,
+   "lon": -67.5,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "licancabur",
+   "name": "Licancabur",
+   "region": "Altiplano, Chile",
+   "lat": -22.83,
+   "lon": -67.88,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "badwater",
+   "name": "Badwater basin",
+   "region": "Death Valley, USA",
+   "lat": 36.23,
+   "lon": -116.77,
+   "cls": "crust",
+   "kind": "positive_control"
+  },
+  {
+   "id": "kelso_dunes",
+   "name": "Kelso dunes",
+   "region": "Mojave, USA",
+   "lat": 34.9,
+   "lon": -115.72,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "amboy_crater",
+   "name": "Amboy lava field",
+   "region": "Mojave, USA",
+   "lat": 34.55,
+   "lon": -115.78,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "meteor_crater",
+   "name": "Meteor Crater",
+   "region": "Arizona, USA",
+   "lat": 35.027,
+   "lon": -111.022,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "hanksville",
+   "name": "Hanksville badlands",
+   "region": "Utah, USA",
+   "lat": 38.41,
+   "lon": -110.79,
+   "cls": "gravel",
+   "kind": "candidate"
+  },
+  {
+   "id": "white_sands",
+   "name": "White Sands",
+   "region": "New Mexico, USA",
+   "lat": 32.8,
+   "lon": -106.3,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "craters_of_the_moon",
+   "name": "Craters of the Moon",
+   "region": "Idaho, USA",
+   "lat": 43.42,
+   "lon": -113.52,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "mauna_kea",
+   "name": "Mauna Kea",
+   "region": "Hawaii, USA",
+   "lat": 19.82,
+   "lon": -155.47,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "kilauea",
+   "name": "Kilauea",
+   "region": "Hawaii, USA",
+   "lat": 19.41,
+   "lon": -155.28,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "haughton",
+   "name": "Haughton crater",
+   "region": "Devon Island, Canada",
+   "lat": 75.38,
+   "lon": -89.67,
+   "cls": "gravel",
+   "kind": "positive_control"
+  },
+  {
+   "id": "la_joya",
+   "name": "Pampas de La Joya",
+   "region": "Peru",
+   "lat": -16.7,
+   "lon": -72,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "black_rock",
+   "name": "Black Rock playa",
+   "region": "Nevada, USA",
+   "lat": 40.9,
+   "lon": -119.05,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "bonneville",
+   "name": "Bonneville salt flats",
+   "region": "Utah, USA",
+   "lat": 40.77,
+   "lon": -113.8,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "great_sand_dunes",
+   "name": "Great Sand Dunes",
+   "region": "Colorado, USA",
+   "lat": 37.75,
+   "lon": -105.53,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "rio_tinto",
+   "name": "Rio Tinto",
+   "region": "Andalusia, Spain",
+   "lat": 37.7,
+   "lon": -6.55,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "timanfaya",
+   "name": "Timanfaya",
+   "region": "Lanzarote, Spain",
+   "lat": 29,
+   "lon": -13.75,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "askja",
+   "name": "Askja",
+   "region": "Iceland",
+   "lat": 65.05,
+   "lon": -16.75,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "etna",
+   "name": "Mount Etna",
+   "region": "Sicily, Italy",
+   "lat": 37.75,
+   "lon": 15,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "tabernas",
+   "name": "Tabernas",
+   "region": "Almeria, Spain",
+   "lat": 37.05,
+   "lon": -2.4,
+   "cls": "gravel",
+   "kind": "candidate"
+  },
+  {
+   "id": "bardenas",
+   "name": "Bardenas Reales",
+   "region": "Navarre, Spain",
+   "lat": 42.2,
+   "lon": -1.5,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "teide",
+   "name": "Teide",
+   "region": "Tenerife, Spain",
+   "lat": 28.27,
+   "lon": -16.64,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "lut_kaluts",
+   "name": "Kaluts",
+   "region": "Lut desert, Iran",
+   "lat": 30.4,
+   "lon": 57.9,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "qaidam",
+   "name": "Dalangtan",
+   "region": "Qaidam, China",
+   "lat": 38.5,
+   "lon": 91.4,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "taklamakan",
+   "name": "Taklamakan",
+   "region": "Xinjiang, China",
+   "lat": 39,
+   "lon": 83,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "khongoryn_els",
+   "name": "Khongoryn Els",
+   "region": "Gobi, Mongolia",
+   "lat": 43.78,
+   "lon": 102.25,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "tso_kar",
+   "name": "Tso Kar",
+   "region": "Ladakh, India",
+   "lat": 33.2,
+   "lon": 78.3,
+   "cls": "gravel",
+   "kind": "candidate"
+  },
+  {
+   "id": "turpan",
+   "name": "Flaming Mountains",
+   "region": "Turpan, China",
+   "lat": 42.9,
+   "lon": 89.6,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "dasht_e_kavir",
+   "name": "Dasht-e Kavir",
+   "region": "Iran",
+   "lat": 34.5,
+   "lon": 54.5,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "thar",
+   "name": "Thar dunes",
+   "region": "Rajasthan, India",
+   "lat": 27,
+   "lon": 70.5,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "makhtesh_ramon",
+   "name": "Makhtesh Ramon",
+   "region": "Negev, Israel",
+   "lat": 30.6,
+   "lon": 34.85,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "karakum",
+   "name": "Karakum",
+   "region": "Turkmenistan",
+   "lat": 40.25,
+   "lon": 58.44,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "pilbara",
+   "name": "North Pole Dome",
+   "region": "Pilbara, Australia",
+   "lat": -21.1,
+   "lon": 119.4,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "lake_eyre",
+   "name": "Kati Thanda",
+   "region": "South Australia",
+   "lat": -28.4,
+   "lon": 137.3,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "simpson",
+   "name": "Simpson dunes",
+   "region": "Australia",
+   "lat": -25,
+   "lon": 137.5,
+   "cls": "fines",
+   "kind": "candidate"
+  },
+  {
+   "id": "dry_valleys",
+   "name": "Taylor Valley",
+   "region": "McMurdo Dry Valleys",
+   "lat": -77.62,
+   "lon": 162.9,
+   "cls": "gravel",
+   "kind": "positive_control"
+  },
+  {
+   "id": "amazon",
+   "name": "Rainforest",
+   "region": "Amazonas, Brazil",
+   "lat": -3,
+   "lon": -60.5,
+   "cls": "fines",
+   "kind": "negative_control"
+  },
+  {
+   "id": "boreal",
+   "name": "Boreal forest",
+   "region": "Saskatchewan, Canada",
+   "lat": 56,
+   "lon": -106,
+   "cls": "gravel",
+   "kind": "negative_control"
+  },
+  {
+   "id": "mojave_cima",
+   "name": "Cima volcanic field",
+   "region": "Mojave, USA",
+   "lat": 35.25,
+   "lon": -115.75,
+   "cls": "bedrock",
+   "kind": "candidate"
+  },
+  {
+   "id": "nubian",
+   "name": "Nubian desert",
+   "region": "Sudan",
+   "lat": 20.5,
+   "lon": 32.5,
+   "cls": "gravel",
+   "kind": "candidate"
+  },
+  {
+   "id": "kharga",
+   "name": "Kharga depression",
+   "region": "Western Desert, Egypt",
+   "lat": 25.4,
+   "lon": 30.5,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "alvord",
+   "name": "Alvord desert",
+   "region": "Oregon, USA",
+   "lat": 42.53,
+   "lon": -118.45,
+   "cls": "crust",
+   "kind": "candidate"
+  },
+  {
+   "id": "nazca",
+   "name": "Nazca pampa",
+   "region": "Peru",
+   "lat": -14.7,
+   "lon": -75.1,
+   "cls": "gravel",
+   "kind": "candidate"
+  }
+ ],
+ "mars": [
+  {
+   "id": "jezero",
+   "name": "Jezero crater",
+   "lat": 18.44,
+   "lon": 77.5,
+   "why": "Perseverance site; delta, clays, carbonates",
+   "cls": "gravel",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/J10_048842_1986_XN_18N282W__J11_048908_1986_XN_18N282W/J10_048842_1986_XN_18N282W__J11_048908_1986_XN_18N282W",
+    "mars/mro/ctx/controlled/usgs/K13_058574_1983_XN_18N282W__K13_058640_1983_XN_18N282W/K13_058574_1983_XN_18N282W__K13_058640_1983_XN_18N282W",
+    "mars/mro/ctx/controlled/usgs/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W/J03_045994_1986_XN_18N282W__J03_046060_1986_XN_18N282W"
+   ]
+  },
+  {
+   "id": "gale",
+   "name": "Gale crater",
+   "lat": -4.59,
+   "lon": 137.44,
+   "why": "Curiosity site; mixed sand and bedrock",
+   "cls": "bedrock",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/B07_012340_1750_XN_05S222W__B07_012195_1750_XN_05S222W/B07_012340_1750_XN_05S222W__B07_012195_1750_XN_05S222W",
+    "mars/mro/ctx/controlled/usgs/B03_010639_1752_XI_04S222W__B02_010573_1755_XI_04S222W/B03_010639_1752_XI_04S222W__B02_010573_1755_XI_04S222W",
+    "mars/mro/ctx/controlled/usgs/B05_011562_1756_XI_04S222W__B05_011417_1756_XI_04S222W/B05_011562_1756_XI_04S222W__B05_011417_1756_XI_04S222W"
+   ]
+  },
+  {
+   "id": "arcadia",
+   "name": "Arcadia Planitia",
+   "lat": 39.4,
+   "lon": -170.4,
+   "why": "Human landing candidate; shallow ice",
+   "cls": "fines",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/N05_064174_2195_XN_39N170W__N05_064464_2195_XN_39N170W/N05_064174_2195_XN_39N170W__N05_064464_2195_XN_39N170W",
+    "mars/mro/ctx/controlled/usgs/K19_060706_2194_XN_39N170W__K18_060416_2193_XN_39N170W/K19_060706_2194_XN_39N170W__K18_060416_2193_XN_39N170W"
+   ]
+  },
+  {
+   "id": "meridiani",
+   "name": "Meridiani Planum",
+   "lat": -1.95,
+   "lon": -5.53,
+   "why": "Opportunity site; hematite plain",
+   "cls": "fines",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/B05_011765_1780_XN_02S005W__B08_012820_1779_XN_02S005W/B05_011765_1780_XN_02S005W__B08_012820_1779_XN_02S005W",
+    "mars/mro/ctx/controlled/usgs/D22_035909_1778_XN_02S005W__D21_035408_1772_XN_02S005W/D22_035909_1778_XN_02S005W__D21_035408_1772_XN_02S005W",
+    "mars/mro/ctx/controlled/usgs/G01_018701_1776_XN_02S005W__G02_018846_1791_XN_00S005W/G01_018701_1776_XN_02S005W__G02_018846_1791_XN_00S005W"
+   ]
+  },
+  {
+   "id": "gusev",
+   "name": "Gusev crater",
+   "lat": -14.57,
+   "lon": 175.47,
+   "why": "Spirit site; basalt plain",
+   "cls": "gravel",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/D19_034808_1653_XN_14S184W__D20_034874_1653_XN_14S184W/D19_034808_1653_XN_14S184W__D20_034874_1653_XN_14S184W",
+    "mars/mro/ctx/controlled/usgs/B11_013921_1652_XN_14S184W__B10_013499_1653_XN_14S184W/B11_013921_1652_XN_14S184W__B10_013499_1653_XN_14S184W",
+    "mars/mro/ctx/controlled/usgs/D10_031261_1654_XI_14S184W__B08_012787_1653_XI_14S184W/D10_031261_1654_XI_14S184W__B08_012787_1653_XI_14S184W"
+   ]
+  },
+  {
+   "id": "elysium",
+   "name": "Elysium Planitia",
+   "lat": 4.5,
+   "lon": 135.62,
+   "why": "InSight site; smooth lava plain",
+   "cls": "gravel",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/F02_036761_1828_XN_02N224W__F04_037262_1841_XN_04N224W/F02_036761_1828_XN_02N224W__F04_037262_1841_XN_04N224W",
+    "mars/mro/ctx/controlled/usgs/F07_038449_1840_XN_04N224W__F06_037961_1837_XN_03N224W/F07_038449_1840_XN_04N224W__F06_037961_1837_XN_03N224W",
+    "mars/mro/ctx/controlled/usgs/F17_042537_1842_XN_04N224W__F18_042827_1842_XN_04N224W/F17_042537_1842_XN_04N224W__F18_042827_1842_XN_04N224W"
+   ]
+  },
+  {
+   "id": "utopia",
+   "name": "Utopia Planitia",
+   "lat": 25.07,
+   "lon": 109.93,
+   "why": "Zhurong site; northern plain",
+   "cls": "fines",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/N14_067844_2054_XN_25N250W__N13_067580_2051_XN_25N249W/N14_067844_2054_XN_25N250W__N13_067580_2051_XN_25N249W"
+   ]
+  },
+  {
+   "id": "oxia",
+   "name": "Oxia Planum",
+   "lat": 18.2,
+   "lon": -24.5,
+   "why": "Rosalind Franklin site; clay-rich plain",
+   "cls": "crust",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/B01_009880_1977_XN_17N024W__P22_009735_1977_XN_17N024W/B01_009880_1977_XN_17N024W__P22_009735_1977_XN_17N024W",
+    "mars/mro/ctx/controlled/usgs/K23_062336_1983_XN_18N024W__K23_062402_1983_XN_18N024W/K23_062336_1983_XN_18N024W__K23_062402_1983_XN_18N024W",
+    "mars/mro/ctx/controlled/usgs/F09_039299_1985_XN_18N024W__J07_047501_1983_XN_18N024W/F09_039299_1985_XN_18N024W__J07_047501_1983_XN_18N024W"
+   ]
+  },
+  {
+   "id": "mawrth",
+   "name": "Mawrth Vallis",
+   "lat": 22.4,
+   "lon": -16.5,
+   "why": "Layered clays",
+   "cls": "crust",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/J01_045048_2024_XI_22N016W__J03_045971_2024_XI_22N016W/J01_045048_2024_XI_22N016W__J03_045971_2024_XI_22N016W"
+   ]
+  },
+  {
+   "id": "chryse",
+   "name": "Chryse Planitia",
+   "lat": 22.27,
+   "lon": -47.95,
+   "why": "Viking 1 site; rocky plain",
+   "cls": "gravel",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/P02_001719_2024_XI_22N048W__P01_001521_2026_XI_22N048W/P02_001719_2024_XI_22N048W__P01_001521_2026_XI_22N048W"
+   ]
+  },
+  {
+   "id": "melas",
+   "name": "Melas Chasma",
+   "lat": -10.4,
+   "lon": -72.5,
+   "why": "Canyon floor; layered deposits",
+   "cls": "bedrock",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/D03_028567_1678_XI_12S072W__D01_027657_1685_XI_11S072W/D03_028567_1678_XI_12S072W__D01_027657_1685_XI_11S072W"
+   ]
+  },
+  {
+   "id": "deuteronilus",
+   "name": "Deuteronilus Mensae",
+   "lat": 40,
+   "lon": 23,
+   "why": "Human landing candidate; buried glaciers",
+   "cls": "gravel",
+   "products": []
+  },
+  {
+   "id": "nili",
+   "name": "Nili Fossae",
+   "lat": 21,
+   "lon": 74.5,
+   "why": "Carbonates and olivine",
+   "cls": "bedrock",
+   "products": [
+    "mars/mro/ctx/controlled/usgs/P05_003086_2011_XI_21N285W__P07_003587_2005_XI_20N285W/P05_003086_2011_XI_21N285W__P07_003587_2005_XI_20N285W",
+    "mars/mro/ctx/controlled/usgs/P14_006633_2018_XI_21N285W__P17_007556_2012_XI_21N285W/P14_006633_2018_XI_21N285W__P17_007556_2012_XI_21N285W",
+    "mars/mro/ctx/controlled/usgs/F09_039269_2012_XN_21N285W__F08_038913_2012_XN_21N285W/F09_039269_2012_XN_21N285W__F08_038913_2012_XN_21N285W"
+   ]
+  }
+ ],
+ "moon": [
+  {
+   "id": "malapert",
+   "name": "Malapert massif",
+   "lat": -85.9,
+   "lon": 0,
+   "why": "Artemis candidate region near the south pole",
+   "cls": "bedrock",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01191S861E3594__TC2W2B0_01_01191S856E3590/TC1W2B0_01_01191S861E3594__TC2W2B0_01_01191S856E3590",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02682S861E0010__TC2W2B0_01_02682S857E0017/TC1W2B0_01_02682S861E0010__TC2W2B0_01_02682S857E0017",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01192S861E3585__TC2W2B0_01_01192S857E3580/TC1W2B0_01_01192S861E3585__TC2W2B0_01_01192S857E3580",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02681S862E0017__TC2W2B0_01_02681S857E0025/TC1W2B0_01_02681S862E0017__TC2W2B0_01_02681S857E0025",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02680S861E0026__TC2W2B0_01_02680S857E0034/TC1W2B0_01_02680S861E0026__TC2W2B0_01_02680S857E0034"
+   ]
+  },
+  {
+   "id": "nobile",
+   "name": "Nobile rim",
+   "lat": -85.2,
+   "lon": 37,
+   "why": "Artemis candidate region; VIPER target",
+   "cls": "fines",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00816S852E0377__TC2W2B0_01_00816S850E0378/TC1W2B0_01_00816S852E0377__TC2W2B0_01_00816S850E0378",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00819S852E0356__TC2W2B0_01_00819S850E0356/TC1W2B0_01_00819S852E0356__TC2W2B0_01_00819S850E0356",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00820S853E0349__TC2W2B0_01_00820S850E0349/TC1W2B0_01_00820S853E0349__TC2W2B0_01_00820S850E0349",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00815S851E0384__TC2W2B0_01_00815S849E0385/TC1W2B0_01_00815S851E0384__TC2W2B0_01_00815S849E0385",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00814S852E0391__TC2W2B0_01_00814S849E0392/TC1W2B0_01_00814S852E0391__TC2W2B0_01_00814S849E0392"
+   ]
+  },
+  {
+   "id": "amundsen",
+   "name": "Amundsen rim",
+   "lat": -84.2,
+   "lon": 85,
+   "why": "South polar crater rim",
+   "cls": "fines",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00772S837E0798__TC2W2B0_01_00772S848E0784/TC1W2B0_01_00772S837E0798__TC2W2B0_01_00772S848E0784",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00773S836E0789__TC2W2B0_01_00773S847E0775/TC1W2B0_01_00773S836E0789__TC2W2B0_01_00773S847E0775",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01608S844E0930__TC2W2B0_01_01608S835E0922/TC1W2B0_01_01608S844E0930__TC2W2B0_01_01608S835E0922",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00774S835E0779__TC2W2B0_01_00774S845E0766/TC1W2B0_01_00774S835E0779__TC2W2B0_01_00774S845E0766",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_00772S837E0798__TC2W2B0_01_00772S834E0802/TC1W2B0_01_00772S837E0798__TC2W2B0_01_00772S834E0802"
+   ]
+  },
+  {
+   "id": "schrodinger",
+   "name": "Schrödinger basin",
+   "lat": -75,
+   "lon": 132.4,
+   "why": "Far-side basin; volcanic vent",
+   "cls": "gravel",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01899S756E1325__TC2W2B0_01_01899S748E1326/TC1W2B0_01_01899S756E1325__TC2W2B0_01_01899S748E1326",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01900S755E1316__TC2W2B0_01_01900S747E1316/TC1W2B0_01_01900S755E1316__TC2W2B0_01_01900S747E1316",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01898S756E1335__TC2W2B0_01_01898S748E1335/TC1W2B0_01_01898S756E1335__TC2W2B0_01_01898S748E1335",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01899S742E1326__TC2W2B0_01_01899S748E1326/TC1W2B0_01_01899S742E1326__TC2W2B0_01_01899S748E1326",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01897S755E1344__TC2W2B0_01_01897S747E1345/TC1W2B0_01_01897S755E1344__TC2W2B0_01_01897S747E1345"
+   ]
+  },
+  {
+   "id": "tranquillitatis",
+   "name": "Mare Tranquillitatis",
+   "lat": 0.67,
+   "lon": 23.47,
+   "why": "Apollo 11 site; mare basalt",
+   "cls": "gravel",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N002E0239/TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N002E0239",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N002E0239/TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N002E0239",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02669N010E0228__TC2W2B0_01_02669N002E0228/TC1W2B0_01_02669N010E0228__TC2W2B0_01_02669N002E0228",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N015E0239/TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N015E0239",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_07067N017E0230__TC2W2B0_01_07067N011E0230/TC1W2B0_01_07067N017E0230__TC2W2B0_01_07067N011E0230"
+   ]
+  },
+  {
+   "id": "hadley",
+   "name": "Hadley Rille",
+   "lat": 26.13,
+   "lon": 3.63,
+   "why": "Apollo 15 site; rille and mountains",
+   "cls": "bedrock",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01686N258E0033__TC2W2B0_01_01686N269E0033/TC1W2B0_01_01686N258E0033__TC2W2B0_01_01686N269E0033",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_07086N261E0039__TC2W2B0_01_07086N270E0039/TC1W2B0_01_07086N261E0039__TC2W2B0_01_07086N270E0039",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC2W2B0_01_01686N255E0033__TC1W2B0_01_01686N258E0033/TC2W2B0_01_01686N255E0033__TC1W2B0_01_01686N258E0033",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01686N258E0033__TC2W2B0_01_01686N255E0033/TC1W2B0_01_01686N258E0033__TC2W2B0_01_01686N255E0033",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01685N258E0044__TC2W2B0_01_01685N269E0044/TC1W2B0_01_01685N258E0044__TC2W2B0_01_01685N269E0044"
+   ]
+  },
+  {
+   "id": "taurus_littrow",
+   "name": "Taurus-Littrow",
+   "lat": 20.19,
+   "lon": 30.77,
+   "why": "Apollo 17 site; valley floor",
+   "cls": "fines",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02662N205E0306__TC2W2B0_01_02662N197E0306/TC1W2B0_01_02662N205E0306__TC2W2B0_01_02662N197E0306",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC2W2B0_01_00823N194E0310__TC1W2B0_01_00823N200E0310/TC2W2B0_01_00823N194E0310__TC1W2B0_01_00823N200E0310",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02662N205E0306__TC2W2B0_01_02662N211E0306/TC1W2B0_01_02662N205E0306__TC2W2B0_01_02662N211E0306",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02662N205E0306__TC2W2B0_01_02662N211E0306/TC1W2B0_01_02662N205E0306__TC2W2B0_01_02662N211E0306",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05161N194E0311__TC2W2B0_01_05161N198E0311/TC1W2B0_01_05161N194E0311__TC2W2B0_01_05161N198E0311"
+   ]
+  },
+  {
+   "id": "descartes",
+   "name": "Descartes highlands",
+   "lat": -8.97,
+   "lon": 15.5,
+   "why": "Apollo 16 site; highland breccia",
+   "cls": "crust",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_07074S087E0155__TC2W2B0_01_07074S094E0155/TC1W2B0_01_07074S087E0155__TC2W2B0_01_07074S094E0155",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02676S084E0151__TC2W2B0_01_02676S092E0151/TC1W2B0_01_02676S084E0151__TC2W2B0_01_02676S092E0151",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02676S084E0151__TC2W2B0_01_02676S092E0151/TC1W2B0_01_02676S084E0151__TC2W2B0_01_02676S092E0151",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05176S079E0154__TC2W2B0_01_05176S089E0154/TC1W2B0_01_05176S079E0154__TC2W2B0_01_05176S089E0154",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_00837S085E0161__TC2W2B0_01_00837S091E0161/TC1W2B0_01_00837S085E0161__TC2W2B0_01_00837S091E0161"
+   ]
+  },
+  {
+   "id": "marius",
+   "name": "Marius Hills",
+   "lat": 14,
+   "lon": -56,
+   "why": "Volcanic domes; lava tube skylight",
+   "cls": "bedrock",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC2W2B0_01_01071N136E3040__TC1W2B0_01_01071N138E3040/TC2W2B0_01_01071N136E3040__TC1W2B0_01_01071N138E3040",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02742N140E3036__TC2W2B0_01_02742N145E3036/TC1W2B0_01_02742N140E3036__TC2W2B0_01_02742N145E3036",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02742N140E3036__TC2W2B0_01_02742N145E3036/TC1W2B0_01_02742N140E3036__TC2W2B0_01_02742N145E3036",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05751N143E3036__TC2W2B0_01_05751N147E3036/TC1W2B0_01_05751N143E3036__TC2W2B0_01_05751N147E3036",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02741N139E3047__TC2W2B0_01_02741N145E3047/TC1W2B0_01_02741N139E3047__TC2W2B0_01_02741N145E3047"
+   ]
+  },
+  {
+   "id": "aristarchus",
+   "name": "Aristarchus plateau",
+   "lat": 26,
+   "lon": -50,
+   "why": "Pyroclastic deposits",
+   "cls": "fines",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC2W2B0_01_01735N260E3101__TC1W2B0_01_01735N263E3101/TC2W2B0_01_01735N260E3101__TC1W2B0_01_01735N263E3101",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01735N263E3101__TC2W2B0_01_01735N260E3101/TC1W2B0_01_01735N263E3101__TC2W2B0_01_01735N260E3101",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05745N255E3100__TC2W2B0_01_05745N259E3100/TC1W2B0_01_05745N255E3100__TC2W2B0_01_05745N259E3100",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02736N261E3102__TC2W2B0_01_02736N253E3102/TC1W2B0_01_02736N261E3102__TC2W2B0_01_02736N253E3102",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02736N261E3102__TC2W2B0_01_02736N266E3102/TC1W2B0_01_02736N261E3102__TC2W2B0_01_02736N266E3102"
+   ]
+  },
+  {
+   "id": "reiner_gamma",
+   "name": "Reiner Gamma",
+   "lat": 7.5,
+   "lon": -59,
+   "why": "Magnetic swirl",
+   "cls": "fines",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02744N072E3015__TC2W2B0_01_02744N078E3015/TC1W2B0_01_02744N072E3015__TC2W2B0_01_02744N078E3015",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02744N072E3015__TC2W2B0_01_02744N078E3015/TC1W2B0_01_02744N072E3015__TC2W2B0_01_02744N078E3015",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05753N072E3015__TC2W2B0_01_05753N076E3015/TC1W2B0_01_05753N072E3015__TC2W2B0_01_05753N076E3015",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05754N072E3004__TC2W2B0_01_05754N076E3005/TC1W2B0_01_05754N072E3004__TC2W2B0_01_05754N076E3005",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02745N072E3004__TC2W2B0_01_02745N078E3004/TC1W2B0_01_02745N072E3004__TC2W2B0_01_02745N078E3004"
+   ]
+  },
+  {
+   "id": "copernicus",
+   "name": "Copernicus",
+   "lat": 9.62,
+   "lon": -20.08,
+   "why": "Young crater; central peaks",
+   "cls": "bedrock",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05209N096E3402__TC2W2B0_01_05209N100E3402/TC1W2B0_01_05209N096E3402__TC2W2B0_01_05209N100E3402",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02708N095E3403__TC2W2B0_01_02708N100E3403/TC1W2B0_01_02708N095E3403__TC2W2B0_01_02708N100E3403",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02708N095E3403__TC2W2B0_01_02708N100E3403/TC1W2B0_01_02708N095E3403__TC2W2B0_01_02708N100E3403",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05716N090E3401__TC2W2B0_01_05716N093E3401/TC1W2B0_01_05716N090E3401__TC2W2B0_01_05716N093E3401",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02708N095E3403__TC2W2B0_01_02708N086E3403/TC1W2B0_01_02708N095E3403__TC2W2B0_01_02708N086E3403"
+   ]
+  },
+  {
+   "id": "tycho",
+   "name": "Tycho",
+   "lat": -43.3,
+   "lon": -11.4,
+   "why": "Young ray crater",
+   "cls": "bedrock",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC2W2B0_01_01699S425E3484__TC1W2B0_01_01699S436E3483/TC2W2B0_01_01699S425E3484__TC1W2B0_01_01699S436E3483",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_01699S436E3483__TC2W2B0_01_01699S425E3484/TC1W2B0_01_01699S436E3483__TC2W2B0_01_01699S425E3484",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02700S432E3484__TC2W2B0_01_02700S427E3484/TC1W2B0_01_02700S432E3484__TC2W2B0_01_02700S427E3484",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02700S432E3484__TC2W2B0_01_02700S441E3484/TC1W2B0_01_02700S432E3484__TC2W2B0_01_02700S441E3484",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02700S432E3484__TC2W2B0_01_02700S441E3484/TC1W2B0_01_02700S432E3484__TC2W2B0_01_02700S441E3484"
+   ]
+  },
+  {
+   "id": "fra_mauro",
+   "name": "Fra Mauro",
+   "lat": -3.65,
+   "lon": -17.47,
+   "why": "Apollo 14 site; ejecta blanket",
+   "cls": "crust",
+   "products": [
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05207S040E3425__TC2W2B0_01_05207S035E3425/TC1W2B0_01_05207S040E3425__TC2W2B0_01_05207S035E3425",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02706S040E3423__TC2W2B0_01_02706S035E3423/TC1W2B0_01_02706S040E3423__TC2W2B0_01_02706S035E3423",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_02706S027E3423__TC2W2B0_01_02706S035E3423/TC1W2B0_01_02706S027E3423__TC2W2B0_01_02706S035E3423",
+    "moon/kaguya/terrain_camera/usgs_dtms_v2/TC1W2B0_01_02706S027E3423__TC2W2B0_01_02706S035E3423/TC1W2B0_01_02706S027E3423__TC2W2B0_01_02706S035E3423",
+    "moon/kaguya/terrain_camera/usgs_dtms/TC1W2B0_01_05207S040E3425__TC2W2B0_01_05207S049E3425/TC1W2B0_01_05207S040E3425__TC2W2B0_01_05207S049E3425"
+   ]
+  }
+ ]
+}

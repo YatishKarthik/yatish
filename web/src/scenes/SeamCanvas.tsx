@@ -12,7 +12,7 @@ export interface TrialRun { earth: TrialResult; mars: TrialResult; lengthM: numb
 interface Props {
   earth: TileSet; mars: TileSet; extentM: number; mode: Mode;
   earthLabel: string; marsLabel: string;
-  earthClass?: string; marsClass?: string;
+  earthClass?: string; marsClass?: string; body?: string;
   trial?: TrialRun;
 }
 
@@ -117,7 +117,7 @@ function Rover({ world, tiles, extentM, offsetX, result, lengthM }: {
   );
 }
 
-function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel: string; marsLabel: string }) {
+function Seam({ extentM, earthLabel, marsLabel, body }: { extentM: number; earthLabel: string; marsLabel: string; body: string }) {
   const E = extentM * KM;
   const group = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
@@ -147,7 +147,7 @@ function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel:
         <div className="flex -translate-y-5 select-none items-center gap-2 whitespace-nowrap font-mono text-xs">
           <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-earth">EARTH · {earthLabel}</span>
           <button
-            type="button" role="slider" aria-label="Seam position: drag to show more Earth or more Mars"
+            type="button" role="slider" aria-label="Seam position: drag to show more of either world"
             aria-valuemin={15} aria-valuemax={85} aria-valuenow={seamPct}
             className="seam-handle hide-in-director"
             onPointerDown={(e) => { dragging.current = true; setDrag(true); e.currentTarget.setPointerCapture(e.pointerId); }}
@@ -158,7 +158,7 @@ function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel:
           >
             <span aria-hidden className="flex gap-[3px]"><i className="block h-3 w-px bg-current" /><i className="block h-3 w-px bg-current" /><i className="block h-3 w-px bg-current" /></span>
           </button>
-          <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-mars">MARS · {marsLabel}</span>
+          <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-mars">{body} · {marsLabel}</span>
           {drag && <span className="absolute left-1/2 top-full mt-1 -translate-x-1/2 bg-page px-1.5 py-0.5 text-ink">{seamPct} / {100 - seamPct}</span>}
         </div>
       </Html>
@@ -228,7 +228,7 @@ function CameraRig({ span, split }: { span: number; split: boolean }) {
   return null;
 }
 
-function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, earthClass, marsClass, trial }: Props) {
+function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, earthClass, marsClass, trial, body = 'MARS' }: Props) {
   const E = extentM * KM, gap = E * 0.12;
   const off = mode === 'split' ? E / 2 + gap / 2 : 0;
   const span = mode === 'split' ? 2 * E + gap : E;
@@ -242,14 +242,14 @@ function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, earthClass, 
       <Half world="earth" tiles={earth} extentM={extentM} offsetX={-off} mode={mode} segments={segments} trialMode={!!trial} rough={CLASS_ROUGH[earthClass ?? ''] ?? 0.2} />
       <Half world="mars" tiles={mars} extentM={extentM} offsetX={off} mode={mode} segments={segments} trialMode={!!trial} rough={CLASS_ROUGH[marsClass ?? ''] ?? 0.2} />
       <CameraRig span={span} split={mode === 'split'} />
-      {mode === 'wipe' && <Seam extentM={extentM} earthLabel={earthLabel} marsLabel={marsLabel} />}
+      {mode === 'wipe' && <Seam extentM={extentM} earthLabel={earthLabel} marsLabel={marsLabel} body={body} />}
       {mode === 'split' && (
         <>
           <Html position={[-off, E * 0.1, -E / 2]} center zIndexRange={[20, 0]}>
             <div className="-translate-y-3 whitespace-nowrap rounded-sm bg-page/80 px-1.5 py-0.5 font-mono text-xs text-earth">EARTH · {earthLabel}</div>
           </Html>
           <Html position={[off, E * 0.1, -E / 2]} center zIndexRange={[20, 0]}>
-            <div className="-translate-y-3 whitespace-nowrap rounded-sm bg-page/80 px-1.5 py-0.5 font-mono text-xs text-mars">MARS · {marsLabel}</div>
+            <div className="-translate-y-3 whitespace-nowrap rounded-sm bg-page/80 px-1.5 py-0.5 font-mono text-xs text-mars">{body} · {marsLabel}</div>
           </Html>
         </>
       )}
@@ -288,7 +288,7 @@ export function SeamCanvas(props: Props) {
       flat linear legacy frameloop="demand" dpr={[1, isSmall() ? 1.5 : 2]}
       camera={{ position: props.mode === 'split' ? [0, span * 0.6 * far, span * 0.9 * far] : [0, E * 1.0 * far, E * 1.55 * far], fov: 34, near: 0.01, far: 500 }}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
-      aria-label="3D terrain: Earth site and Mars target at the same scale, coloured by the current layer"
+      aria-label="3D terrain: Earth site and target at the same scale, coloured by the current layer"
     >
       <Scene {...props} />
     </Canvas>

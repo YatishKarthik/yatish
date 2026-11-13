@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Ribbon, RibbonAxis } from '../charts/Ribbon';
 import { asset } from '../data/load';
-import { rankedSites, resolutionLabel, siteIndex, targetIndex, tempColour } from '../data/select';
+import { bodyName, rankedSites, resolutionLabel, siteIndex, targetIndex, tempColour } from '../data/select';
 import { useStore, withTarget } from '../state/store';
 import { ClockBar } from '../ui/ClockBar';
 import { Num } from '../ui/Num';
@@ -18,19 +18,21 @@ export function SolView() {
   const target = data.targets[Math.max(0, targetIndex(data, targetId))];
   const ranked = rankedSites(data, target.id).filter((s) => (cls === 'all' || s.class.name === cls) && (cat === 'all' || s.catalogue.status === cat));
   const listRef = useFlip<HTMLOListElement>(`${target.id}|${cls}|${cat}`);
+  const bodies = [...new Set(data.targets.map((t) => t.body))];
   const classes = ['all', ...new Set(data.sites.map((s) => s.class.name))];
   const cats = ['all', ...new Set(data.sites.map((s) => s.catalogue.status))];
 
   return (
     <div className="mx-auto max-w-5xl space-y-5 px-5 py-5">
-      <h1 className="sr-only">Thermal Twin: choose a Mars target and compare Earth sites by their thermal day</h1>
+      <h1 className="sr-only">Thermal Twin: choose a target and compare Earth sites by their thermal day</h1>
 
-      <section aria-label="Mars targets" className="space-y-1">
+      <section aria-label="Targets" className="space-y-1">
         <div className="flex items-baseline justify-between">
-          <h2 className="head">Mars targets</h2>
+          <span className="flex flex-wrap items-center gap-3"><h2 className="head">{bodyName(target)} targets</h2>
+            {bodies.length > 1 && <Seg label="World" value={target.body} onChange={(b) => setTarget(data.targets.find((t) => t.body === b)!.id)} options={bodies.map((b) => ({ value: b, label: b === 'moon' ? 'Moon' : 'Mars' }))} />}</span>
           <span className="caps">ground temperature over one day</span>
         </div>
-        {data.targets.map((t) => {
+        {data.targets.filter((t) => t.body === target.body).map((t) => {
           const ti = targetIndex(data, t.id), on = t.id === target.id;
           return (
             <button key={t.id} type="button" aria-pressed={on} onClick={() => setTarget(t.id)}

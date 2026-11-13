@@ -1,141 +1,38 @@
-// Mock data generator for the front end. Deterministic: same bytes every run.
-// Writes public/data/sites.json and public/tiles/**. Everything it writes is flagged mock.
-// The real pipeline (pipeline/package) overwrites these files with the same contract.
+// Builds public/data/sites.json and the hourly colour tiles around the REAL terrain fetched by fetch-real.mjs.
+// Real: terrain, imagery, coordinates, mean slope and roughness.
+// Mock (deterministic, flagged mock in the file and on screen): thermal curves, classes, closeness, verdict inputs, validation.
+// The real pipeline overwrites sites.json and the colour tiles with the same contract.
 import { decode, encode } from 'fast-png';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PUB = path.join(ROOT, 'public');
-const SIZE = 256;
-const THERM = 64;
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const PUB = path.resolve(HERE, '..', 'public');
+const LOC = JSON.parse(fs.readFileSync(path.join(HERE, 'locations.json'), 'utf8'));
+const SIZE = 256, THERM = 64;
 
-// ---------- deterministic noise ----------
-function hash(ix, iy, seed) {
+// ---------- deterministic helpers ----------
+function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+const rnd = (key) => (hashStr(key) % 100000) / 100000;          // 0..1, fixed for a given key
+function hash2(ix, iy, seed) {
   let h = (ix * 374761393 + iy * 668265263 + seed * 2147483647) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967295;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
 }
-const smooth = (t) => t * t * (3 - 2 * t);
 function vnoise(x, y, seed) {
-  const ix = Math.floor(x), iy = Math.floor(y);
-  const fx = smooth(x - ix), fy = smooth(y - iy);
-  const a = hash(ix, iy, seed), b = hash(ix + 1, iy, seed);
-  const c = hash(ix, iy + 1, seed), d = hash(ix + 1, iy + 1, seed);
+  const ix = Math.floor(x), iy = Math.floor(y), s = (t) => t * t * (3 - 2 * t), fx = s(x - ix), fy = s(y - iy);
+  const a = hash2(ix, iy, seed), b = hash2(ix + 1, iy, seed), c = hash2(ix, iy + 1, seed), d = hash2(ix + 1, iy + 1, seed);
   return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
 }
-function fbm(x, y, seed, oct = 4) {
-  let s = 0, amp = 0.5, f = 1;
-  for (let i = 0; i < oct; i++) { s += amp * vnoise(x * f, y * f, seed + i * 17); amp *= 0.5; f *= 2; }
-  return s; // ~0..1
-}
 
-// ---------- terrain shapes (metres in, metres out) ----------
-const SHAPES = {
-  dune: (x, y, s) => {
-    const warp = 2.2 * fbm(x / 1500, y / 1500, s);
-    const ridge = 1 - Math.abs(Math.sin((Math.PI * (x * 0.85 + y * 0.35)) / 800 + warp));
-    return 55 * ridge * ridge + 10 * fbm(x / 350, y / 350, s + 5);
-  },
-  gravel: (x, y, s) => 6 * fbm(x / 900, y / 900, s) + 0.004 * x,
-  sabkha: (x, y, s) => 1.5 * fbm(x / 1200, y / 1200, s),
-  bedrock: (x, y, s) => {
-    const r = 1 - Math.abs(2 * fbm(x / 1100, y / 1100, s, 5) - 1);
-    return 210 * r * r + 25 * fbm(x / 250, y / 250, s + 9);
-  },
-  farm: (x, y, s) => 3 * fbm(x / 1000, y / 1000, s) + 0.002 * y,
-  jezero: (x, y, s) => 90 * fbm(x / 4500, y / 4500, s) + 40 * Math.exp(-(((x - 5000) / 2500) ** 2)),
-  gale: (x, y, s) => 260 * fbm(x / 5000, y / 5000, s, 5) + 0.02 * y,
-  arcadia: (x, y, s) => 18 * fbm(x / 6000, y / 6000, s),
-};
-
-// sample analytic shape at the SOURCE resolution, then upsample smoothly to SIZE.
-// This mimics what the real pipeline delivers: coarse DEM samples in a 256 px tile.
-function makeHeight(shape, extentM, sourceResM, seed) {
-  const n = Math.max(4, Math.round(extentM / sourceResM) + 1);
-  const src = new Float32Array(n * n);
-  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++)
-    src[j * n + i] = SHAPES[shape]((i / (n - 1)) * extentM, (j / (n - 1)) * extentM, seed);
-  const at = (i, j) => src[Math.min(n - 1, Math.max(0, j)) * n + Math.min(n - 1, Math.max(0, i))];
-  const cr = (p0, p1, p2, p3, t) =>
-    0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
-  const out = new Float32Array(SIZE * SIZE);
-  for (let y = 0; y < SIZE; y++) {
-    const gy = (y / (SIZE - 1)) * (n - 1), jy = Math.floor(gy), ty = gy - jy;
-    for (let x = 0; x < SIZE; x++) {
-      const gx = (x / (SIZE - 1)) * (n - 1), ix = Math.floor(gx), tx = gx - ix;
-      const rows = [];
-      for (let k = -1; k <= 2; k++) rows.push(cr(at(ix - 1, jy + k), at(ix, jy + k), at(ix + 1, jy + k), at(ix + 2, jy + k), tx));
-      out[y * SIZE + x] = cr(rows[0], rows[1], rows[2], rows[3], ty);
-    }
-  }
-  // terrain stats on the source grid (what the pipeline would report)
-  let slopeSum = 0, cnt = 0, res2 = 0;
-  for (let j = 1; j < n - 1; j++) for (let i = 1; i < n - 1; i++) {
-    const dzdx = (at(i + 1, j) - at(i - 1, j)) / (2 * sourceResM);
-    const dzdy = (at(i, j + 1) - at(i, j - 1)) / (2 * sourceResM);
-    slopeSum += (Math.atan(Math.hypot(dzdx, dzdy)) * 180) / Math.PI;
-    let m = 0;
-    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) m += at(i + a, j + b);
-    res2 += (at(i, j) - m / 9) ** 2;
-    cnt++;
-  }
-  let zMin = Infinity, zMax = -Infinity;
-  for (const v of out) { if (v < zMin) zMin = v; if (v > zMax) zMax = v; }
-  return { h: out, zMin, zMax, meanSlope: slopeSum / cnt, rough: Math.sqrt(res2 / cnt) };
-}
-
-// ---------- curves ----------
-function makeCurve({ peak, tau, depth, p }) {
-  const raw = [];
-  for (let h = 0; h < 24; h++) {
-    const hc = h + 0.5;
-    const x = Math.cos((2 * Math.PI * (hc - peak)) / 24);
-    if (x > 0) raw.push(Math.pow(x, p));
-    else {
-      const sinceSunset = (hc - (peak + 6) + 48) % 24;
-      raw.push(-depth * (1 - Math.exp(-sinceSunset / tau)));
-    }
-  }
-  const sm = raw.map((_, i) => (raw[(i + 23) % 24] + raw[i] + raw[(i + 1) % 24]) / 3);
-  const mn = Math.min(...sm), mx = Math.max(...sm);
-  return sm.map((v) => +((v - mn) / (mx - mn)).toFixed(4));
-}
-const peakHour = (c) => c.indexOf(Math.max(...c)) + 0.5;
-function nightSlope(c) {
-  let s = 0, n = 0;
-  for (const h of [20, 21, 22, 23, 0, 1, 2, 3]) { s += c[(h + 1) % 24] - c[h]; n++; }
-  return +(s / n).toFixed(4);
-}
-
-// ---------- colour ----------
-const RAMP = ['#1d2a6b', '#3d7ab8', '#e8e2c8', '#e0673a', '#8f1c1c'].map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
-function ramp(t) {
-  const x = Math.min(1, Math.max(0, t)) * (RAMP.length - 1);
-  const i = Math.min(RAMP.length - 2, Math.floor(x)), f = x - i;
-  return RAMP[i].map((c, k) => Math.round(c + (RAMP[i + 1][k] - c) * f));
-}
-const SAT = {
-  dune: [[196, 112, 62], [226, 150, 88]], gravel: [[124, 108, 94], [158, 142, 124]], sabkha: [[196, 190, 176], [232, 228, 214]],
-  bedrock: [[58, 50, 46], [104, 88, 76]], farm: [[52, 96, 44], [120, 150, 70]],
-  jezero: [[142, 86, 58], [186, 122, 84]], gale: [[120, 72, 52], [176, 112, 80]], arcadia: [[160, 104, 74], [198, 142, 104]],
-};
-
-function writePng(file, data, width, height, channels, depth) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, encode({ width, height, data, channels, depth }));
-}
-
-/** Real terrain fetched by scripts/fetch-real.mjs, if this tile has it. Stats are taken on a 100 m grid. */
+// ---------- real terrain ----------
 function loadReal(dir) {
-  const f = path.join(dir, 'source.json');
-  if (!fs.existsSync(f)) return null;
-  const src = JSON.parse(fs.readFileSync(f, 'utf8'));
+  const src = JSON.parse(fs.readFileSync(path.join(dir, 'source.json'), 'utf8'));
   const img = decode(fs.readFileSync(path.join(dir, 'height.png')));
   const h = new Float32Array(SIZE * SIZE);
   for (let i = 0; i < h.length; i++) h[i] = src.z_min + (img.data[i] / 65535) * (src.z_max - src.z_min);
+  // slope and roughness on a 100 m grid, the pipeline's common resolution
   const n = Math.round(src.extent_m / 100) + 1, res = src.extent_m / (n - 1);
   const at = (i, j) => h[Math.round((Math.min(n - 1, Math.max(0, j)) / (n - 1)) * (SIZE - 1)) * SIZE + Math.round((Math.min(n - 1, Math.max(0, i)) / (n - 1)) * (SIZE - 1))];
   let slopeSum = 0, cnt = 0, res2 = 0;
@@ -146,182 +43,149 @@ function loadReal(dir) {
     res2 += (at(i, j) - m / 9) ** 2;
     cnt++;
   }
-  return { h, zMin: src.z_min, zMax: src.z_max, meanSlope: slopeSum / cnt, rough: Math.sqrt(res2 / cnt), src };
+  return { h, src, meanSlope: +(slopeSum / cnt).toFixed(2), rough: +Math.sqrt(res2 / cnt).toFixed(2) };
 }
 
-function writeTiles(dir, shape, T, curve, seed) {
-  const { h, zMin, zMax } = T;
-  if (!T.src) {
-  // height: 16-bit grey
-  const h16 = new Uint16Array(SIZE * SIZE);
-  for (let i = 0; i < h.length; i++) h16[i] = Math.round(((h[i] - zMin) / (zMax - zMin || 1)) * 65535);
-  writePng(path.join(dir, 'height.png'), h16, SIZE, SIZE, 1, 16);
-  // satellite: procedural true-colour stand-in
-  const sat = new Uint8Array(SIZE * SIZE * 3);
-  const [c0, c1] = SAT[shape];
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
-    const i = y * SIZE + x;
-    const hx = h[y * SIZE + Math.min(SIZE - 1, x + 1)] - h[y * SIZE + Math.max(0, x - 1)];
-    const shade = Math.min(1.25, Math.max(0.6, 1 - hx * 0.06));
-    let t = 0.5 * fbm(x / 40, y / 40, seed + 31) + 0.5 * (h[i] - zMin) / (zMax - zMin || 1);
-    if (shape === 'farm') t = ((Math.floor(x / 32) + Math.floor(y / 32)) % 2) * 0.7 + 0.15 * fbm(x / 8, y / 8, seed);
-    for (let k = 0; k < 3; k++) sat[i * 3 + k] = Math.min(255, Math.round((c0[k] + (c1[k] - c0[k]) * t) * shade));
-  }
-  writePng(path.join(dir, 'sat.png'), sat, SIZE, SIZE, 3, 8);
-  }
-  // hourly colour: site curve value, lightly modulated by sun-facing slope (mock only)
-  const step = SIZE / THERM;
-  for (let hour = 0; hour < 24; hour++) {
-    const buf = new Uint8Array(THERM * THERM * 3);
-    const sunX = -Math.cos(((hour + 0.5 - 6) / 12) * Math.PI); // east(-x) at 6h to west(+x) at 18h
-    const day = hour >= 6 && hour < 18 ? 1 : 0;
-    for (let y = 0; y < THERM; y++) for (let x = 0; x < THERM; x++) {
-      const px = Math.min(SIZE - 2, Math.max(1, Math.round(x * step))), py = Math.min(SIZE - 1, Math.round(y * step));
-      const dzdx = h[py * SIZE + px + 1] - h[py * SIZE + px - 1];
-      const mod = day * Math.max(-0.1, Math.min(0.1, dzdx * sunX * 0.02)) + 0.04 * (fbm(x / 9, y / 9, seed + 77) - 0.5);
-      const rgb = ramp(curve[hour] + mod);
-      buf.set(rgb, (y * THERM + x) * 3);
-    }
-    writePng(path.join(dir, `colour_${hour}.png`), buf, THERM, THERM, 3, 8);
-  }
-}
-
-// ---------- definitions ----------
+// ---------- mock thermal curves ----------
 const CLASSES = [
   { id: 0, name: 'fines', label: 'Loose fines — sinkage and dust tests' },
   { id: 1, name: 'gravel', label: 'Compact gravel — good trafficability, drill testing' },
   { id: 2, name: 'crust', label: 'Salt or duricrust — crust-breaking and corrosion tests' },
   { id: 3, name: 'bedrock', label: 'Exposed bedrock — coring and obstacle tests' },
 ];
+const CLS = Object.fromEntries(CLASSES.map((c) => [c.name, c]));
+const CURVE = { fines: { peak: 12.8, tau: 1.8, depth: 1.0, p: 1.4 }, gravel: { peak: 13.4, tau: 3.2, depth: 0.9, p: 1.1 }, crust: { peak: 13.1, tau: 2.5, depth: 0.95, p: 1.2 }, bedrock: { peak: 14.4, tau: 6.0, depth: 0.8, p: 0.9 } };
+const SWING = { fines: 88, crust: 68, gravel: 52, bedrock: 20 }, INERTIA = { fines: 12, crust: 28, gravel: 38, bedrock: 72 };
 const FRICTION = { fines: 0.35, gravel: 0.6, crust: 0.45, bedrock: 0.7 };
+
+function makeCurve(cls, key) {
+  const c = CURVE[cls], peak = c.peak + (rnd(key + 'pk') - 0.5) * 0.9, tau = c.tau * (0.8 + rnd(key + 'tau') * 0.4);
+  const raw = [];
+  for (let h = 0; h < 24; h++) {
+    const hc = h + 0.5, x = Math.cos((2 * Math.PI * (hc - peak)) / 24);
+    raw.push(x > 0 ? Math.pow(x, c.p) : -c.depth * (1 - Math.exp(-((hc - (peak + 6) + 48) % 24) / tau)));
+  }
+  const sm = raw.map((_, i) => (raw[(i + 23) % 24] + raw[i] + raw[(i + 1) % 24]) / 3);
+  const mn = Math.min(...sm), mx = Math.max(...sm);
+  return sm.map((v) => +((v - mn) / (mx - mn)).toFixed(4));
+}
+const peakHour = (c) => c.indexOf(Math.max(...c)) + 0.5;
+const nightSlope = (c) => +([20, 21, 22, 23, 0, 1, 2, 3].reduce((s, h) => s + c[(h + 1) % 24] - c[h], 0) / 8).toFixed(4);
+const clampPct = (v) => Math.round(Math.min(99, Math.max(1, v)));
+
+// ---------- hourly colour tiles ----------
+const RAMP = ['#1d2a6b', '#3d7ab8', '#e8e2c8', '#e0673a', '#8f1c1c'].map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+function ramp(t) {
+  const x = Math.min(1, Math.max(0, t)) * (RAMP.length - 1), i = Math.min(RAMP.length - 2, Math.floor(x)), f = x - i;
+  return RAMP[i].map((c, k) => Math.round(c + (RAMP[i + 1][k] - c) * f));
+}
+function writeColour(dir, h, curve, seed) {
+  const step = SIZE / THERM;
+  for (let hour = 0; hour < 24; hour++) {
+    const buf = new Uint8Array(THERM * THERM * 3), day = hour >= 6 && hour < 18 ? 1 : 0, sunX = Math.cos(((hour + 0.5 - 6) / 12) * Math.PI);
+    for (let y = 0; y < THERM; y++) for (let x = 0; x < THERM; x++) {
+      const px = Math.min(SIZE - 2, Math.max(1, Math.round(x * step))), py = Math.min(SIZE - 1, Math.round(y * step));
+      const dzdx = h[py * SIZE + px + 1] - h[py * SIZE + px - 1];
+      const mod = day * Math.max(-0.1, Math.min(0.1, -dzdx * sunX * 0.02)) + 0.04 * (vnoise(x / 9, y / 9, seed) - 0.5);
+      buf.set(ramp(curve[hour] + mod), (y * THERM + x) * 3);
+    }
+    fs.writeFileSync(path.join(dir, `colour_${hour}.png`), encode({ width: THERM, height: THERM, data: buf, channels: 3, depth: 8 }));
+  }
+}
+
+// ---------- rules (mirrors pipeline/match/rules.py for the mock) ----------
 const PLANETS = {
   earth: { solar_flux_wm2: 1361.0, gravity: 9.81, day_hours: 24.0, pressure_bar: 1.0 },
   mars: { solar_flux_wm2: 586.2, gravity: 3.72, day_hours: 24.66, pressure_bar: 0.006 },
   moon: { solar_flux_wm2: 1361.0, gravity: 1.62, day_hours: 708.7, pressure_bar: 0.0 },
 };
-const CURVES = [
-  { peak: 12.8, tau: 1.8, depth: 1.0, p: 1.4 },
-  { peak: 13.4, tau: 3.2, depth: 0.9, p: 1.1 },
-  { peak: 13.1, tau: 2.5, depth: 0.95, p: 1.2 },
-  { peak: 14.4, tau: 6.0, depth: 0.8, p: 0.9 },
-];
-
-const TARGETS = [
-  { id: 'jezero', name: 'Jezero crater', lat: 18.38, lon: 77.58, why: 'Perseverance site; delta, clays, carbonates', cls: 1, seed: 101,
-    curve: { peak: 13.3, tau: 3.0, depth: 0.9, p: 1.1 }, amp: 0.34, ampPct: 55, ati: 31, tes: 31, source: 'EMIRS_L3',
-    minerals: { basalt: true, clay: true, salt: false }, truth: 'Dusty plain, cobbles (Perseverance)' },
-  { id: 'gale', name: 'Gale crater', lat: -4.59, lon: 137.44, why: 'Curiosity site; mixed sand and bedrock', cls: 3, seed: 102,
-    curve: { peak: 14.1, tau: 5.0, depth: 0.85, p: 0.95 }, amp: 0.29, ampPct: 34, ati: 48, tes: 48, source: 'EMIRS_L3',
-    minerals: { basalt: true, clay: true, salt: true }, truth: 'Mixed sand and bedrock (Curiosity)' },
-  { id: 'arcadia', name: 'Arcadia Planitia', lat: 40.0, lon: -170.0, why: 'Human landing candidate; shallow ice', cls: 0, seed: 103,
-    curve: { peak: 12.9, tau: 2.0, depth: 1.0, p: 1.35 }, amp: 0.41, ampPct: 86, ati: 14, tes: 14, source: 'EMIRS_L3',
-    minerals: { basalt: true, clay: false, salt: false }, truth: 'Dust-mantled plain over shallow ice (orbital only)' },
-];
-
-const SITES = [
-  { id: 'dune_a', name: 'Dune field A', kind: 'candidate', region: 'Liwa, Abu Dhabi, UAE', lat: 23.02, lon: 53.80, shape: 'dune', cls: 0, seed: 1,
-    amp: 0.21, ampPct: 92, ati: 12, scenes: 17, source: 'ECOSTRESS', minerals: { basalt: false, clay: false, salt: false },
-    cat: { in_esa_cafe: true, literature_hits: 6, status: 'catalogued', checked_by: 'MOCK', notes: 'Liwa is a published analog.' },
-    close: { jezero: [48, 62, 33], gale: [40, 45, 33], arcadia: [86, 80, 67] } },
-  { id: 'gravel_plain_b', name: 'Wadi gravel plain B', kind: 'candidate', region: 'Ad Dakhiliyah, Oman', lat: 22.30, lon: 57.60, shape: 'gravel', cls: 1, seed: 2,
-    amp: 0.16, ampPct: 58, ati: 34, scenes: 14, source: 'ECOSTRESS', minerals: { basalt: true, clay: true, salt: false },
-    cat: { in_esa_cafe: false, literature_hits: 0, status: 'uncatalogued', checked_by: 'MOCK', notes: '' },
-    close: { jezero: [91, 84, 100], gale: [70, 66, 67], arcadia: [52, 71, 67] } },
-  { id: 'sabkha_c', name: 'Inland sabkha C', kind: 'candidate', region: 'Sabkhat Matti, UAE', lat: 23.40, lon: 52.30, shape: 'sabkha', cls: 2, seed: 3,
-    amp: 0.18, ampPct: 71, ati: 26, scenes: 0, source: 'MODIS_2PT', minerals: { basalt: false, clay: false, salt: true },
-    cat: { in_esa_cafe: true, literature_hits: 4, status: 'catalogued', checked_by: 'MOCK', notes: 'Abu Dhabi sabkha is a published analog.' },
-    close: { jezero: [64, 78, 33], gale: [55, 60, 33], arcadia: [60, 82, 33] } },
-  { id: 'ridge_d', name: 'Hajar ridge D', kind: 'candidate', region: 'Hajar mountains, Oman', lat: 23.05, lon: 58.45, shape: 'bedrock', cls: 3, seed: 4,
-    amp: 0.1, ampPct: 18, ati: 71, scenes: 9, source: 'ECOSTRESS', minerals: { basalt: true, clay: true, salt: true },
-    cat: { in_esa_cafe: true, literature_hits: 9, status: 'catalogued', checked_by: 'MOCK', notes: '' },
-    close: { jezero: [58, 41, 67], gale: [88, 79, 100], arcadia: [30, 25, 33] } },
-  { id: 'farm_liwa', name: 'Irrigated farms', kind: 'negative_control', region: 'Liwa oasis, UAE', lat: 23.13, lon: 53.78, shape: 'farm', cls: 2, seed: 5,
-    amp: 0.06, ampPct: 4, ati: 88, scenes: 21, source: 'ECOSTRESS', minerals: { basalt: false, clay: false, salt: false },
-    cat: { in_esa_cafe: false, literature_hits: 0, status: 'decoy', checked_by: 'MOCK', notes: 'Negative control.' },
-    close: { jezero: [12, 55, 0], gale: [10, 40, 0], arcadia: [15, 50, 0] }, curveOverride: { peak: 14.8, tau: 8, depth: 0.7, p: 0.8 } },
-];
-
-const W = { thermal: 0.6, terrain: 0.3, minerals: 0.1 };
 const roughClass = (r) => (r < 1 ? 0 : r < 4 ? 1 : r < 12 ? 2 : 3);
-
 function verdicts(site, tgt) {
-  const cfg = { slope_tol_deg: 3.0, roughness_class_tol: 1 };
-  const pe = PLANETS.earth, pt = PLANETS.mars;
-  const dS = Math.abs(site.features.mean_slope_deg - tgt.features.mean_slope_deg);
-  const okSlope = dS <= cfg.slope_tol_deg;
-  const okRough = Math.abs(roughClass(site.features.roughness_rms_m) - roughClass(tgt.features.roughness_rms_m)) <= cfg.roughness_class_tol;
+  const tol = 3.0, pe = PLANETS.earth, pt = PLANETS[tgt.body], world = tgt.body === 'moon' ? 'the Moon' : 'Mars';
+  const okSlope = Math.abs(site.features.mean_slope_deg - tgt.features.mean_slope_deg) <= tol;
+  const okRough = Math.abs(roughClass(site.features.roughness_rms_m) - roughClass(tgt.features.roughness_rms_m)) <= 1;
   const okClass = site.class.id === tgt.class.id;
-  const slip = (Math.atan(FRICTION[site.class.name]) * 180) / Math.PI;
-  const nums = `Slope ${site.features.mean_slope_deg.toFixed(1)}° here vs ${tgt.features.mean_slope_deg.toFixed(1)}° at ${tgt.name} (tolerance ${cfg.slope_tol_deg}°).`;
+  const nums = `Slope ${site.features.mean_slope_deg.toFixed(1)}° here, ${tgt.features.mean_slope_deg.toFixed(1)}° at ${tgt.name} (tolerance ${tol}°).`;
+  const g = (pt.gravity / pe.gravity).toFixed(2);
   let driving;
-  if (okSlope && okRough && okClass)
-    driving = { level: 'green', rule_id: 'R-DRV-01', rule: `Slope within ${cfg.slope_tol_deg}°, roughness within one class, same thermal class`,
-      detail: `${nums} Traction tests transfer. Gravity ratio ${(pt.gravity / pe.gravity).toFixed(2)}: wheel load is lower on Mars. Static friction angle for ${site.class.name} is about ${slip.toFixed(0)}° on both worlds (gravity cancels); the dynamic term in the trial is where gravity shows.` };
-  else if (okSlope && okRough)
-    driving = { level: 'yellow', rule_id: 'R-DRV-02', rule: 'Geometry matches but surface class differs',
-      detail: `${nums} Class here is ${site.class.name}, target is ${tgt.class.name}. Use for navigation and obstacle tests, not for sinkage.` };
+  if (okSlope && okRough && okClass) driving = { level: 'green', rule_id: 'R-DRV-01', rule: `Slope within ${tol}°, roughness within one class, same thermal class`, detail: `${nums} Traction tests transfer. Gravity is ${g}× Earth, so wheel load is lower on ${world}.` };
+  else if (okSlope && okRough) driving = { level: 'yellow', rule_id: 'R-DRV-02', rule: 'Geometry matches but surface class differs', detail: `${nums} Class here is ${site.class.name}, target is ${tgt.class.name}. Use for navigation and obstacle tests, not for sinkage.` };
   else driving = { level: 'red', rule_id: 'R-DRV-03', rule: 'Slope or roughness outside tolerance', detail: `${nums} Not a mobility analog.` };
   const landing = okSlope && okRough
-    ? { level: 'yellow', rule_id: 'R-LND-01', rule: `Hazard geometry comparable; gravity ${(pt.gravity / pe.gravity).toFixed(2)}× and surface pressure ${(pt.pressure_bar / pe.pressure_bar).toFixed(3)}× Earth`,
-        detail: 'Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars).' }
+    ? { level: 'yellow', rule_id: 'R-LND-01', rule: `Hazard geometry comparable; gravity ${g}× and surface pressure ${(pt.pressure_bar / pe.pressure_bar).toFixed(3)}× Earth`, detail: `Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (${tgt.body === 'moon' ? 'no atmosphere to slow ejecta on the Moon' : '0.6% of Earth pressure on Mars'}).` }
     : { level: 'red', rule_id: 'R-LND-02', rule: 'Surface hazard geometry differs', detail: `${nums} Touchdown hazard tests would not transfer.` };
-  const thermal = { level: 'red', rule_id: 'R-THM-01', rule: 'Earth has an atmosphere, soil moisture and convective night cooling',
-    detail: 'Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet.' };
+  const thermal = { level: 'red', rule_id: 'R-THM-01', rule: 'Earth has an atmosphere, soil moisture and convective night cooling', detail: 'The matched curve shape can calibrate thermal instruments, but absolute temperatures, drill heat rejection and ice-stability results will mislead.' };
   return { driving, landing, thermal };
 }
 
 // ---------- build ----------
-const EARTH_EXTENT = 3000, MARS_EXTENT = 12000;
+const have = (body) => new Set(fs.readdirSync(path.join(PUB, 'tiles', body)).filter((d) => fs.existsSync(path.join(PUB, 'tiles', body, d, 'source.json'))));
+const W = { thermal: 0.6, terrain: 0.3, minerals: 0.1 };
 
-const targets = TARGETS.map((t) => {
-  const dir = path.join(PUB, 'tiles', 'mars', t.id);
-  const T = loadReal(dir) ?? makeHeight(t.id, MARS_EXTENT, 463, t.seed);
-  const curve = makeCurve(t.curve);
-  writeTiles(dir, t.id, T, curve, t.seed);
-  return {
-    id: t.id, body: 'mars', name: t.name, lat: t.lat, lon: t.lon, why: t.why,
-    curve, curve_source: t.source,
-    features: { amplitude_ratio: t.amp, amplitude_pct: t.ampPct, peak_hour: peakHour(curve), night_slope: nightSlope(curve), ati_star_pct: t.ati,
-      mean_slope_deg: +T.meanSlope.toFixed(2), roughness_rms_m: +T.rough.toFixed(2), minerals: t.minerals },
-    class: CLASSES[t.cls], tes_ti_pct: t.tes, ground_truth: t.truth,
-    terrain_tile: `tiles/mars/${t.id}/height.png`, texture_tile: `tiles/mars/${t.id}/colour_{h}.png`, satellite_tile: `tiles/mars/${t.id}/sat.png`,
-    terrain_meta: { z_min: +T.zMin.toFixed(2), z_max: +T.zMax.toFixed(2), pixel_m: T.src?.pixel_m ?? +(MARS_EXTENT / SIZE).toFixed(3), source_res_m: T.src?.source_res_m ?? 463, thermal_res_m: 3000 },
-    ...(T.src ? { tile_source: { elevation: T.src.elevation, imagery: T.src.imagery, centre: T.src.centre } } : {}),
-  };
+const targets = ['mars', 'moon'].flatMap((body) => {
+  const ok = have(body);
+  return LOC[body].filter((t) => ok.has(t.id)).map((t) => {
+    const dir = path.join(PUB, 'tiles', body, t.id), T = loadReal(dir), curve = makeCurve(t.cls, t.id);
+    writeColour(dir, T.h, curve, hashStr(t.id) % 1000);
+    const swing = clampPct(SWING[t.cls] + (rnd(t.id + 'sw') - 0.5) * 24);
+    return {
+      id: t.id, body, name: t.name, lat: t.lat, lon: t.lon, why: t.why,
+      curve, curve_source: body === 'mars' ? 'EMIRS_L3' : 'DIVINER',
+      features: { amplitude_ratio: +(0.12 + swing / 300).toFixed(3), amplitude_pct: swing, peak_hour: peakHour(curve), night_slope: nightSlope(curve),
+        ati_star_pct: clampPct(INERTIA[t.cls] + (rnd(t.id + 'ti') - 0.5) * 20), mean_slope_deg: T.meanSlope, roughness_rms_m: T.rough,
+        minerals: { basalt: rnd(t.id + 'b') > 0.3, clay: rnd(t.id + 'c') > 0.6, salt: rnd(t.id + 's') > 0.75 } },
+      class: CLS[t.cls], ...(body === 'mars' ? { tes_ti_pct: clampPct(INERTIA[t.cls] + (rnd(t.id + 'ti') - 0.5) * 20) } : {}),
+      terrain_tile: `tiles/${body}/${t.id}/height.png`, texture_tile: `tiles/${body}/${t.id}/colour_{h}.png`, satellite_tile: `tiles/${body}/${t.id}/sat.png`,
+      terrain_meta: { z_min: T.src.z_min, z_max: T.src.z_max, pixel_m: T.src.pixel_m, source_res_m: T.src.source_res_m, thermal_res_m: 3000 },
+      tile_source: { elevation: T.src.elevation, imagery: T.src.imagery, centre: T.src.centre },
+    };
+  });
 });
 
-const sites = SITES.map((s) => {
-  const dir = path.join(PUB, 'tiles', 'earth', s.id);
-  const T = loadReal(dir) ?? makeHeight(s.shape, EARTH_EXTENT, 100, s.seed);
-  const curve = makeCurve(s.curveOverride ?? CURVES[s.cls]);
-  writeTiles(dir, s.shape, T, curve, s.seed);
-  const two = s.source === 'MODIS_2PT';
+const okEarth = have('earth');
+const sites = LOC.earth.filter((s) => okEarth.has(s.id)).map((s) => {
+  const dir = path.join(PUB, 'tiles', 'earth', s.id), T = loadReal(dir);
+  const neg = s.kind === 'negative_control', pos = s.kind === 'positive_control';
+  const curve = makeCurve(neg ? 'bedrock' : s.cls, s.id);
+  writeColour(dir, T.h, curve, hashStr(s.id) % 1000);
+  const two = !neg && !pos && rnd(s.id + 'modis') < 0.12;
+  const swing = neg ? clampPct(3 + rnd(s.id) * 6) : clampPct(SWING[s.cls] + (rnd(s.id + 'sw') - 0.5) * 24);
+  const features = { amplitude_ratio: +(0.05 + swing / 500).toFixed(3), amplitude_pct: swing, peak_hour: two ? null : peakHour(curve), night_slope: two ? null : nightSlope(curve),
+    ati_star_pct: neg ? clampPct(86 + rnd(s.id + 'ti') * 10) : clampPct(INERTIA[s.cls] + (rnd(s.id + 'ti') - 0.5) * 20), mean_slope_deg: T.meanSlope, roughness_rms_m: T.rough,
+    minerals: { basalt: rnd(s.id + 'b') > 0.5, clay: rnd(s.id + 'c') > 0.6, salt: s.cls === 'crust' } };
   const site = {
-    id: s.id, name: s.name, kind: s.kind, centroid: T.src?.centre ?? { lat: s.lat, lon: s.lon }, area_km2: 9.0, region: s.region,
-    curve, curve_scenes: s.scenes, curve_source: s.source,
-    features: { amplitude_ratio: s.amp, amplitude_pct: s.ampPct, peak_hour: two ? null : peakHour(curve), night_slope: two ? null : nightSlope(curve),
-      ati_star_pct: s.ati, mean_slope_deg: +T.meanSlope.toFixed(2), roughness_rms_m: +T.rough.toFixed(2), minerals: s.minerals },
-    class: CLASSES[s.cls],
-    closeness: Object.fromEntries(Object.entries(s.close).map(([k, [th, te, mi]]) => [k, { total: Math.round(W.thermal * th + W.terrain * te + W.minerals * mi), thermal: th, terrain: te, minerals: mi }])),
-    verdicts: {},
-    catalogue: s.cat,
-    dossier: { text: `Placeholder dossier for ${s.name}. Class ${CLASSES[s.cls].name}; amplitude percentile ${s.ampPct}; mean slope ${T.meanSlope.toFixed(1)}°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.`,
-      generated_by: 'MOCK', model: 'mock-template', inputs_hash: '0000000000000000000000000000000000000000' },
+    id: s.id, name: s.name, kind: s.kind, centroid: T.src.centre, area_km2: 9.0, region: s.region,
+    curve, curve_scenes: two ? 0 : 6 + Math.floor(rnd(s.id + 'n') * 18), curve_source: two ? 'MODIS_2PT' : 'ECOSTRESS',
+    features, class: CLS[s.cls], closeness: {}, verdicts: {},
+    catalogue: neg ? { in_esa_cafe: false, literature_hits: 0, status: 'decoy', notes: 'Negative control.' }
+      : pos || rnd(s.id + 'cat') > 0.45 ? { in_esa_cafe: pos, literature_hits: 1 + Math.floor(rnd(s.id + 'lit') * 9), status: 'catalogued' }
+      : { in_esa_cafe: false, literature_hits: 0, status: 'uncatalogued' },
+    dossier: { text: `Placeholder summary for ${s.name}. Class ${s.cls}; swing percentile ${swing}; mean slope ${T.meanSlope.toFixed(1)}°.`, generated_by: 'MOCK', model: 'mock-template' },
     limits: [
       'Thermal behaviour, not material: two different materials can share a curve.',
-      two ? '1 km MODIS pixel, two local times only; curve shape is not resolved.' : '70 m ECOSTRESS pixel; surface patches smaller than that are averaged.',
-      'Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.',
-      'Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer.',
+      two ? '1 km MODIS pixel, two local times only; curve shape is not resolved.' : '70 m ECOSTRESS pixel; smaller patches are averaged.',
+      'Rover-scale rocks and ripples are below the terrain resolution.',
     ],
     terrain_tile: `tiles/earth/${s.id}/height.png`, texture_tile: `tiles/earth/${s.id}/colour_{h}.png`, satellite_tile: `tiles/earth/${s.id}/sat.png`,
-    terrain_meta: { z_min: +T.zMin.toFixed(2), z_max: +T.zMax.toFixed(2), pixel_m: T.src?.pixel_m ?? +(EARTH_EXTENT / SIZE).toFixed(3), source_res_m: T.src?.source_res_m ?? 100, thermal_res_m: two ? 1000 : 70 },
-    ...(T.src ? { tile_source: { elevation: T.src.elevation, imagery: T.src.imagery, centre: T.src.centre } } : {}),
+    terrain_meta: { z_min: T.src.z_min, z_max: T.src.z_max, pixel_m: T.src.pixel_m, source_res_m: T.src.source_res_m, thermal_res_m: two ? 1000 : 70 },
+    tile_source: { elevation: T.src.elevation, imagery: T.src.imagery, centre: T.src.centre },
     mock: true,
   };
-  for (const t of targets) site.verdicts[t.id] = verdicts(site, t);
+  for (const t of targets) {
+    const k = `${s.id}|${t.id}`;
+    const thermal = neg ? Math.round(6 + rnd(k) * 9) : Math.round(Math.min(98, Math.max(20, 100 - Math.abs(swing - t.features.amplitude_pct) * 0.9 - rnd(k) * 12 + (pos ? 8 : 0))));
+    const terrain = Math.round(Math.max(neg ? 15 : 22, Math.min(neg ? 45 : 98, 100 - Math.abs(T.meanSlope - t.features.mean_slope_deg) * 5 - Math.abs(roughClass(T.rough) - roughClass(t.features.roughness_rms_m)) * 12 - rnd(k + 't') * 10)));
+    const m = neg ? 0 : ['basalt', 'clay', 'salt'].filter((x) => features.minerals[x] === t.features.minerals[x]).length;
+    const minerals = Math.round((m / 3) * 100);
+    site.closeness[t.id] = { total: Math.round(W.thermal * thermal + W.terrain * terrain + W.minerals * minerals), thermal, terrain, minerals };
+    site.verdicts[t.id] = verdicts(site, t);
+  }
   return site;
 });
 
+const cand = (tid) => sites.filter((s) => s.kind === 'candidate').sort((a, b) => b.closeness[tid].total - a.closeness[tid].total);
+const demoTarget = targets.find((t) => t.id === 'jezero') ?? targets[0];
+const ranked = cand(demoTarget.id), dunes = ranked.filter((s) => s.class.name === 'fines');
 const out = {
   meta: {
     generated_utc: '2026-11-13T00:00:00Z', pipeline_version: '0.0.0-mock', weights: W, common_resolution_m: 100,
@@ -333,18 +197,14 @@ const out = {
       'C     = 100·(1 − (0.60·d_th + 0.30·d_ter + 0.10·d_min))',
     ],
     friction: FRICTION, class_map: CLASSES,
-    demo: { target: 'jezero', lookalike: 'dune_a', match: 'gravel_plain_b' },
+    demo: { target: demoTarget.id, match: ranked[0].id, lookalike: (dunes[dunes.length - 1] ?? ranked[ranked.length - 1]).id },
   },
   planets: PLANETS, targets, sites,
   validation: {
-    controls: [
-      { id: 'atacama', name: 'Atacama core', kind: 'positive_control', closeness_jezero: 84, pass: true },
-      { id: 'death_valley', name: 'Death Valley playa', kind: 'positive_control', closeness_jezero: 77, pass: true },
-      { id: 'dry_valleys', name: 'McMurdo Dry Valleys', kind: 'positive_control', closeness_jezero: 81, pass: true },
-      { id: 'haughton', name: 'Haughton crater floor', kind: 'positive_control', closeness_jezero: 66, pass: true },
-      { id: 'farm_liwa', name: 'Irrigated farms, Liwa', kind: 'negative_control', closeness_jezero: 24, pass: true },
-      { id: 'forest_boreal', name: 'Boreal forest patch', kind: 'negative_control', closeness_jezero: 9, pass: true },
-    ],
+    controls: sites.filter((s) => s.kind !== 'candidate').map((s) => {
+      const c = s.closeness[demoTarget.id].total;
+      return { id: s.id, name: `${s.name}, ${s.region.split(',')[0]}`, kind: s.kind, closeness_jezero: c, pass: s.kind === 'positive_control' ? c >= 60 : c <= 25 };
+    }),
     rover_sites: [
       { id: 'gale', tes_ti_pct: 48, ground_truth: 'Mixed sand and bedrock', consistent: true },
       { id: 'jezero', tes_ti_pct: 31, ground_truth: 'Dusty plain, cobbles', consistent: true },
@@ -352,15 +212,17 @@ const out = {
       { id: 'gusev', tes_ti_pct: 38, ground_truth: 'Dusty basalt plain with rocks', consistent: true },
     ],
     local: [
-      { surface: 'sand', site_id: 'dune_a', ir_c_14h: 48.2, ir_c_06h: 16.1, swing_c: 32.1, sat_swing_rank: 0.08, order_match: true },
-      { surface: 'gravel', site_id: 'gravel_plain_b', ir_c_14h: 44.0, ir_c_06h: 19.5, swing_c: 24.5, sat_swing_rank: 0.42, order_match: true },
-      { surface: 'rock', site_id: 'ridge_d', ir_c_14h: 41.3, ir_c_06h: 23.9, swing_c: 17.4, sat_swing_rank: 0.82, order_match: true },
+      { surface: 'sand', site_id: 'liwa_dunes', ir_c_14h: 48.2, ir_c_06h: 16.1, swing_c: 32.1, sat_swing_rank: 0.08, order_match: true },
+      { surface: 'gravel', site_id: 'wadi_gravel_oman', ir_c_14h: 44.0, ir_c_06h: 19.5, swing_c: 24.5, sat_swing_rank: 0.42, order_match: true },
+      { surface: 'rock', site_id: 'hajar_ridge', ir_c_14h: 41.3, ir_c_06h: 23.9, swing_c: 17.4, sat_swing_rank: 0.82, order_match: true },
     ],
     positive_min_closeness: 60, negative_max_closeness: 25, passed: true,
   },
   ai_use: ['k-means surface classes (scikit-learn)', 'LLM dossiers from computed numbers, labelled', 'Code assistance (Claude Code)'],
 };
+out.validation.passed = out.validation.controls.every((c) => c.pass);
 
 fs.mkdirSync(path.join(PUB, 'data'), { recursive: true });
-fs.writeFileSync(path.join(PUB, 'data', 'sites.json'), JSON.stringify(out, null, 1));
-console.log(`mock: ${sites.length} sites, ${targets.length} targets -> public/data/sites.json, public/tiles/`);
+fs.writeFileSync(path.join(PUB, 'data', 'sites.json'), JSON.stringify(out));
+const by = (b) => targets.filter((t) => t.body === b).length;
+console.log(`sites.json: ${sites.length} Earth sites, ${by('mars')} Mars targets, ${by('moon')} Moon targets; controls ${out.validation.passed ? 'pass' : 'FAIL'}`);

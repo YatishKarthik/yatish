@@ -1,0 +1,16 @@
+{
+ "id": "schrodinger",
+ "real": true,
+ "centre": {
+  "lat": -75,
+  "lon": 132.4
+ },
+ "extent_m": 3000,
+ "source_res_m": 34.1,
+ "elevation": "USGS Kaguya TC stereo DTM TC1W2B0_01_01899S756E1325__TC2W2B0_01_01899S748E1326",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 10.8,
+ "z_min": -4669.58,
+ "z_max": -4600.02,
+ "pixel_m": 11.719
+}

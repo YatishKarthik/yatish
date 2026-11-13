@@ -1,0 +1,16 @@
+{
+ "id": "kilauea",
+ "real": true,
+ "centre": {
+  "lat": 19.41,
+  "lon": -155.28
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_5QKB_20231029_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 1021.9,
+ "z_max": 1245.11,
+ "pixel_m": 11.719
+}

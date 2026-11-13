@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { bodyName } from '../data/select';
 import { pathProfile } from '../data/tiles';
 import type { World } from '../data/types';
 import { SeamCanvas } from '../scenes/SeamCanvas';
@@ -9,7 +10,7 @@ import { slipHiss } from '../ui/sound';
 import { Hud, MissingTiles, NotFound } from './SeamView';
 import { useSeam } from './useSeam';
 
-function Profile({ world, heights, result, lengthM }: { world: World; heights: Float32Array; result: TrialResult; lengthM: number }) {
+function Profile({ world, label, heights, result, lengthM }: { world: World; label: string; heights: Float32Array; result: TrialResult; lengthM: number }) {
   const t = useStore((s) => s.trial.t);
   const st = sampleAt(result, t);
   const W = 600, H = 70;
@@ -26,14 +27,14 @@ function Profile({ world, heights, result, lengthM }: { world: World; heights: F
   return (
     <div className="panel p-3">
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-5 font-mono text-sm">
-        <span style={{ color: colour }}>{world.toUpperCase()}</span>
+        <span style={{ color: colour }}>{label.toUpperCase()}</span>
         <span>slip {(st.slip * 100).toFixed(0)}%</span>
         <span>speed {st.speed.toFixed(2)} m/s</span>
         <span>slope {st.slopeDeg.toFixed(1)}°</span>
         <span>{st.dist.toFixed(0)} / {lengthM.toFixed(0)} m</span>
         <span className="font-semibold" style={{ color: done ? (result.outcome === 'PASS' ? '#3fb950' : '#f85149') : '#9aa4b2' }}>{done ? result.outcome : 'RUNNING'}</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${world} elevation along the path, relief ${span.toFixed(0)} metres`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${label} elevation along the path, relief ${span.toFixed(0)} metres`}>
         {slipBands.map((bx, i) => <rect key={i} x={bx - 1} y={0} width={3} height={H} fill="#f85149" opacity={0.35} />)}
         <path d={d} fill="none" stroke={colour} strokeWidth={1.5} />
         <line x1={x} x2={x} y1={0} y2={H} stroke="#e6e9ef" strokeWidth={1} />
@@ -86,13 +87,14 @@ export function TrialView() {
 
   if (!site) return <NotFound what="Site" />;
   const done = !!run && trial.t >= run.end;
+  const B = bodyName(target);
   let sentence = '';
   if (run && done) {
     const e = run.earth, m = run.mars;
     if (e.outcome === 'PASS' && m.outcome === 'PASS')
-      sentence = `Both rovers finish. Steepest climb ${e.maxSlopeDeg.toFixed(1)}° on Earth, ${m.maxSlopeDeg.toFixed(1)}° on Mars.`;
-    else if (e.outcome === 'PASS') sentence = `Passes on Earth, sticks on Mars on a ${m.maxSlopeDeg.toFixed(1)}° climb.`;
-    else if (m.outcome === 'PASS') sentence = 'Sticks on Earth, passes on Mars.';
+      sentence = `Both rovers finish. Steepest climb ${e.maxSlopeDeg.toFixed(1)}° on Earth, ${m.maxSlopeDeg.toFixed(1)}° on ${B}.`;
+    else if (e.outcome === 'PASS') sentence = `Passes on Earth, sticks on ${B} on a ${m.maxSlopeDeg.toFixed(1)}° climb.`;
+    else if (m.outcome === 'PASS') sentence = `Sticks on Earth, passes on ${B}.`;
     else sentence = 'Both rovers stick on this path.';
   }
 
@@ -104,12 +106,12 @@ export function TrialView() {
       </div>
       <div className={`viewport ${director ? 'letterbox !max-h-[60vh]' : 'h-[44vh] min-h-[280px]'}`}>
         {tiles && run
-          ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode="split" earthLabel={site.name} marsLabel={target.name} earthClass={site.class.name} marsClass={target.class?.name} trial={run} />
+          ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode="split" earthLabel={site.name} marsLabel={target.name} earthClass={site.class.name} marsClass={target.class?.name} body={B.toUpperCase()} trial={run} />
           : <div className="flex h-full items-center justify-center px-5 text-center font-mono text-sm text-dim">
               {tiles && !friction ? 'The trial needs a friction table in sites.json.' : 'Loading terrain…'}
             </div>}
         <div className="fx" />
-        <Hud extra="Click the terrain to move the path" />
+        <Hud extra="Click the terrain to move the path" body={B.toUpperCase()} />
         {tiles && <MissingTiles earth={tiles.earth.missing} mars={tiles.mars.missing} />}
       </div>
 
@@ -129,7 +131,7 @@ export function TrialView() {
               {done && (
                 <>
                   <span className="stamp !rotate-0 text-base" style={{ color: run.mars.outcome === 'PASS' && run.earth.outcome === 'PASS' ? '#3fb950' : '#f85149', borderColor: 'currentColor' }}>
-                    EARTH {run.earth.outcome} / MARS {run.mars.outcome}
+                    EARTH {run.earth.outcome} / {B.toUpperCase()} {run.mars.outcome}
                   </span>
                   <span className="max-w-3xl text-sm">{sentence}</span>
                 </>
@@ -137,11 +139,11 @@ export function TrialView() {
             </div>
           </div>
           <div className="grid gap-3 lg:grid-cols-2">
-            <Profile world="earth" heights={run.hE} result={run.earth} lengthM={run.lengthM} />
-            <Profile world="mars" heights={run.hM} result={run.mars} lengthM={run.lengthM} />
+            <Profile world="earth" label="Earth" heights={run.hE} result={run.earth} lengthM={run.lengthM} />
+            <Profile world="mars" label={B} heights={run.hM} result={run.mars} lengthM={run.lengthM} />
           </div>
           <p className="hide-in-director caps">
-            Gravity {data.planets.earth.gravity} / {data.planets[target.body].gravity} m/s² · friction μ {run.muE} / {run.muM} · terrain {tiles?.earth.hf.sourceResM} m / {tiles?.mars.hf.sourceResM} m (Earth / Mars)
+            Gravity {data.planets.earth.gravity} / {data.planets[target.body].gravity} m/s² · friction μ {run.muE} / {run.muM} · terrain {tiles?.earth.hf.sourceResM} m / {tiles?.mars.hf.sourceResM} m (Earth / {B})
           </p>
         </>
       )}

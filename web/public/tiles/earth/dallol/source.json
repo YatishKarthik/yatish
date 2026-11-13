@@ -1,0 +1,16 @@
+{
+ "id": "dallol",
+ "real": true,
+ "centre": {
+  "lat": 14.24,
+  "lon": 40.3
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2B_37PFR_20231010_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": -124.83,
+ "z_max": -80.95,
+ "pixel_m": 11.719
+}

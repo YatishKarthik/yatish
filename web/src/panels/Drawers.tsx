@@ -2,7 +2,7 @@ import type { Site } from '../data/types';
 
 export const LIMITATIONS = [
   'Temperature curves are compared by shape and rank within each planet, not as absolute temperatures.',
-  'Mars thermal data is far coarser than the terrain shown.',
+  'Thermal data for Mars and the Moon is far coarser than the terrain shown.',
 ];
 
 export function DossierDrawer({ site }: { site: Site }) {

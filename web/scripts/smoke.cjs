@@ -24,7 +24,7 @@ const fail = (msg) => { throw new Error(msg); };
     await page.goto(`${B}/?nointro`);
     await page.waitForSelector('canvas');
     await page.getByRole('button', { name: 'Mars', exact: true }).first().click();
-    await page.getByRole('button', { name: /Gale crater/ }).first().click();
+    await page.locator('aside').getByRole('button', { name: /Gale crater/ }).click();
     await page.waitForSelector('text=Ground like Gale crater');
     if (figDir) { await page.waitForTimeout(2500); await page.screenshot({ path: path.join(figDir, 'system-earth.png') }); }
 

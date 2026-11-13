@@ -1,0 +1,16 @@
+{
+ "id": "hadley",
+ "real": true,
+ "centre": {
+  "lat": 26.13,
+  "lon": 3.63
+ },
+ "extent_m": 3000,
+ "source_res_m": 29.3,
+ "elevation": "USGS Kaguya TC stereo DTM TC2W2B0_01_01686N255E0033__TC1W2B0_01_01686N258E0033",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 29.3,
+ "z_min": -2413.24,
+ "z_max": -1891.33,
+ "pixel_m": 11.719
+}

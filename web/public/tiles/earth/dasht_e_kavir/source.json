@@ -1,0 +1,16 @@
+{
+ "id": "dasht_e_kavir",
+ "real": true,
+ "centre": {
+  "lat": 34.5,
+  "lon": 54.5
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_40SBD_20231006_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 712.51,
+ "z_max": 715.2,
+ "pixel_m": 11.719
+}

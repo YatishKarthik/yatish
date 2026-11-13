@@ -1,0 +1,16 @@
+{
+ "id": "white_desert",
+ "real": true,
+ "centre": {
+  "lat": 27.3,
+  "lon": 28
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2B_35RNL_20231028_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 0,
+ "z_max": 97.06,
+ "pixel_m": 11.719
+}

@@ -1,0 +1,16 @@
+{
+ "id": "lake_eyre",
+ "real": true,
+ "centre": {
+  "lat": -28.4,
+  "lon": 137.3
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2B_53JQJ_20231014_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": -15.5,
+ "z_max": -13.85,
+ "pixel_m": 11.719
+}

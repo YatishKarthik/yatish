@@ -20,6 +20,7 @@ export function resolutionLabel(s: Site | Target): string {
     if (s.curve_source === 'MODIS_2PT') return '1 km MODIS · 2-point';
     return `70 m ECOSTRESS · ${s.curve_scenes} scenes · 24 bins`;
   }
+  if (s.body === 'moon') return 'LRO Diviner · 24 bins';
   return s.curve_source === 'TES_DERIVED' ? '3 km TES · model curve' : 'Hope EMIRS L3 · 24 bins';
 }
 
@@ -31,6 +32,9 @@ export function tempColour(t: number): string {
   const c = RAMP[i].map((v, k) => Math.round(v + (RAMP[i + 1][k] - v) * f));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
+
+/** Display name of a target's world. */
+export const bodyName = (t: { body: string }) => (t.body === 'moon' ? 'Moon' : 'Mars');
 
 export const PERMIT: Record<Level, { word: string; colour: string }> = {
   green: { word: 'PERMITTED', colour: '#3fb950' },

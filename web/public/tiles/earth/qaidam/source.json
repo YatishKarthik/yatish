@@ -1,0 +1,16 @@
+{
+ "id": "qaidam",
+ "real": true,
+ "centre": {
+  "lat": 38.5,
+  "lon": 91.4
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_46SCH_20231031_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 2726.18,
+ "z_max": 2778.38,
+ "pixel_m": 11.719
+}

@@ -1,0 +1,16 @@
+{
+ "id": "badwater",
+ "real": true,
+ "centre": {
+  "lat": 36.23,
+  "lon": -116.77
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_11SNA_20231020_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": -86.09,
+ "z_max": 777.27,
+ "pixel_m": 11.719
+}

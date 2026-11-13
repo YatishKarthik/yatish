@@ -1,0 +1,16 @@
+{
+ "id": "malapert",
+ "real": true,
+ "centre": {
+  "lat": -85.9,
+  "lon": 0
+ },
+ "extent_m": 3000,
+ "source_res_m": 29.5,
+ "elevation": "USGS Kaguya TC stereo DTM TC1W2B0_01_02682S861E0010__TC2W2B0_01_02682S857E0017",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 9.7,
+ "z_min": 2988.67,
+ "z_max": 4783.39,
+ "pixel_m": 11.719
+}

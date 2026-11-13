@@ -43,6 +43,19 @@ The app is a mission-ops console: a dark bench with instruments on it, where the
 | Director frame 2.39:1 with timecode | decorative, director mode only |
 | Sound: site tone, stamp click, slip hiss | decorative, off by default, opt-in |
 
+## System view
+
+The entry screen is deliberately more atmospheric than the working views.
+
+| Effect | Purpose |
+|---|---|
+| Planet turns to face the chosen target or sites | information |
+| Camera zoom to the chosen body, lens tightens | information: focus |
+| Coloured dust band, twinkling stars, shooting stars | decorative; off or still with reduced motion |
+| Atmosphere rim on each body | decorative |
+| Saturation +45 % on this view's canvas only | decorative; data views are untouched so ramp colours stay exact |
+| Slow camera float | decorative; off with reduced motion |
+
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).

@@ -1,0 +1,16 @@
+{
+ "id": "taklamakan",
+ "real": true,
+ "centre": {
+  "lat": 39,
+  "lon": 83
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_44SPJ_20231013_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 0,
+ "z_max": 1133.98,
+ "pixel_m": 11.719
+}

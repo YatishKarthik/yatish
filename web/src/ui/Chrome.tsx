@@ -24,12 +24,16 @@ export function Chrome({ children }: { children: ReactNode }) {
         </nav>
         <div className="ml-auto flex flex-wrap items-center gap-3">
           {data && (
-            <div role="group" aria-label="Mars target" className="flex items-center gap-1">
-              <span className="caps mr-1 hidden md:inline">Target</span>
-              {data.targets.map((t) => (
-                <button key={t.id} type="button" className="btn !min-h-[36px]" aria-pressed={t.id === target} onClick={() => setTarget(t.id)}>{t.name.split(' ')[0]}</button>
-              ))}
-            </div>
+            <label className="flex items-center gap-2">
+              <span className="caps hidden md:inline">Target</span>
+              <select value={target} onChange={(e) => setTarget(e.target.value)} className="min-h-[36px] rounded border border-line bg-panel px-2 font-mono text-sm text-ink">
+                {(['mars', 'moon'] as const).map((b) => data.targets.some((t) => t.body === b) && (
+                  <optgroup key={b} label={b === 'mars' ? 'Mars' : 'Moon'}>
+                    {data.targets.filter((t) => t.body === b).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
           )}
           <button type="button" className="btn" aria-pressed={sound} onClick={() => { setSound(!sound); useStore.getState().set({ sound: !sound }); }}>
             Sound {sound ? 'on' : 'off'}

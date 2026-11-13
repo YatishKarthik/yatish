@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { asset } from '../data/load';
 import { rankedSites, siteIndex, targetIndex } from '../data/select';
+import { Atmosphere, Galaxy } from '../scenes/Galaxy';
 import { useStore, withTarget } from '../state/store';
 import { Num } from '../ui/Num';
 import { Seg } from '../ui/Seg';
@@ -13,10 +14,10 @@ type Body = 'earth' | 'mars' | 'moon';
 type Focus = Body | null;
 interface Pin { id: string; label: string; lat: number; lon: number; active?: boolean; onPick: () => void }
 
-const BODIES: Record<Body, { x: number; r: number; name: string }> = {
-  earth: { x: -3.5, r: 1.3, name: 'Earth' },
-  mars: { x: 0.35, r: 0.95, name: 'Mars' },
-  moon: { x: 3.1, r: 0.6, name: 'Moon' },
+const BODIES: Record<Body, { x: number; r: number; name: string; glow: string; k: number }> = {
+  earth: { x: -3.5, r: 1.3, name: 'Earth', glow: '#4aa3ff', k: 1.1 },
+  mars: { x: 0.35, r: 0.95, name: 'Mars', glow: '#ff7a4a', k: 0.8 },
+  moon: { x: 3.1, r: 0.6, name: 'Moon', glow: '#cfd8ff', k: 0.45 },
 };
 const REDUCE = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DEG = Math.PI / 180;
@@ -57,7 +58,7 @@ function PinMark({ pin, r }: { pin: Pin; r: number }) {
 }
 
 function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus; pins: Pin[]; face: { lat: number; lon: number } | null; onPick: () => void }) {
-  const { x, r, name } = BODIES[body];
+  const { x, r, name, glow, k: glowK } = BODIES[body];
   const tex = useTexture(asset(`textures/${body}.jpg`));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
@@ -82,6 +83,7 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
 
   return (
     <group position={[x, 0, 0]}>
+      <Atmosphere r={r} colour={glow} strength={glowK} />
       <group ref={group}>
         <mesh onClick={(e) => { e.stopPropagation(); onPick(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
           <sphereGeometry args={[r, 96, 64]} />
@@ -96,23 +98,6 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
       )}
     </group>
   );
-}
-
-function Stars() {
-  const geo = useMemo(() => {
-    // fixed seed, so the sky is the same on every load
-    let s = 7;
-    const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    const n = 1400, pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const u = rnd() * 2 - 1, t = rnd() * Math.PI * 2, q = Math.sqrt(1 - u * u), R = 70;
-      pos[i * 3] = R * q * Math.cos(t); pos[i * 3 + 1] = R * u; pos[i * 3 + 2] = R * q * Math.sin(t);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    return g;
-  }, []);
-  return <points geometry={geo}><pointsMaterial size={1.4} sizeAttenuation={false} color="#9aa4b2" transparent opacity={0.6} /></points>;
 }
 
 /** Wide view of all three, or a close view with the chosen body on the left. The lens tightens as it moves in. */
@@ -131,6 +116,7 @@ function Rig({ focus }: { focus: Focus }) {
       fov = 30;
     }
     const k = REDUCE ? 1 : Math.min(1, dt * 2.6);
+    if (!REDUCE) { const t = performance.now() / 1000; want.x += Math.sin(t * 0.23) * 0.12; want.y += Math.sin(t * 0.31) * 0.08; }   // slow float
     camera.position.lerp(want, k);
     look.current.lerp(at, k);
     camera.lookAt(look.current);
@@ -152,24 +138,24 @@ export function SystemView() {
   const martian = data.targets.filter((t) => t.body === 'mars');
 
   const marsPins: Pin[] = martian.map((t) => ({ id: t.id, label: t.name, lat: t.lat, lon: t.lon, active: t.id === target.id, onPick: () => { setTarget(t.id); setFocus('earth'); } }));
-  const moonPins: Pin[] = lunar.map((t) => ({ id: t.id, label: t.name, lat: t.lat, lon: t.lon, onPick: () => { setTarget(t.id); setFocus('earth'); } }));
-  const earthPins: Pin[] = ranked.map((s, i) => ({ id: s.id, label: String(i + 1).padStart(2, '0'), lat: s.centroid.lat, lon: s.centroid.lon, active: s.id === hoverSite, onPick: () => setHoverSite(s.id) }));
+  const moonPins: Pin[] = lunar.map((t) => ({ id: t.id, label: t.name, lat: t.lat, lon: t.lon, active: t.id === target.id, onPick: () => { setTarget(t.id); setFocus('earth'); } }));
+  const earthPins: Pin[] = ranked.slice(0, 15).map((s, i) => ({ id: s.id, label: String(i + 1).padStart(2, '0'), lat: s.centroid.lat, lon: s.centroid.lon, active: s.id === hoverSite, onPick: () => setHoverSite(s.id) }));
 
   const mean = (xs: { lat: number; lon: number }[]) => (xs.length ? { lat: xs.reduce((a, b) => a + b.lat, 0) / xs.length, lon: xs.reduce((a, b) => a + b.lon, 0) / xs.length } : null);
   const face: Record<Body, { lat: number; lon: number } | null> = {
-    earth: mean(ranked.map((s) => s.centroid)),
+    earth: ranked[0]?.centroid ?? null,
     mars: target.body === 'mars' ? { lat: target.lat, lon: target.lon } : mean(martian),
-    moon: mean(lunar) ?? { lat: -60, lon: 0 },
+    moon: target.body === 'moon' ? { lat: target.lat, lon: target.lon } : mean(lunar) ?? { lat: -60, lon: 0 },
   };
   const pick = (b: Body) => { setFocus(b); if (b !== 'earth') setDest(b); };
 
   return (
     <div className="relative h-[calc(100vh-53px)] min-h-[520px] overflow-hidden">
-      <Canvas camera={{ position: [0, 0.5, 10.5], fov: 38, near: 0.1, far: 200 }} dpr={[1, 2]}
+      <Canvas style={{ filter: 'saturate(1.45) contrast(1.06)' }} camera={{ position: [0, 0.5, 10.5], fov: 38, near: 0.1, far: 300 }} dpr={[1, 2]}
         aria-label="Earth, Mars and the Moon. Choose a destination, then find matching ground on Earth.">
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[-3, 3, 10]} intensity={2.4} />
-        <Stars />
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[-3, 3, 10]} intensity={3.0} color="#fff4e6" />
+        <Galaxy />
         <Suspense fallback={null}>
           <Planet body="earth" focus={focus} pins={earthPins} face={face.earth} onPick={() => pick('earth')} />
           <Planet body="mars" focus={focus} pins={marsPins} face={face.mars} onPick={() => pick('mars')} />
@@ -213,17 +199,17 @@ export function SystemView() {
             <div className="panel p-3">
               <h2 className="head mb-2">Lunar targets</h2>
               {lunar.length
-                ? <ul className="space-y-1">{lunar.map((t) => <li key={t.id}><button type="button" className="row w-full border border-line px-3 py-2 text-left" onClick={() => { setTarget(t.id); setFocus('earth'); }}>{t.name}</button></li>)}</ul>
+                ? <ul className="space-y-1">{lunar.map((t) => <li key={t.id}><button type="button" aria-pressed={t.id === target.id} className={`row w-full border border-line px-3 py-2 text-left ${t.id === target.id ? '!border-ink' : ''}`} onClick={() => { setTarget(t.id); setFocus('earth'); }}><span className="block font-semibold">{t.name}</span><span className="block text-sm text-dim">{t.why}</span></button></li>)}</ul>
                 : <p className="text-sm text-dim">No lunar targets in this data yet. Shackleton rim is planned.</p>}
-              <button type="button" className="btn mt-3" onClick={() => { setDest('mars'); setFocus('mars'); }}>Go to Mars</button>
+              {!lunar.length && <button type="button" className="btn mt-3" onClick={() => { setDest('mars'); setFocus('mars'); }}>Go to Mars</button>}
             </div>
           )}
           {focus === 'earth' && (
             <div className="panel p-3">
               <h2 className="head mb-1">Ground like {target.name}</h2>
-              <p className="caps mb-2">ranked by closeness</p>
+              <p className="caps mb-2">top 10 of {ranked.length} by closeness</p>
               <ol className="space-y-1">
-                {ranked.map((s, i) => (
+                {ranked.slice(0, 10).map((s, i) => (
                   <li key={s.id}>
                     <Link to={withTarget(`/seam/${s.id}`)} onPointerEnter={() => setHoverSite(s.id)} onFocus={() => setHoverSite(s.id)}
                       className={`row flex items-center justify-between gap-3 border border-line px-3 py-2 ${hoverSite === s.id ? '!border-ink' : ''}`}>
@@ -237,7 +223,7 @@ export function SystemView() {
                   </li>
                 ))}
               </ol>
-              <Link to={withTarget('/sol')} className="btn mt-3 w-full">Compare their thermal days</Link>
+              <Link to={withTarget('/sol')} className="btn mt-3 w-full">See all {ranked.length} and their thermal days</Link>
             </div>
           )}
         </aside>

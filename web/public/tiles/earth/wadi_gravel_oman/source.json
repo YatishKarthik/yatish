@@ -1,0 +1,16 @@
+{
+ "id": "wadi_gravel_oman",
+ "real": true,
+ "centre": {
+  "lat": 22.3,
+  "lon": 57.6
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2B_40QEK_20231012_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 247.49,
+ "z_max": 266.66,
+ "pixel_m": 11.719
+}

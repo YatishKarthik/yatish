@@ -1,0 +1,16 @@
+{
+ "id": "erg_chebbi",
+ "real": true,
+ "centre": {
+  "lat": 31.15,
+  "lon": -4.02
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_30RVV_20231005_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 707.48,
+ "z_max": 808.37,
+ "pixel_m": 11.719
+}

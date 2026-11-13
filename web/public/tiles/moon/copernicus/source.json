@@ -1,0 +1,16 @@
+{
+ "id": "copernicus",
+ "real": true,
+ "centre": {
+  "lat": 9.62,
+  "lon": -20.08
+ },
+ "extent_m": 3000,
+ "source_res_m": 32.3,
+ "elevation": "USGS Kaguya TC stereo DTM TC1W2B0_01_05209N096E3402__TC2W2B0_01_05209N100E3402",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 32.3,
+ "z_min": -4083.31,
+ "z_max": -2749.03,
+ "pixel_m": 11.719
+}

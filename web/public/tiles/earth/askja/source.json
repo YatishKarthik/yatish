@@ -1,0 +1,16 @@
+{
+ "id": "askja",
+ "real": true,
+ "centre": {
+  "lat": 65.05,
+  "lon": -16.75
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_28WDT_20231031_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 1055.5,
+ "z_max": 1182.49,
+ "pixel_m": 11.719
+}

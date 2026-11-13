@@ -1,0 +1,16 @@
+{
+ "id": "marius",
+ "real": true,
+ "centre": {
+  "lat": 14,
+  "lon": -56
+ },
+ "extent_m": 3000,
+ "source_res_m": 33.7,
+ "elevation": "USGS Kaguya TC stereo DTM TC1W2B0_01_02742N140E3036__TC2W2B0_01_02742N145E3036",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 33.7,
+ "z_min": -1208.49,
+ "z_max": -1180.96,
+ "pixel_m": 11.719
+}

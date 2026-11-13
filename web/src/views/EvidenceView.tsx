@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { rankedSites, resolutionLabel, targetIndex } from '../data/select';
+import { bodyName, rankedSites, resolutionLabel, targetIndex } from '../data/select';
 import { LIMITATIONS } from '../panels/Drawers';
 import { useStore } from '../state/store';
 import { Num } from '../ui/Num';
@@ -48,12 +48,12 @@ export function EvidenceView() {
               <Tooltip {...TIP} formatter={(x) => (typeof x === 'number' ? x.toFixed(2) : String(x))} labelFormatter={(h) => `${h} h`} />
               <Legend verticalAlign="top" wrapperStyle={{ fontFamily: 'IBM Plex Mono', fontSize: 12 }} />
               <ReferenceLine x={hour} stroke="#e6e9ef" strokeDasharray="2 3" />
-              <Line name={`Mars · ${target.name}`} dataKey="target" stroke="#e0673a" strokeWidth={2} dot={false} isAnimationActive={false} />
+              <Line name={`${bodyName(target)} · ${target.name}`} dataKey="target" stroke="#e0673a" strokeWidth={2} dot={false} isAnimationActive={false} />
               <Line name={`Earth · ${site.name}`} dataKey="site" stroke="#4f8df7" strokeWidth={2} dot={twoPoint} strokeDasharray={twoPoint ? '4 4' : undefined} connectNulls isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <p className="caps">Earth: {resolutionLabel(site)} · Mars: {resolutionLabel(target)}{twoPoint ? ' · two measured points' : ''}</p>
+        <p className="caps">Earth: {resolutionLabel(site)} · {bodyName(target)}: {resolutionLabel(target)}{twoPoint ? ' · two measured points' : ''}</p>
       </section>
 
       <section className="panel p-3" aria-label="Controls">

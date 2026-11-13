@@ -1,4 +1,4 @@
-import { getPath, resolutionLabel } from '../data/select';
+import { bodyName, getPath, resolutionLabel } from '../data/select';
 import type { Site, Target } from '../data/types';
 import { useStore } from '../state/store';
 import { Num } from '../ui/Num';
@@ -46,9 +46,9 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
         <p className="caps mb-1">Percentile within each planet</p>
         <div className="space-y-1.5">
           <Bar label="Swing · Earth" path={`sites.${si}.features.amplitude_pct`} colour="#4f8df7" />
-          <Bar label="Swing · Mars" path={`targets.${ti}.features.amplitude_pct`} colour="#e0673a" />
+          <Bar label={`Swing · ${bodyName(target)}`} path={`targets.${ti}.features.amplitude_pct`} colour="#e0673a" />
           <Bar label="Inertia · Earth" path={`sites.${si}.features.ati_star_pct`} colour="#4f8df7" />
-          <Bar label="Inertia · Mars" path={`targets.${ti}.features.ati_star_pct`} colour="#e0673a" />
+          <Bar label={`Inertia · ${bodyName(target)}`} path={`targets.${ti}.features.ati_star_pct`} colour="#e0673a" />
         </div>
       </div>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
@@ -58,7 +58,7 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
         <dt className="caps">Roughness</dt>
         <dd><Num path={`sites.${si}.features.roughness_rms_m`} digits={1} unit=" m" /> <span className="text-dim">vs</span> <Num path={`targets.${ti}.features.roughness_rms_m`} digits={1} unit=" m" /></dd>
         <dt className="caps">Thermal data</dt><dd className="font-mono text-xs uppercase">{resolutionLabel(site)}</dd>
-        <dt className="caps">Mars data</dt><dd className="font-mono text-xs uppercase">{resolutionLabel(target)}</dd>
+        <dt className="caps">{bodyName(target)} data</dt><dd className="font-mono text-xs uppercase">{resolutionLabel(target)}</dd>
         <dt className="caps">Catalogue</dt>
         <dd>{site.catalogue.status}</dd>
       </dl>
