@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --hour: 14;
+  --motion-100: 100ms; --motion-150: 150ms; --motion-200: 200ms; --motion-300: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
+}
+html, body, #root { height: 100%; }
+body { @apply bg-page text-ink font-sans text-base antialiased; margin: 0; font-feature-settings: 'ss01', 'cv11'; }
+h1, h2, h3 { font-weight: 600; }
+:focus-visible { outline: 2px solid #d4ff3a; outline-offset: 2px; }
+button { cursor: pointer; }
+::selection { background: #d4ff3a; color: #090a0c; }
+
+@layer components {
+  /* L1 surface: hairline border plus a top edge light, no shadow, no blur */
+  .panel { @apply rounded border border-line bg-panel; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); }
+  .caps { @apply font-mono text-xs uppercase text-dim; letter-spacing: 0.12em; }
+  .display { @apply font-display uppercase; letter-spacing: 0.04em; }
+  .mock { outline: 1px dashed #f2a93b; outline-offset: 2px; }
+  .chip { @apply inline-flex items-center border border-line px-1.5 py-0.5 font-mono text-xs uppercase text-dim; letter-spacing: 0.08em; }
+  .btn {
+    @apply inline-flex min-h-[40px] items-center justify-center gap-2 rounded border border-line bg-panel px-3 text-sm font-medium text-ink;
+    transition: border-color var(--motion-150) var(--ease-out), background-color var(--motion-150) var(--ease-out), color var(--motion-150) var(--ease-out);
+  }
+  .btn:hover { border-color: #99a1ac; }
+  .btn[aria-pressed='true'] { @apply border-ink bg-ink text-page; }
+  .btn-primary { @apply border-accent bg-accent text-page; }
+  .btn-primary:hover { border-color: #eef0f2; }
+  .seam-handle { @apply flex h-10 w-10 cursor-ew-resize touch-none items-center justify-center rounded-full border border-accent bg-page text-accent; }
+  .stamp { @apply inline-block -rotate-6 border-2 px-2 py-0.5 font-mono text-sm font-semibold; letter-spacing: 0.18em; }
+
+  /* instrument viewport: corner registration marks frame the 3D scene */
+  .viewport { @apply relative overflow-hidden rounded border border-line bg-page; }
+  .viewport::before, .viewport::after {
+    content: ''; position: absolute; width: 18px; height: 18px; pointer-events: none; z-index: 5; border-color: #eef0f2; border-style: solid;
+  }
+  .viewport::before { left: 8px; bottom: 8px; border-width: 0 0 1px 1px; }
+  .viewport::after { right: 8px; bottom: 8px; border-width: 0 1px 1px 0; }
+
+  .row { transition: border-color var(--motion-150) var(--ease-out), background-color var(--motion-150) var(--ease-out); }
+  .row:hover { @apply border-dim bg-paper; }
+  .rise { animation: rise var(--motion-300) var(--ease-out) both; }
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* clock scrubber: a thin track with a square thumb, and hour ticks under it */
+input[type='range'].scrub { -webkit-appearance: none; appearance: none; height: 24px; background: transparent; }
+input[type='range'].scrub::-webkit-slider-runnable-track { height: 2px; background: #23272e; }
+input[type='range'].scrub::-moz-range-track { height: 2px; background: #23272e; }
+input[type='range'].scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 22px; margin-top: -10px; background: #d4ff3a; border: 0; border-radius: 1px; }
+input[type='range'].scrub::-moz-range-thumb { width: 10px; height: 22px; background: #d4ff3a; border: 0; border-radius: 1px; }
+.ticks { background-image: repeating-linear-gradient(90deg, #99a1ac 0 1px, transparent 1px calc(100% / 24)); background-size: calc(100% - 10px) 100%; background-position: 5px 0; background-repeat: no-repeat; height: 5px; opacity: 0.55; }
+
+/* one cursor line across every ribbon, driven by the clock */
+.hour-cursor { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: #d4ff3a; left: calc(var(--hour) / 24 * 100%); pointer-events: none; }
+
+.director .hide-in-director { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+}

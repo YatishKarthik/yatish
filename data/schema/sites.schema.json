@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Thermal Twin sites.json",
+  "type": "object",
+  "required": ["meta", "planets", "targets", "sites", "validation", "ai_use"],
+  "definitions": {
+    "curve": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 24, "maxItems": 24 },
+    "minerals": {
+      "type": ["object", "null"],
+      "required": ["basalt", "clay", "salt"],
+      "properties": { "basalt": { "type": "boolean" }, "clay": { "type": "boolean" }, "salt": { "type": "boolean" } }
+    },
+    "features": {
+      "type": "object",
+      "required": ["amplitude_ratio", "peak_hour", "night_slope", "ati_star_pct", "mean_slope_deg", "roughness_rms_m", "minerals"],
+      "properties": {
+        "amplitude_ratio": { "type": "number" },
+        "amplitude_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "peak_hour": { "type": ["number", "null"] },
+        "night_slope": { "type": ["number", "null"] },
+        "ati_star_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "mean_slope_deg": { "type": "number" },
+        "roughness_rms_m": { "type": "number" },
+        "minerals": { "$ref": "#/definitions/minerals" }
+      }
+    },
+    "class": {
+      "type": "object",
+      "required": ["id", "name", "label"],
+      "properties": { "id": { "type": "integer", "minimum": 0, "maximum": 3 }, "name": { "enum": ["fines", "gravel", "crust", "bedrock"] }, "label": { "type": "string" } }
+    },
+    "terrain_meta": {
+      "type": "object",
+      "required": ["z_min", "z_max", "pixel_m", "source_res_m"],
+      "properties": {
+        "z_min": { "type": "number" }, "z_max": { "type": "number" },
+        "pixel_m": { "type": "number", "exclusiveMinimum": 0 },
+        "source_res_m": { "type": "number", "exclusiveMinimum": 0 },
+        "thermal_res_m": { "type": "number" }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "required": ["level", "rule", "detail"],
+      "properties": { "level": { "enum": ["green", "yellow", "red"] }, "rule": { "type": "string" }, "detail": { "type": "string" }, "rule_id": { "type": "string" } }
+    },
+    "verdictSet": {
+      "type": "object",
+      "required": ["driving", "landing", "thermal"],
+      "properties": { "driving": { "$ref": "#/definitions/verdict" }, "landing": { "$ref": "#/definitions/verdict" }, "thermal": { "$ref": "#/definitions/verdict" } }
+    },
+    "closeness": {
+      "type": "object",
+      "required": ["total", "thermal", "terrain"],
+      "properties": { "total": { "type": "number" }, "thermal": { "type": "number" }, "terrain": { "type": "number" }, "minerals": { "type": ["number", "null"] } }
+    },
+    "planet": {
+      "type": "object",
+      "required": ["solar_flux_wm2", "gravity", "day_hours", "pressure_bar"],
+      "properties": { "solar_flux_wm2": { "type": "number" }, "gravity": { "type": "number" }, "day_hours": { "type": "number" }, "pressure_bar": { "type": "number" } }
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["generated_utc", "pipeline_version", "weights", "common_resolution_m", "earth_thermal_source", "mock"],
+      "properties": {
+        "generated_utc": { "type": "string" },
+        "pipeline_version": { "type": "string" },
+        "weights": { "type": "object", "required": ["thermal", "terrain", "minerals"] },
+        "common_resolution_m": { "type": "number" },
+        "earth_thermal_source": { "type": "string" },
+        "mock": { "type": "boolean" },
+        "formula": { "type": "array", "items": { "type": "string" } },
+        "friction": { "type": "object", "additionalProperties": { "type": "number" } },
+        "class_map": { "type": "array", "items": { "$ref": "#/definitions/class" } },
+        "demo": { "type": "object", "properties": { "target": { "type": "string" }, "lookalike": { "type": "string" }, "match": { "type": "string" } } }
+      }
+    },
+    "planets": {
+      "type": "object",
+      "required": ["earth", "mars"],
+      "additionalProperties": { "$ref": "#/definitions/planet" }
+    },
+    "targets": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "body", "name", "lat", "lon", "curve", "curve_source", "features", "terrain_tile", "texture_tile"],
+        "properties": {
+          "id": { "type": "string" }, "body": { "enum": ["mars", "moon"] }, "name": { "type": "string" },
+          "lat": { "type": "number" }, "lon": { "type": "number" }, "why": { "type": "string" },
+          "curve": { "$ref": "#/definitions/curve" }, "curve_source": { "type": "string" },
+          "features": { "$ref": "#/definitions/features" }, "class": { "$ref": "#/definitions/class" },
+          "tes_ti_pct": { "type": "number" }, "ground_truth": { "type": "string" },
+          "terrain_tile": { "type": "string" }, "texture_tile": { "type": "string" }, "satellite_tile": { "type": "string" },
+          "terrain_meta": { "$ref": "#/definitions/terrain_meta" }
+        }
+      }
+    },
+    "sites": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind", "centroid", "area_km2", "region", "curve", "curve_scenes", "curve_source", "features", "class", "closeness", "verdicts", "catalogue", "dossier", "limits", "terrain_tile", "texture_tile", "satellite_tile", "mock"],
+        "properties": {
+          "id": { "type": "string" }, "name": { "type": "string" },
+          "kind": { "enum": ["candidate", "positive_control", "negative_control"] },
+          "centroid": { "type": "object", "required": ["lat", "lon"] },
+          "area_km2": { "type": "number" }, "region": { "type": "string" },
+          "curve": { "$ref": "#/definitions/curve" }, "curve_scenes": { "type": "integer" }, "curve_source": { "type": "string" },
+          "features": { "$ref": "#/definitions/features" }, "class": { "$ref": "#/definitions/class" },
+          "closeness": { "type": "object", "additionalProperties": { "$ref": "#/definitions/closeness" } },
+          "verdicts": { "type": "object", "additionalProperties": { "$ref": "#/definitions/verdictSet" } },
+          "catalogue": {
+            "type": "object", "required": ["in_esa_cafe", "literature_hits", "status"],
+            "properties": { "in_esa_cafe": { "type": "boolean" }, "literature_hits": { "type": "integer" }, "status": { "type": "string" }, "checked_by": { "type": "string" }, "notes": { "type": "string" } }
+          },
+          "dossier": { "type": "object", "required": ["text", "generated_by", "model"], "properties": { "text": { "type": "string" }, "generated_by": { "type": "string" }, "model": { "type": "string" }, "inputs_hash": { "type": "string" } } },
+          "limits": { "type": "array", "items": { "type": "string" } },
+          "terrain_tile": { "type": "string" }, "texture_tile": { "type": "string" }, "satellite_tile": { "type": "string" },
+          "terrain_meta": { "$ref": "#/definitions/terrain_meta" },
+          "mock": { "type": "boolean" }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": ["controls", "rover_sites", "local", "passed"],
+      "properties": {
+        "controls": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "closeness_jezero", "pass"] } },
+        "rover_sites": { "type": "array", "items": { "type": "object", "required": ["id", "tes_ti_pct", "ground_truth", "consistent"] } },
+        "local": { "type": "array", "items": { "type": "object", "required": ["surface", "site_id", "ir_c_14h", "ir_c_06h", "swing_c", "sat_swing_rank", "order_match"] } },
+        "positive_min_closeness": { "type": "number" },
+        "negative_max_closeness": { "type": "number" },
+        "passed": { "type": "boolean" }
+      }
+    },
+    "ai_use": { "type": "array", "items": { "type": "string" } }
+  }
+}

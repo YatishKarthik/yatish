@@ -1,0 +1,1234 @@
+{
+ "meta": {
+  "generated_utc": "2026-11-13T00:00:00Z",
+  "pipeline_version": "0.0.0-mock",
+  "weights": {
+   "thermal": 0.6,
+   "terrain": 0.3,
+   "minerals": 0.1
+  },
+  "common_resolution_m": 100,
+  "earth_thermal_source": "ECOSTRESS_L2T_LSTE_V2",
+  "mock": true,
+  "formula": [
+   "d_th  = 0.5·|amp_pct_a − amp_pct_t| + 0.25·|peak_a − peak_t|/12 + 0.25·|night_pct_a − night_pct_t|",
+   "d_ter = 0.5·|slope_pct_a − slope_pct_t| + 0.5·|rough_pct_a − rough_pct_t|",
+   "d_min = 1 − (matching mineral flags)/3",
+   "C     = 100·(1 − (0.60·d_th + 0.30·d_ter + 0.10·d_min))"
+  ],
+  "friction": {
+   "fines": 0.35,
+   "gravel": 0.6,
+   "crust": 0.45,
+   "bedrock": 0.7
+  },
+  "class_map": [
+   {
+    "id": 0,
+    "name": "fines",
+    "label": "Loose fines — sinkage and dust tests"
+   },
+   {
+    "id": 1,
+    "name": "gravel",
+    "label": "Compact gravel — good trafficability, drill testing"
+   },
+   {
+    "id": 2,
+    "name": "crust",
+    "label": "Salt or duricrust — crust-breaking and corrosion tests"
+   },
+   {
+    "id": 3,
+    "name": "bedrock",
+    "label": "Exposed bedrock — coring and obstacle tests"
+   }
+  ],
+  "demo": {
+   "target": "jezero",
+   "lookalike": "dune_a",
+   "match": "gravel_plain_b"
+  }
+ },
+ "planets": {
+  "earth": {
+   "solar_flux_wm2": 1361,
+   "gravity": 9.81,
+   "day_hours": 24,
+   "pressure_bar": 1
+  },
+  "mars": {
+   "solar_flux_wm2": 586.2,
+   "gravity": 3.72,
+   "day_hours": 24.66,
+   "pressure_bar": 0.006
+  },
+  "moon": {
+   "solar_flux_wm2": 1361,
+   "gravity": 1.62,
+   "day_hours": 708.7,
+   "pressure_bar": 0
+  }
+ },
+ "targets": [
+  {
+   "id": "jezero",
+   "body": "mars",
+   "name": "Jezero crater",
+   "lat": 18.38,
+   "lon": 77.58,
+   "why": "Perseverance site; delta, clays, carbonates",
+   "curve": [
+    0.0726,
+    0.0472,
+    0.0291,
+    0.016,
+    0.0067,
+    0,
+    0.1623,
+    0.3694,
+    0.6211,
+    0.7445,
+    0.8542,
+    0.938,
+    0.9881,
+    1,
+    0.9725,
+    0.9082,
+    0.8128,
+    0.6959,
+    0.5691,
+    0.4395,
+    0.3228,
+    0.2265,
+    0.1575,
+    0.108
+   ],
+   "curve_source": "EMIRS_L3",
+   "features": {
+    "amplitude_ratio": 0.34,
+    "amplitude_pct": 55,
+    "peak_hour": 13.5,
+    "night_slope": -0.0395,
+    "ati_star_pct": 31,
+    "mean_slope_deg": 0.51,
+    "roughness_rms_m": 1.37,
+    "minerals": {
+     "basalt": true,
+     "clay": true,
+     "salt": false
+    }
+   },
+   "class": {
+    "id": 1,
+    "name": "gravel",
+    "label": "Compact gravel — good trafficability, drill testing"
+   },
+   "tes_ti_pct": 31,
+   "ground_truth": "Dusty plain, cobbles (Perseverance)",
+   "terrain_tile": "tiles/mars/jezero/height.png",
+   "texture_tile": "tiles/mars/jezero/colour_{h}.png",
+   "satellite_tile": "tiles/mars/jezero/sat.png",
+   "terrain_meta": {
+    "z_min": 23.54,
+    "z_max": 97.85,
+    "pixel_m": 46.875,
+    "source_res_m": 463,
+    "thermal_res_m": 3000
+   }
+  },
+  {
+   "id": "gale",
+   "body": "mars",
+   "name": "Gale crater",
+   "lat": -4.59,
+   "lon": 137.44,
+   "why": "Curiosity site; mixed sand and bedrock",
+   "curve": [
+    0.1455,
+    0.1078,
+    0.0769,
+    0.0516,
+    0.0308,
+    0.0139,
+    0,
+    0.1627,
+    0.3805,
+    0.646,
+    0.7762,
+    0.8812,
+    0.9559,
+    0.9963,
+    1,
+    0.9668,
+    0.8987,
+    0.7994,
+    0.6738,
+    0.536,
+    0.413,
+    0.3167,
+    0.2479,
+    0.1916
+   ],
+   "curve_source": "EMIRS_L3",
+   "features": {
+    "amplitude_ratio": 0.29,
+    "amplitude_pct": 34,
+    "peak_hour": 14.5,
+    "night_slope": -0.0478,
+    "ati_star_pct": 48,
+    "mean_slope_deg": 1.56,
+    "roughness_rms_m": 3.92,
+    "minerals": {
+     "basalt": true,
+     "clay": true,
+     "salt": true
+    }
+   },
+   "class": {
+    "id": 3,
+    "name": "bedrock",
+    "label": "Exposed bedrock — coring and obstacle tests"
+   },
+   "tes_ti_pct": 48,
+   "ground_truth": "Mixed sand and bedrock (Curiosity)",
+   "terrain_tile": "tiles/mars/gale/height.png",
+   "texture_tile": "tiles/mars/gale/colour_{h}.png",
+   "satellite_tile": "tiles/mars/gale/sat.png",
+   "terrain_meta": {
+    "z_min": 102.69,
+    "z_max": 406.19,
+    "pixel_m": 46.875,
+    "source_res_m": 463,
+    "thermal_res_m": 3000
+   }
+  },
+  {
+   "id": "arcadia",
+   "body": "mars",
+   "name": "Arcadia Planitia",
+   "lat": 40,
+   "lon": -170,
+   "why": "Human landing candidate; shallow ice",
+   "curve": [
+    0.0309,
+    0.0177,
+    0.0096,
+    0.0048,
+    0.0018,
+    0,
+    0.1828,
+    0.4029,
+    0.6638,
+    0.7779,
+    0.8825,
+    0.9604,
+    1,
+    0.9955,
+    0.9476,
+    0.8633,
+    0.7551,
+    0.642,
+    0.5148,
+    0.3783,
+    0.2464,
+    0.1483,
+    0.0889,
+    0.0528
+   ],
+   "curve_source": "EMIRS_L3",
+   "features": {
+    "amplitude_ratio": 0.41,
+    "amplitude_pct": 86,
+    "peak_hour": 12.5,
+    "night_slope": -0.0306,
+    "ati_star_pct": 14,
+    "mean_slope_deg": 0.08,
+    "roughness_rms_m": 0.2,
+    "minerals": {
+     "basalt": true,
+     "clay": false,
+     "salt": false
+    }
+   },
+   "class": {
+    "id": 0,
+    "name": "fines",
+    "label": "Loose fines — sinkage and dust tests"
+   },
+   "tes_ti_pct": 14,
+   "ground_truth": "Dust-mantled plain over shallow ice (orbital only)",
+   "terrain_tile": "tiles/mars/arcadia/height.png",
+   "texture_tile": "tiles/mars/arcadia/colour_{h}.png",
+   "satellite_tile": "tiles/mars/arcadia/sat.png",
+   "terrain_meta": {
+    "z_min": 4.78,
+    "z_max": 15.24,
+    "pixel_m": 46.875,
+    "source_res_m": 463,
+    "thermal_res_m": 3000
+   }
+  }
+ ],
+ "sites": [
+  {
+   "id": "dune_a",
+   "name": "Dune field A",
+   "kind": "candidate",
+   "centroid": {
+    "lat": 23.08,
+    "lon": 53.77
+   },
+   "area_km2": 9,
+   "region": "Liwa, Abu Dhabi, UAE",
+   "curve": [
+    0.0223,
+    0.0122,
+    0.0063,
+    0.003,
+    0.0011,
+    0,
+    0.1848,
+    0.4066,
+    0.6691,
+    0.7831,
+    0.8873,
+    0.9637,
+    1,
+    0.9908,
+    0.9374,
+    0.8481,
+    0.7374,
+    0.6264,
+    0.495,
+    0.3546,
+    0.2177,
+    0.1243,
+    0.0707,
+    0.0399
+   ],
+   "curve_scenes": 17,
+   "curve_source": "ECOSTRESS",
+   "features": {
+    "amplitude_ratio": 0.21,
+    "amplitude_pct": 92,
+    "peak_hour": 12.5,
+    "night_slope": -0.0271,
+    "ati_star_pct": 12,
+    "mean_slope_deg": 5.32,
+    "roughness_rms_m": 6,
+    "minerals": {
+     "basalt": false,
+     "clay": false,
+     "salt": false
+    }
+   },
+   "class": {
+    "id": 0,
+    "name": "fines",
+    "label": "Loose fines — sinkage and dust tests"
+   },
+   "closeness": {
+    "jezero": {
+     "total": 51,
+     "thermal": 48,
+     "terrain": 62,
+     "minerals": 33
+    },
+    "gale": {
+     "total": 41,
+     "thermal": 40,
+     "terrain": 45,
+     "minerals": 33
+    },
+    "arcadia": {
+     "total": 82,
+     "thermal": 86,
+     "terrain": 80,
+     "minerals": 67
+    }
+   },
+   "verdicts": {
+    "jezero": {
+     "driving": {
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 5.3° here vs 0.5° at Jezero crater (tolerance 3°). Not a mobility analog."
+     },
+     "landing": {
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 5.3° here vs 0.5° at Jezero crater (tolerance 3°). Touchdown hazard tests would not transfer."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "gale": {
+     "driving": {
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 5.3° here vs 1.6° at Gale crater (tolerance 3°). Not a mobility analog."
+     },
+     "landing": {
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 5.3° here vs 1.6° at Gale crater (tolerance 3°). Touchdown hazard tests would not transfer."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "arcadia": {
+     "driving": {
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 5.3° here vs 0.1° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
+     },
+     "landing": {
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 5.3° here vs 0.1° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    }
+   },
+   "catalogue": {
+    "in_esa_cafe": true,
+    "literature_hits": 6,
+    "status": "catalogued",
+    "checked_by": "MOCK",
+    "notes": "Liwa is a published analog."
+   },
+   "dossier": {
+    "text": "Placeholder dossier for Dune field A. Class fines; amplitude percentile 92; mean slope 5.3°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "generated_by": "MOCK",
+    "model": "mock-template",
+    "inputs_hash": "0000000000000000000000000000000000000000"
+   },
+   "limits": [
+    "Thermal behaviour, not material: two different materials can share a curve.",
+    "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
+    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
+   ],
+   "terrain_tile": "tiles/earth/dune_a/height.png",
+   "texture_tile": "tiles/earth/dune_a/colour_{h}.png",
+   "satellite_tile": "tiles/earth/dune_a/sat.png",
+   "terrain_meta": {
+    "z_min": 0.78,
+    "z_max": 61.22,
+    "pixel_m": 11.719,
+    "source_res_m": 100,
+    "thermal_res_m": 70
+   },
+   "mock": true
+  },
+  {
+   "id": "gravel_plain_b",
+   "name": "Gravel plain B",
+   "kind": "candidate",
+   "centroid": {
+    "lat": 23.9,
+    "lon": 54.8
+   },
+   "area_km2": 9,
+   "region": "Abu Dhabi, UAE",
+   "curve": [
+    0.0813,
+    0.0537,
+    0.0335,
+    0.0187,
+    0.0079,
+    0,
+    0.1573,
+    0.3593,
+    0.6066,
+    0.7309,
+    0.843,
+    0.9302,
+    0.9842,
+    1,
+    0.9763,
+    0.9152,
+    0.8222,
+    0.7065,
+    0.581,
+    0.4529,
+    0.3376,
+    0.2412,
+    0.1707,
+    0.1191
+   ],
+   "curve_scenes": 14,
+   "curve_source": "ECOSTRESS",
+   "features": {
+    "amplitude_ratio": 0.16,
+    "amplitude_pct": 58,
+    "peak_hour": 13.5,
+    "night_slope": -0.0412,
+    "ati_star_pct": 34,
+    "mean_slope_deg": 0.27,
+    "roughness_rms_m": 0.11,
+    "minerals": {
+     "basalt": true,
+     "clay": true,
+     "salt": false
+    }
+   },
+   "class": {
+    "id": 1,
+    "name": "gravel",
+    "label": "Compact gravel — good trafficability, drill testing"
+   },
+   "closeness": {
+    "jezero": {
+     "total": 90,
+     "thermal": 91,
+     "terrain": 84,
+     "minerals": 100
+    },
+    "gale": {
+     "total": 69,
+     "thermal": 70,
+     "terrain": 66,
+     "minerals": 67
+    },
+    "arcadia": {
+     "total": 59,
+     "thermal": 52,
+     "terrain": 71,
+     "minerals": 67
+    }
+   },
+   "verdicts": {
+    "jezero": {
+     "driving": {
+      "level": "green",
+      "rule_id": "R-DRV-01",
+      "rule": "Slope within 3°, roughness within one class, same thermal class",
+      "detail": "Slope 0.3° here vs 0.5° at Jezero crater (tolerance 3°). Traction tests transfer. Gravity ratio 0.38: wheel load is lower on Mars. Static friction angle for gravel is about 31° on both worlds (gravity cancels); the dynamic term in the trial is where gravity shows."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "gale": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.3° here vs 1.6° at Gale crater (tolerance 3°). Class here is gravel, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "arcadia": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.3° here vs 0.1° at Arcadia Planitia (tolerance 3°). Class here is gravel, target is fines. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    }
+   },
+   "catalogue": {
+    "in_esa_cafe": false,
+    "literature_hits": 0,
+    "status": "uncatalogued",
+    "checked_by": "MOCK",
+    "notes": ""
+   },
+   "dossier": {
+    "text": "Placeholder dossier for Gravel plain B. Class gravel; amplitude percentile 58; mean slope 0.3°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "generated_by": "MOCK",
+    "model": "mock-template",
+    "inputs_hash": "0000000000000000000000000000000000000000"
+   },
+   "limits": [
+    "Thermal behaviour, not material: two different materials can share a curve.",
+    "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
+    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
+   ],
+   "terrain_tile": "tiles/earth/gravel_plain_b/height.png",
+   "texture_tile": "tiles/earth/gravel_plain_b/colour_{h}.png",
+   "satellite_tile": "tiles/earth/gravel_plain_b/sat.png",
+   "terrain_meta": {
+    "z_min": 1.13,
+    "z_max": 16.04,
+    "pixel_m": 11.719,
+    "source_res_m": 100,
+    "thermal_res_m": 70
+   },
+   "mock": true
+  },
+  {
+   "id": "sabkha_c",
+   "name": "Inland sabkha C",
+   "kind": "candidate",
+   "centroid": {
+    "lat": 23.6,
+    "lon": 53.1
+   },
+   "area_km2": 9,
+   "region": "Al Dhafra, UAE",
+   "curve": [
+    0.0525,
+    0.0325,
+    0.0191,
+    0.0101,
+    0.004,
+    0,
+    0.1744,
+    0.3896,
+    0.6471,
+    0.765,
+    0.8711,
+    0.9512,
+    0.9959,
+    1,
+    0.9632,
+    0.8896,
+    0.7877,
+    0.6707,
+    0.5454,
+    0.4144,
+    0.2927,
+    0.1935,
+    0.127,
+    0.0824
+   ],
+   "curve_scenes": 0,
+   "curve_source": "MODIS_2PT",
+   "features": {
+    "amplitude_ratio": 0.18,
+    "amplitude_pct": 71,
+    "peak_hour": null,
+    "night_slope": null,
+    "ati_star_pct": 26,
+    "mean_slope_deg": 0.03,
+    "roughness_rms_m": 0.02,
+    "minerals": {
+     "basalt": false,
+     "clay": false,
+     "salt": true
+    }
+   },
+   "class": {
+    "id": 2,
+    "name": "crust",
+    "label": "Salt or duricrust — crust-breaking and corrosion tests"
+   },
+   "closeness": {
+    "jezero": {
+     "total": 65,
+     "thermal": 64,
+     "terrain": 78,
+     "minerals": 33
+    },
+    "gale": {
+     "total": 54,
+     "thermal": 55,
+     "terrain": 60,
+     "minerals": 33
+    },
+    "arcadia": {
+     "total": 64,
+     "thermal": 60,
+     "terrain": 82,
+     "minerals": 33
+    }
+   },
+   "verdicts": {
+    "jezero": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.0° here vs 0.5° at Jezero crater (tolerance 3°). Class here is crust, target is gravel. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "gale": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.0° here vs 1.6° at Gale crater (tolerance 3°). Class here is crust, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "arcadia": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.0° here vs 0.1° at Arcadia Planitia (tolerance 3°). Class here is crust, target is fines. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    }
+   },
+   "catalogue": {
+    "in_esa_cafe": true,
+    "literature_hits": 4,
+    "status": "catalogued",
+    "checked_by": "MOCK",
+    "notes": "Abu Dhabi sabkha is a published analog."
+   },
+   "dossier": {
+    "text": "Placeholder dossier for Inland sabkha C. Class crust; amplitude percentile 71; mean slope 0.0°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "generated_by": "MOCK",
+    "model": "mock-template",
+    "inputs_hash": "0000000000000000000000000000000000000000"
+   },
+   "limits": [
+    "Thermal behaviour, not material: two different materials can share a curve.",
+    "1 km MODIS pixel, two local times only; curve shape is not resolved.",
+    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
+   ],
+   "terrain_tile": "tiles/earth/sabkha_c/height.png",
+   "texture_tile": "tiles/earth/sabkha_c/colour_{h}.png",
+   "satellite_tile": "tiles/earth/sabkha_c/sat.png",
+   "terrain_meta": {
+    "z_min": 0.22,
+    "z_max": 1.05,
+    "pixel_m": 11.719,
+    "source_res_m": 100,
+    "thermal_res_m": 1000
+   },
+   "mock": true
+  },
+  {
+   "id": "ridge_d",
+   "name": "Ophiolite ridge D",
+   "kind": "candidate",
+   "centroid": {
+    "lat": 23.2,
+    "lon": 57.9
+   },
+   "area_km2": 9,
+   "region": "Hajar, Oman",
+   "curve": [
+    0.1582,
+    0.1198,
+    0.0872,
+    0.0597,
+    0.0364,
+    0.0167,
+    0,
+    0.1355,
+    0.3346,
+    0.5867,
+    0.7322,
+    0.8484,
+    0.9339,
+    0.9851,
+    1,
+    0.9777,
+    0.9194,
+    0.8275,
+    0.7055,
+    0.5566,
+    0.4241,
+    0.3205,
+    0.2572,
+    0.2036
+   ],
+   "curve_scenes": 9,
+   "curve_source": "ECOSTRESS",
+   "features": {
+    "amplitude_ratio": 0.1,
+    "amplitude_pct": 18,
+    "peak_hour": 14.5,
+    "night_slope": -0.0485,
+    "ati_star_pct": 71,
+    "mean_slope_deg": 11.49,
+    "roughness_rms_m": 11.32,
+    "minerals": {
+     "basalt": true,
+     "clay": true,
+     "salt": true
+    }
+   },
+   "class": {
+    "id": 3,
+    "name": "bedrock",
+    "label": "Exposed bedrock — coring and obstacle tests"
+   },
+   "closeness": {
+    "jezero": {
+     "total": 54,
+     "thermal": 58,
+     "terrain": 41,
+     "minerals": 67
+    },
+    "gale": {
+     "total": 87,
+     "thermal": 88,
+     "terrain": 79,
+     "minerals": 100
+    },
+    "arcadia": {
+     "total": 29,
+     "thermal": 30,
+     "terrain": 25,
+     "minerals": 33
+    }
+   },
+   "verdicts": {
+    "jezero": {
+     "driving": {
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 11.5° here vs 0.5° at Jezero crater (tolerance 3°). Not a mobility analog."
+     },
+     "landing": {
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 11.5° here vs 0.5° at Jezero crater (tolerance 3°). Touchdown hazard tests would not transfer."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "gale": {
+     "driving": {
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 11.5° here vs 1.6° at Gale crater (tolerance 3°). Not a mobility analog."
+     },
+     "landing": {
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 11.5° here vs 1.6° at Gale crater (tolerance 3°). Touchdown hazard tests would not transfer."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "arcadia": {
+     "driving": {
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 11.5° here vs 0.1° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
+     },
+     "landing": {
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 11.5° here vs 0.1° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    }
+   },
+   "catalogue": {
+    "in_esa_cafe": true,
+    "literature_hits": 9,
+    "status": "catalogued",
+    "checked_by": "MOCK",
+    "notes": "Samail ophiolite is a published analog."
+   },
+   "dossier": {
+    "text": "Placeholder dossier for Ophiolite ridge D. Class bedrock; amplitude percentile 18; mean slope 11.5°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "generated_by": "MOCK",
+    "model": "mock-template",
+    "inputs_hash": "0000000000000000000000000000000000000000"
+   },
+   "limits": [
+    "Thermal behaviour, not material: two different materials can share a curve.",
+    "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
+    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
+   ],
+   "terrain_tile": "tiles/earth/ridge_d/height.png",
+   "texture_tile": "tiles/earth/ridge_d/colour_{h}.png",
+   "satellite_tile": "tiles/earth/ridge_d/sat.png",
+   "terrain_meta": {
+    "z_min": 28.37,
+    "z_max": 226.38,
+    "pixel_m": 11.719,
+    "source_res_m": 100,
+    "thermal_res_m": 70
+   },
+   "mock": true
+  },
+  {
+   "id": "farm_al_ain",
+   "name": "Irrigated farm block",
+   "kind": "negative_control",
+   "centroid": {
+    "lat": 24.2,
+    "lon": 55.7
+   },
+   "area_km2": 9,
+   "region": "Al Ain, UAE",
+   "curve": [
+    0.1729,
+    0.138,
+    0.1073,
+    0.0802,
+    0.0562,
+    0.0351,
+    0.0165,
+    0,
+    0.1668,
+    0.3956,
+    0.6734,
+    0.8074,
+    0.9064,
+    0.971,
+    1,
+    0.9927,
+    0.9494,
+    0.8709,
+    0.7581,
+    0.6081,
+    0.4535,
+    0.3309,
+    0.2571,
+    0.2124
+   ],
+   "curve_scenes": 21,
+   "curve_source": "ECOSTRESS",
+   "features": {
+    "amplitude_ratio": 0.06,
+    "amplitude_pct": 4,
+    "peak_hour": 14.5,
+    "night_slope": -0.0497,
+    "ati_star_pct": 88,
+    "mean_slope_deg": 0.13,
+    "roughness_rms_m": 0.05,
+    "minerals": {
+     "basalt": false,
+     "clay": false,
+     "salt": false
+    }
+   },
+   "class": {
+    "id": 2,
+    "name": "crust",
+    "label": "Salt or duricrust — crust-breaking and corrosion tests"
+   },
+   "closeness": {
+    "jezero": {
+     "total": 24,
+     "thermal": 12,
+     "terrain": 55,
+     "minerals": 0
+    },
+    "gale": {
+     "total": 18,
+     "thermal": 10,
+     "terrain": 40,
+     "minerals": 0
+    },
+    "arcadia": {
+     "total": 24,
+     "thermal": 15,
+     "terrain": 50,
+     "minerals": 0
+    }
+   },
+   "verdicts": {
+    "jezero": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.1° here vs 0.5° at Jezero crater (tolerance 3°). Class here is crust, target is gravel. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "gale": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.1° here vs 1.6° at Gale crater (tolerance 3°). Class here is crust, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    },
+    "arcadia": {
+     "driving": {
+      "level": "yellow",
+      "rule_id": "R-DRV-02",
+      "rule": "Geometry matches but surface class differs",
+      "detail": "Slope 0.1° here vs 0.1° at Arcadia Planitia (tolerance 3°). Class here is crust, target is fines. Use for navigation and obstacle tests, not for sinkage."
+     },
+     "landing": {
+      "level": "yellow",
+      "rule_id": "R-LND-01",
+      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
+      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+     },
+     "thermal": {
+      "level": "red",
+      "rule_id": "R-THM-01",
+      "rule": "Earth has an atmosphere, soil moisture and convective night cooling",
+      "detail": "Thermal-instrument calibration can use the matched curve SHAPE, but absolute temperatures, drill heat rejection and ice-stability results will mislead. Apparent thermal inertia of the same material differs with pressure; a thin dust skin can halve it on either planet."
+     }
+    }
+   },
+   "catalogue": {
+    "in_esa_cafe": false,
+    "literature_hits": 0,
+    "status": "decoy",
+    "checked_by": "MOCK",
+    "notes": "Negative control."
+   },
+   "dossier": {
+    "text": "Placeholder dossier for Irrigated farm block. Class crust; amplitude percentile 4; mean slope 0.1°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "generated_by": "MOCK",
+    "model": "mock-template",
+    "inputs_hash": "0000000000000000000000000000000000000000"
+   },
+   "limits": [
+    "Thermal behaviour, not material: two different materials can share a curve.",
+    "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
+    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
+   ],
+   "terrain_tile": "tiles/earth/farm_al_ain/height.png",
+   "texture_tile": "tiles/earth/farm_al_ain/colour_{h}.png",
+   "satellite_tile": "tiles/earth/farm_al_ain/sat.png",
+   "terrain_meta": {
+    "z_min": 0.54,
+    "z_max": 7.78,
+    "pixel_m": 11.719,
+    "source_res_m": 100,
+    "thermal_res_m": 70
+   },
+   "mock": true
+  }
+ ],
+ "validation": {
+  "controls": [
+   {
+    "id": "atacama",
+    "name": "Atacama core",
+    "kind": "positive_control",
+    "closeness_jezero": 84,
+    "pass": true
+   },
+   {
+    "id": "death_valley",
+    "name": "Death Valley playa",
+    "kind": "positive_control",
+    "closeness_jezero": 77,
+    "pass": true
+   },
+   {
+    "id": "dry_valleys",
+    "name": "McMurdo Dry Valleys",
+    "kind": "positive_control",
+    "closeness_jezero": 81,
+    "pass": true
+   },
+   {
+    "id": "haughton",
+    "name": "Haughton crater floor",
+    "kind": "positive_control",
+    "closeness_jezero": 66,
+    "pass": true
+   },
+   {
+    "id": "farm_al_ain",
+    "name": "Irrigated farm, Al Ain",
+    "kind": "negative_control",
+    "closeness_jezero": 24,
+    "pass": true
+   },
+   {
+    "id": "forest_boreal",
+    "name": "Boreal forest patch",
+    "kind": "negative_control",
+    "closeness_jezero": 9,
+    "pass": true
+   }
+  ],
+  "rover_sites": [
+   {
+    "id": "gale",
+    "tes_ti_pct": 48,
+    "ground_truth": "Mixed sand and bedrock",
+    "consistent": true
+   },
+   {
+    "id": "jezero",
+    "tes_ti_pct": 31,
+    "ground_truth": "Dusty plain, cobbles",
+    "consistent": true
+   },
+   {
+    "id": "meridiani",
+    "tes_ti_pct": 12,
+    "ground_truth": "Fine sand, hematite spherules",
+    "consistent": true
+   },
+   {
+    "id": "gusev",
+    "tes_ti_pct": 38,
+    "ground_truth": "Dusty basalt plain with rocks",
+    "consistent": true
+   }
+  ],
+  "local": [
+   {
+    "surface": "sand",
+    "site_id": "dune_a",
+    "ir_c_14h": 48.2,
+    "ir_c_06h": 16.1,
+    "swing_c": 32.1,
+    "sat_swing_rank": 0.08,
+    "order_match": true
+   },
+   {
+    "surface": "gravel",
+    "site_id": "gravel_plain_b",
+    "ir_c_14h": 44,
+    "ir_c_06h": 19.5,
+    "swing_c": 24.5,
+    "sat_swing_rank": 0.42,
+    "order_match": true
+   },
+   {
+    "surface": "rock",
+    "site_id": "ridge_d",
+    "ir_c_14h": 41.3,
+    "ir_c_06h": 23.9,
+    "swing_c": 17.4,
+    "sat_swing_rank": 0.82,
+    "order_match": true
+   }
+  ],
+  "positive_min_closeness": 60,
+  "negative_max_closeness": 25,
+  "passed": true
+ },
+ "ai_use": [
+  "k-means surface classes (scikit-learn)",
+  "LLM dossiers from computed numbers, labelled",
+  "Code assistance (Claude Code)"
+ ]
+}
