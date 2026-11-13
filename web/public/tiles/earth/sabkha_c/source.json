@@ -1,0 +1,15 @@
+{
+ "real": true,
+ "centre": {
+  "lat": 23.4,
+  "lon": 52.3
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_39QXF_20231013_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 50.56,
+ "z_max": 67.85,
+ "pixel_m": 11.719
+}

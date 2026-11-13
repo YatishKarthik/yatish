@@ -1,0 +1,15 @@
+{
+ "real": true,
+ "centre": {
+  "lat": -4.59,
+  "lon": 137.44
+ },
+ "extent_m": 3000,
+ "source_res_m": 20,
+ "elevation": "USGS CTX stereo DTM D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 20,
+ "z_min": -4493.96,
+ "z_max": -4446.09,
+ "pixel_m": 11.719
+}

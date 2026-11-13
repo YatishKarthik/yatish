@@ -111,8 +111,8 @@
     "peak_hour": 13.5,
     "night_slope": -0.0395,
     "ati_star_pct": 31,
-    "mean_slope_deg": 0.51,
-    "roughness_rms_m": 1.37,
+    "mean_slope_deg": 2.21,
+    "roughness_rms_m": 1.53,
     "minerals": {
      "basalt": true,
      "clay": true,
@@ -130,11 +130,19 @@
    "texture_tile": "tiles/mars/jezero/colour_{h}.png",
    "satellite_tile": "tiles/mars/jezero/sat.png",
    "terrain_meta": {
-    "z_min": 23.54,
-    "z_max": 97.85,
-    "pixel_m": 46.875,
-    "source_res_m": 463,
+    "z_min": -2620.14,
+    "z_max": -2515.42,
+    "pixel_m": 11.719,
+    "source_res_m": 20.1,
     "thermal_res_m": 3000
+   },
+   "tile_source": {
+    "elevation": "USGS CTX stereo DTM J10_048842_1986_XN_18N282W__J11_048908_1986_XN_18N282W",
+    "imagery": "CTX orthoimage, same product",
+    "centre": {
+     "lat": 18.44,
+     "lon": 77.5
+    }
    }
   },
   {
@@ -177,8 +185,8 @@
     "peak_hour": 14.5,
     "night_slope": -0.0478,
     "ati_star_pct": 48,
-    "mean_slope_deg": 1.56,
-    "roughness_rms_m": 3.92,
+    "mean_slope_deg": 1.53,
+    "roughness_rms_m": 1.73,
     "minerals": {
      "basalt": true,
      "clay": true,
@@ -196,11 +204,19 @@
    "texture_tile": "tiles/mars/gale/colour_{h}.png",
    "satellite_tile": "tiles/mars/gale/sat.png",
    "terrain_meta": {
-    "z_min": 102.69,
-    "z_max": 406.19,
-    "pixel_m": 46.875,
-    "source_res_m": 463,
+    "z_min": -4493.96,
+    "z_max": -4446.09,
+    "pixel_m": 11.719,
+    "source_res_m": 20,
     "thermal_res_m": 3000
+   },
+   "tile_source": {
+    "elevation": "USGS CTX stereo DTM D03_028335_1754_XI_04S222W__D03_028269_1752_XI_04S222W",
+    "imagery": "CTX orthoimage, same product",
+    "centre": {
+     "lat": -4.59,
+     "lon": 137.44
+    }
    }
   },
   {
@@ -243,8 +259,8 @@
     "peak_hour": 12.5,
     "night_slope": -0.0306,
     "ati_star_pct": 14,
-    "mean_slope_deg": 0.08,
-    "roughness_rms_m": 0.2,
+    "mean_slope_deg": 1.23,
+    "roughness_rms_m": 1.13,
     "minerals": {
      "basalt": true,
      "clay": false,
@@ -262,11 +278,19 @@
    "texture_tile": "tiles/mars/arcadia/colour_{h}.png",
    "satellite_tile": "tiles/mars/arcadia/sat.png",
    "terrain_meta": {
-    "z_min": 4.78,
-    "z_max": 15.24,
-    "pixel_m": 46.875,
-    "source_res_m": 463,
+    "z_min": -4011.99,
+    "z_max": -3937.99,
+    "pixel_m": 11.719,
+    "source_res_m": 22.3,
     "thermal_res_m": 3000
+   },
+   "tile_source": {
+    "elevation": "USGS CTX stereo DTM N05_064174_2195_XN_39N170W__N05_064464_2195_XN_39N170W",
+    "imagery": "CTX orthoimage, same product",
+    "centre": {
+     "lat": 39.4,
+     "lon": -170.4
+    }
    }
   }
  ],
@@ -276,8 +300,8 @@
    "name": "Dune field A",
    "kind": "candidate",
    "centroid": {
-    "lat": 23.08,
-    "lon": 53.77
+    "lat": 23.02,
+    "lon": 53.8
    },
    "area_km2": 9,
    "region": "Liwa, Abu Dhabi, UAE",
@@ -315,8 +339,8 @@
     "peak_hour": 12.5,
     "night_slope": -0.0271,
     "ati_star_pct": 12,
-    "mean_slope_deg": 5.32,
-    "roughness_rms_m": 6,
+    "mean_slope_deg": 5.47,
+    "roughness_rms_m": 3.95,
     "minerals": {
      "basalt": false,
      "clay": false,
@@ -354,13 +378,13 @@
       "level": "red",
       "rule_id": "R-DRV-03",
       "rule": "Slope or roughness outside tolerance",
-      "detail": "Slope 5.3° here vs 0.5° at Jezero crater (tolerance 3°). Not a mobility analog."
+      "detail": "Slope 5.5° here vs 2.2° at Jezero crater (tolerance 3°). Not a mobility analog."
      },
      "landing": {
       "level": "red",
       "rule_id": "R-LND-02",
       "rule": "Surface hazard geometry differs",
-      "detail": "Slope 5.3° here vs 0.5° at Jezero crater (tolerance 3°). Touchdown hazard tests would not transfer."
+      "detail": "Slope 5.5° here vs 2.2° at Jezero crater (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -374,13 +398,13 @@
       "level": "red",
       "rule_id": "R-DRV-03",
       "rule": "Slope or roughness outside tolerance",
-      "detail": "Slope 5.3° here vs 1.6° at Gale crater (tolerance 3°). Not a mobility analog."
+      "detail": "Slope 5.5° here vs 1.5° at Gale crater (tolerance 3°). Not a mobility analog."
      },
      "landing": {
       "level": "red",
       "rule_id": "R-LND-02",
       "rule": "Surface hazard geometry differs",
-      "detail": "Slope 5.3° here vs 1.6° at Gale crater (tolerance 3°). Touchdown hazard tests would not transfer."
+      "detail": "Slope 5.5° here vs 1.5° at Gale crater (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -394,13 +418,13 @@
       "level": "red",
       "rule_id": "R-DRV-03",
       "rule": "Slope or roughness outside tolerance",
-      "detail": "Slope 5.3° here vs 0.1° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
+      "detail": "Slope 5.5° here vs 1.2° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
      },
      "landing": {
       "level": "red",
       "rule_id": "R-LND-02",
       "rule": "Surface hazard geometry differs",
-      "detail": "Slope 5.3° here vs 0.1° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
+      "detail": "Slope 5.5° here vs 1.2° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -418,7 +442,7 @@
     "notes": "Liwa is a published analog."
    },
    "dossier": {
-    "text": "Placeholder dossier for Dune field A. Class fines; amplitude percentile 92; mean slope 5.3°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "text": "Placeholder dossier for Dune field A. Class fines; amplitude percentile 92; mean slope 5.5°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
     "generated_by": "MOCK",
     "model": "mock-template",
     "inputs_hash": "0000000000000000000000000000000000000000"
@@ -426,31 +450,39 @@
    "limits": [
     "Thermal behaviour, not material: two different materials can share a curve.",
     "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
-    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.",
     "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
    ],
    "terrain_tile": "tiles/earth/dune_a/height.png",
    "texture_tile": "tiles/earth/dune_a/colour_{h}.png",
    "satellite_tile": "tiles/earth/dune_a/sat.png",
    "terrain_meta": {
-    "z_min": 0.78,
-    "z_max": 61.22,
+    "z_min": 88.27,
+    "z_max": 196.14,
     "pixel_m": 11.719,
-    "source_res_m": 100,
+    "source_res_m": 30,
     "thermal_res_m": 70
+   },
+   "tile_source": {
+    "elevation": "Copernicus DEM GLO-30",
+    "imagery": "Sentinel-2 L2A S2A_39QYF_20231003_0_L2A",
+    "centre": {
+     "lat": 23.02,
+     "lon": 53.8
+    }
    },
    "mock": true
   },
   {
    "id": "gravel_plain_b",
-   "name": "Gravel plain B",
+   "name": "Wadi gravel plain B",
    "kind": "candidate",
    "centroid": {
-    "lat": 23.9,
-    "lon": 54.8
+    "lat": 22.3,
+    "lon": 57.6
    },
    "area_km2": 9,
-   "region": "Abu Dhabi, UAE",
+   "region": "Ad Dakhiliyah, Oman",
    "curve": [
     0.0813,
     0.0537,
@@ -485,8 +517,8 @@
     "peak_hour": 13.5,
     "night_slope": -0.0412,
     "ati_star_pct": 34,
-    "mean_slope_deg": 0.27,
-    "roughness_rms_m": 0.11,
+    "mean_slope_deg": 0.81,
+    "roughness_rms_m": 1,
     "minerals": {
      "basalt": true,
      "clay": true,
@@ -524,7 +556,7 @@
       "level": "green",
       "rule_id": "R-DRV-01",
       "rule": "Slope within 3°, roughness within one class, same thermal class",
-      "detail": "Slope 0.3° here vs 0.5° at Jezero crater (tolerance 3°). Traction tests transfer. Gravity ratio 0.38: wheel load is lower on Mars. Static friction angle for gravel is about 31° on both worlds (gravity cancels); the dynamic term in the trial is where gravity shows."
+      "detail": "Slope 0.8° here vs 2.2° at Jezero crater (tolerance 3°). Traction tests transfer. Gravity ratio 0.38: wheel load is lower on Mars. Static friction angle for gravel is about 31° on both worlds (gravity cancels); the dynamic term in the trial is where gravity shows."
      },
      "landing": {
       "level": "yellow",
@@ -544,7 +576,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.3° here vs 1.6° at Gale crater (tolerance 3°). Class here is gravel, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 0.8° here vs 1.5° at Gale crater (tolerance 3°). Class here is gravel, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -564,7 +596,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.3° here vs 0.1° at Arcadia Planitia (tolerance 3°). Class here is gravel, target is fines. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 0.8° here vs 1.2° at Arcadia Planitia (tolerance 3°). Class here is gravel, target is fines. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -588,7 +620,7 @@
     "notes": ""
    },
    "dossier": {
-    "text": "Placeholder dossier for Gravel plain B. Class gravel; amplitude percentile 58; mean slope 0.3°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "text": "Placeholder dossier for Wadi gravel plain B. Class gravel; amplitude percentile 58; mean slope 0.8°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
     "generated_by": "MOCK",
     "model": "mock-template",
     "inputs_hash": "0000000000000000000000000000000000000000"
@@ -596,18 +628,26 @@
    "limits": [
     "Thermal behaviour, not material: two different materials can share a curve.",
     "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
-    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.",
     "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
    ],
    "terrain_tile": "tiles/earth/gravel_plain_b/height.png",
    "texture_tile": "tiles/earth/gravel_plain_b/colour_{h}.png",
    "satellite_tile": "tiles/earth/gravel_plain_b/sat.png",
    "terrain_meta": {
-    "z_min": 1.13,
-    "z_max": 16.04,
+    "z_min": 247.49,
+    "z_max": 266.66,
     "pixel_m": 11.719,
-    "source_res_m": 100,
+    "source_res_m": 30,
     "thermal_res_m": 70
+   },
+   "tile_source": {
+    "elevation": "Copernicus DEM GLO-30",
+    "imagery": "Sentinel-2 L2A S2B_40QEK_20231012_0_L2A",
+    "centre": {
+     "lat": 22.3,
+     "lon": 57.6
+    }
    },
    "mock": true
   },
@@ -616,11 +656,11 @@
    "name": "Inland sabkha C",
    "kind": "candidate",
    "centroid": {
-    "lat": 23.6,
-    "lon": 53.1
+    "lat": 23.4,
+    "lon": 52.3
    },
    "area_km2": 9,
-   "region": "Al Dhafra, UAE",
+   "region": "Sabkhat Matti, UAE",
    "curve": [
     0.0525,
     0.0325,
@@ -655,8 +695,8 @@
     "peak_hour": null,
     "night_slope": null,
     "ati_star_pct": 26,
-    "mean_slope_deg": 0.03,
-    "roughness_rms_m": 0.02,
+    "mean_slope_deg": 0.73,
+    "roughness_rms_m": 1.3,
     "minerals": {
      "basalt": false,
      "clay": false,
@@ -694,7 +734,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.0° here vs 0.5° at Jezero crater (tolerance 3°). Class here is crust, target is gravel. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 0.7° here vs 2.2° at Jezero crater (tolerance 3°). Class here is crust, target is gravel. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -714,7 +754,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.0° here vs 1.6° at Gale crater (tolerance 3°). Class here is crust, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 0.7° here vs 1.5° at Gale crater (tolerance 3°). Class here is crust, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -734,7 +774,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.0° here vs 0.1° at Arcadia Planitia (tolerance 3°). Class here is crust, target is fines. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 0.7° here vs 1.2° at Arcadia Planitia (tolerance 3°). Class here is crust, target is fines. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -758,7 +798,7 @@
     "notes": "Abu Dhabi sabkha is a published analog."
    },
    "dossier": {
-    "text": "Placeholder dossier for Inland sabkha C. Class crust; amplitude percentile 71; mean slope 0.0°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "text": "Placeholder dossier for Inland sabkha C. Class crust; amplitude percentile 71; mean slope 0.7°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
     "generated_by": "MOCK",
     "model": "mock-template",
     "inputs_hash": "0000000000000000000000000000000000000000"
@@ -766,31 +806,39 @@
    "limits": [
     "Thermal behaviour, not material: two different materials can share a curve.",
     "1 km MODIS pixel, two local times only; curve shape is not resolved.",
-    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.",
     "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
    ],
    "terrain_tile": "tiles/earth/sabkha_c/height.png",
    "texture_tile": "tiles/earth/sabkha_c/colour_{h}.png",
    "satellite_tile": "tiles/earth/sabkha_c/sat.png",
    "terrain_meta": {
-    "z_min": 0.22,
-    "z_max": 1.05,
+    "z_min": 50.56,
+    "z_max": 67.85,
     "pixel_m": 11.719,
-    "source_res_m": 100,
+    "source_res_m": 30,
     "thermal_res_m": 1000
+   },
+   "tile_source": {
+    "elevation": "Copernicus DEM GLO-30",
+    "imagery": "Sentinel-2 L2A S2A_39QXF_20231013_0_L2A",
+    "centre": {
+     "lat": 23.4,
+     "lon": 52.3
+    }
    },
    "mock": true
   },
   {
    "id": "ridge_d",
-   "name": "Ophiolite ridge D",
+   "name": "Hajar ridge D",
    "kind": "candidate",
    "centroid": {
-    "lat": 23.2,
-    "lon": 57.9
+    "lat": 23.05,
+    "lon": 58.45
    },
    "area_km2": 9,
-   "region": "Hajar, Oman",
+   "region": "Hajar mountains, Oman",
    "curve": [
     0.1582,
     0.1198,
@@ -825,8 +873,8 @@
     "peak_hour": 14.5,
     "night_slope": -0.0485,
     "ati_star_pct": 71,
-    "mean_slope_deg": 11.49,
-    "roughness_rms_m": 11.32,
+    "mean_slope_deg": 22.93,
+    "roughness_rms_m": 19.42,
     "minerals": {
      "basalt": true,
      "clay": true,
@@ -864,13 +912,13 @@
       "level": "red",
       "rule_id": "R-DRV-03",
       "rule": "Slope or roughness outside tolerance",
-      "detail": "Slope 11.5° here vs 0.5° at Jezero crater (tolerance 3°). Not a mobility analog."
+      "detail": "Slope 22.9° here vs 2.2° at Jezero crater (tolerance 3°). Not a mobility analog."
      },
      "landing": {
       "level": "red",
       "rule_id": "R-LND-02",
       "rule": "Surface hazard geometry differs",
-      "detail": "Slope 11.5° here vs 0.5° at Jezero crater (tolerance 3°). Touchdown hazard tests would not transfer."
+      "detail": "Slope 22.9° here vs 2.2° at Jezero crater (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -884,13 +932,13 @@
       "level": "red",
       "rule_id": "R-DRV-03",
       "rule": "Slope or roughness outside tolerance",
-      "detail": "Slope 11.5° here vs 1.6° at Gale crater (tolerance 3°). Not a mobility analog."
+      "detail": "Slope 22.9° here vs 1.5° at Gale crater (tolerance 3°). Not a mobility analog."
      },
      "landing": {
       "level": "red",
       "rule_id": "R-LND-02",
       "rule": "Surface hazard geometry differs",
-      "detail": "Slope 11.5° here vs 1.6° at Gale crater (tolerance 3°). Touchdown hazard tests would not transfer."
+      "detail": "Slope 22.9° here vs 1.5° at Gale crater (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -904,13 +952,13 @@
       "level": "red",
       "rule_id": "R-DRV-03",
       "rule": "Slope or roughness outside tolerance",
-      "detail": "Slope 11.5° here vs 0.1° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
+      "detail": "Slope 22.9° here vs 1.2° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
      },
      "landing": {
       "level": "red",
       "rule_id": "R-LND-02",
       "rule": "Surface hazard geometry differs",
-      "detail": "Slope 11.5° here vs 0.1° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
+      "detail": "Slope 22.9° here vs 1.2° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -925,10 +973,10 @@
     "literature_hits": 9,
     "status": "catalogued",
     "checked_by": "MOCK",
-    "notes": "Samail ophiolite is a published analog."
+    "notes": ""
    },
    "dossier": {
-    "text": "Placeholder dossier for Ophiolite ridge D. Class bedrock; amplitude percentile 18; mean slope 11.5°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "text": "Placeholder dossier for Hajar ridge D. Class bedrock; amplitude percentile 18; mean slope 22.9°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
     "generated_by": "MOCK",
     "model": "mock-template",
     "inputs_hash": "0000000000000000000000000000000000000000"
@@ -936,31 +984,39 @@
    "limits": [
     "Thermal behaviour, not material: two different materials can share a curve.",
     "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
-    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.",
     "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
    ],
    "terrain_tile": "tiles/earth/ridge_d/height.png",
    "texture_tile": "tiles/earth/ridge_d/colour_{h}.png",
    "satellite_tile": "tiles/earth/ridge_d/sat.png",
    "terrain_meta": {
-    "z_min": 28.37,
-    "z_max": 226.38,
+    "z_min": 692.13,
+    "z_max": 1301.6,
     "pixel_m": 11.719,
-    "source_res_m": 100,
+    "source_res_m": 30,
     "thermal_res_m": 70
+   },
+   "tile_source": {
+    "elevation": "Copernicus DEM GLO-30",
+    "imagery": "Sentinel-2 L2A S2B_40QFL_20231012_0_L2A",
+    "centre": {
+     "lat": 23.05,
+     "lon": 58.45
+    }
    },
    "mock": true
   },
   {
-   "id": "farm_al_ain",
-   "name": "Irrigated farm block",
+   "id": "farm_liwa",
+   "name": "Irrigated farms",
    "kind": "negative_control",
    "centroid": {
-    "lat": 24.2,
-    "lon": 55.7
+    "lat": 23.13,
+    "lon": 53.78
    },
    "area_km2": 9,
-   "region": "Al Ain, UAE",
+   "region": "Liwa oasis, UAE",
    "curve": [
     0.1729,
     0.138,
@@ -995,8 +1051,8 @@
     "peak_hour": 14.5,
     "night_slope": -0.0497,
     "ati_star_pct": 88,
-    "mean_slope_deg": 0.13,
-    "roughness_rms_m": 0.05,
+    "mean_slope_deg": 4.28,
+    "roughness_rms_m": 3.52,
     "minerals": {
      "basalt": false,
      "clay": false,
@@ -1034,7 +1090,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.1° here vs 0.5° at Jezero crater (tolerance 3°). Class here is crust, target is gravel. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 4.3° here vs 2.2° at Jezero crater (tolerance 3°). Class here is crust, target is gravel. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -1054,7 +1110,7 @@
       "level": "yellow",
       "rule_id": "R-DRV-02",
       "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.1° here vs 1.6° at Gale crater (tolerance 3°). Class here is crust, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
+      "detail": "Slope 4.3° here vs 1.5° at Gale crater (tolerance 3°). Class here is crust, target is bedrock. Use for navigation and obstacle tests, not for sinkage."
      },
      "landing": {
       "level": "yellow",
@@ -1071,16 +1127,16 @@
     },
     "arcadia": {
      "driving": {
-      "level": "yellow",
-      "rule_id": "R-DRV-02",
-      "rule": "Geometry matches but surface class differs",
-      "detail": "Slope 0.1° here vs 0.1° at Arcadia Planitia (tolerance 3°). Class here is crust, target is fines. Use for navigation and obstacle tests, not for sinkage."
+      "level": "red",
+      "rule_id": "R-DRV-03",
+      "rule": "Slope or roughness outside tolerance",
+      "detail": "Slope 4.3° here vs 1.2° at Arcadia Planitia (tolerance 3°). Not a mobility analog."
      },
      "landing": {
-      "level": "yellow",
-      "rule_id": "R-LND-01",
-      "rule": "Hazard geometry comparable; gravity 0.38× and surface pressure 0.006× Earth",
-      "detail": "Leg loads and tip-over geometry transfer; descent dynamics and plume–regolith interaction do not (0.6% of Earth pressure on Mars)."
+      "level": "red",
+      "rule_id": "R-LND-02",
+      "rule": "Surface hazard geometry differs",
+      "detail": "Slope 4.3° here vs 1.2° at Arcadia Planitia (tolerance 3°). Touchdown hazard tests would not transfer."
      },
      "thermal": {
       "level": "red",
@@ -1098,7 +1154,7 @@
     "notes": "Negative control."
    },
    "dossier": {
-    "text": "Placeholder dossier for Irrigated farm block. Class crust; amplitude percentile 4; mean slope 0.1°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
+    "text": "Placeholder dossier for Irrigated farms. Class crust; amplitude percentile 4; mean slope 4.3°. The real text is written by an LLM from the numbers on this page and is read by a human before freeze.",
     "generated_by": "MOCK",
     "model": "mock-template",
     "inputs_hash": "0000000000000000000000000000000000000000"
@@ -1106,18 +1162,26 @@
    "limits": [
     "Thermal behaviour, not material: two different materials can share a curve.",
     "70 m ECOSTRESS pixel; surface patches smaller than that are averaged.",
-    "Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.",
+    "Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.",
     "Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer."
    ],
-   "terrain_tile": "tiles/earth/farm_al_ain/height.png",
-   "texture_tile": "tiles/earth/farm_al_ain/colour_{h}.png",
-   "satellite_tile": "tiles/earth/farm_al_ain/sat.png",
+   "terrain_tile": "tiles/earth/farm_liwa/height.png",
+   "texture_tile": "tiles/earth/farm_liwa/colour_{h}.png",
+   "satellite_tile": "tiles/earth/farm_liwa/sat.png",
    "terrain_meta": {
-    "z_min": 0.54,
-    "z_max": 7.78,
+    "z_min": 95.51,
+    "z_max": 207.31,
     "pixel_m": 11.719,
-    "source_res_m": 100,
+    "source_res_m": 30,
     "thermal_res_m": 70
+   },
+   "tile_source": {
+    "elevation": "Copernicus DEM GLO-30",
+    "imagery": "Sentinel-2 L2A S2A_39QYF_20231003_0_L2A",
+    "centre": {
+     "lat": 23.13,
+     "lon": 53.78
+    }
    },
    "mock": true
   }
@@ -1153,8 +1217,8 @@
     "pass": true
    },
    {
-    "id": "farm_al_ain",
-    "name": "Irrigated farm, Al Ain",
+    "id": "farm_liwa",
+    "name": "Irrigated farms, Liwa",
     "kind": "negative_control",
     "closeness_jezero": 24,
     "pass": true

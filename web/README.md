@@ -25,6 +25,25 @@ The Mars target is kept in the URL hash (`#t=jezero`). Press `D` or open `/?dire
 
 To re-shoot the submission figures into `report/figures/`: `npm run build && node scripts/smoke.cjs --figures ../report/figures`.
 
+## Real terrain and imagery
+
+`node scripts/fetch-real.mjs` downloads real ground for the 3D tiles from open data on AWS, then `npm run mock` rebuilds `sites.json` around it:
+
+- Earth elevation: Copernicus DEM GLO-30 (© DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA).
+- Earth imagery: Sentinel-2 L2A true colour (contains modified Copernicus Sentinel data, 2023).
+- Mars elevation and imagery: USGS Astrogeology CTX stereo DTMs and orthoimages (NASA/JPL/MSSS/USGS).
+
+Terrain, imagery and the slope and roughness numbers are real. Thermal curves, closeness, classes and validation numbers are still mock until the pipeline replaces them.
+
+## Connecting the pipeline
+
+The app has no API. The pipeline's only job is to write files into `web/public/`:
+
+1. `web/public/data/sites.json`, valid against `data/schema/sites.schema.json`, with `meta.mock` and every `site.mock` set to `false`.
+2. For every site and target, a folder under `web/public/tiles/` holding `height.png` (16-bit grey, 256×256), `sat.png` and `colour_0.png` … `colour_23.png`, at the paths named in `sites.json`.
+
+Then run `npm run build` and deploy `web/dist/`. The app checks the schema on load and shows the reason if the file is rejected. Mock markers disappear once the flags are false.
+
 ## Data contract
 
 `../data/schema/sites.schema.json` is checked at load. The app needs these fields beyond BUILD_SPEC §4:

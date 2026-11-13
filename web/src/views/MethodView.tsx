@@ -4,8 +4,10 @@ import { Num } from '../ui/Num';
 const DATA_ROWS = [
   ['Earth surface temperature', 'NASA ECOSTRESS L2T LSTE v2', '70 m', 'many local times (ISS orbit)'],
   ['Earth temperature fallback', 'NASA MODIS MYD11A2', '1 km', '13:30 and 01:30 only'],
-  ['Earth elevation', 'Copernicus DEM GLO-30', '30 m → 100 m', '—'],
+  ['Earth elevation', 'Copernicus DEM GLO-30 (© DLR e.V. 2010–2014, © Airbus Defence and Space GmbH 2014–2018)', '30 m', '—'],
   ['Earth minerals', 'NASA EMIT L2A reflectance', '60 m', 'presence flags only'],
+  ['Earth imagery', 'Copernicus Sentinel-2 L2A true colour', '10 m', 'one clear scene'],
+  ['Mars terrain and imagery (3D view)', 'USGS Astrogeology CTX stereo DTM and orthoimage', '≈ 20 m / 6 m', '—'],
   ['Mars surface temperature', 'Hope EMIRS L3 (MBRSC / EMM)', '100–300 km', 'all local times'],
   ['Mars thermal inertia', 'MGS TES (Putzig & Mellon)', '≈ 3 km', 'night side'],
   ['Mars elevation', 'MOLA MEGDR', '463 m', 'upsampled for display'],

@@ -107,6 +107,8 @@ export function SeamView() {
         {tiles && (
           <p className="hide-in-director font-mono text-xs uppercase text-dim">
             {(extentM / 1000).toFixed(1)} km tile · elevation {tiles.earth.hf.sourceResM} m / {tiles.mars.hf.sourceResM} m · thermal {tiles.earth.hf.thermalResM} m / {tiles.mars.hf.thermalResM} m (Earth / Mars)
+            {site.tile_source && <><br />Earth: {site.tile_source.elevation} · {site.tile_source.imagery.split(' ').slice(0, 2).join(' ')}</>}
+            {target.tile_source && <><br />Mars: {target.tile_source.elevation.split(' ').slice(0, 4).join(' ')} and orthoimage</>}
           </p>
         )}
       </div>

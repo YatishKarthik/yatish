@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { cropPoint, heightAt, tileWidthM, type Heightfield, type TileSet } from '../data/tiles';
 
-export const EXAG = 2;            // vertical exaggeration, printed on screen
+export const EXAG = 1;            // true vertical scale, printed on screen
 export const KM = 1 / 1000;       // scene units are kilometres
 
 export function cropBase(hf: Heightfield, extentM: number): number {

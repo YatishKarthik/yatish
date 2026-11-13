@@ -11,6 +11,7 @@ export interface Features {
   ati_star_pct: number; mean_slope_deg: number; roughness_rms_m: number; minerals: Minerals | null;
 }
 export interface SurfaceClass { id: number; name: ClassName; label: string }
+export interface TileSource { elevation: string; imagery: string; centre?: { lat: number; lon: number } }
 export interface TerrainMeta { z_min: number; z_max: number; pixel_m: number; source_res_m: number; thermal_res_m?: number }
 export interface Verdict { level: Level; rule: string; detail: string; rule_id?: string }
 export type VerdictSet = Record<Scenario, Verdict>;
@@ -20,7 +21,7 @@ export interface Target {
   id: string; body: 'mars' | 'moon'; name: string; lat: number; lon: number; why?: string;
   curve: number[]; curve_source: string; features: Features; class?: SurfaceClass;
   tes_ti_pct?: number; ground_truth?: string;
-  terrain_tile: string; texture_tile: string; satellite_tile?: string; terrain_meta?: TerrainMeta;
+  terrain_tile: string; texture_tile: string; satellite_tile?: string; terrain_meta?: TerrainMeta; tile_source?: TileSource;
 }
 export interface Site {
   id: string; name: string; kind: 'candidate' | 'positive_control' | 'negative_control';
@@ -30,7 +31,7 @@ export interface Site {
   catalogue: { in_esa_cafe: boolean; literature_hits: number; status: string; checked_by?: string; notes?: string };
   dossier: { text: string; generated_by: string; model: string; inputs_hash?: string };
   limits: string[];
-  terrain_tile: string; texture_tile: string; satellite_tile: string; terrain_meta?: TerrainMeta; mock: boolean;
+  terrain_tile: string; texture_tile: string; satellite_tile: string; terrain_meta?: TerrainMeta; tile_source?: TileSource; mock: boolean;
 }
 export interface SitesJson {
   meta: {

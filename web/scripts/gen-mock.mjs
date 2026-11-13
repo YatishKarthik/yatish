@@ -1,7 +1,7 @@
 // Mock data generator for the front end. Deterministic: same bytes every run.
 // Writes public/data/sites.json and public/tiles/**. Everything it writes is flagged mock.
 // The real pipeline (pipeline/package) overwrites these files with the same contract.
-import { encode } from 'fast-png';
+import { decode, encode } from 'fast-png';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -128,8 +128,30 @@ function writePng(file, data, width, height, channels, depth) {
   fs.writeFileSync(file, encode({ width, height, data, channels, depth }));
 }
 
+/** Real terrain fetched by scripts/fetch-real.mjs, if this tile has it. Stats are taken on a 100 m grid. */
+function loadReal(dir) {
+  const f = path.join(dir, 'source.json');
+  if (!fs.existsSync(f)) return null;
+  const src = JSON.parse(fs.readFileSync(f, 'utf8'));
+  const img = decode(fs.readFileSync(path.join(dir, 'height.png')));
+  const h = new Float32Array(SIZE * SIZE);
+  for (let i = 0; i < h.length; i++) h[i] = src.z_min + (img.data[i] / 65535) * (src.z_max - src.z_min);
+  const n = Math.round(src.extent_m / 100) + 1, res = src.extent_m / (n - 1);
+  const at = (i, j) => h[Math.round((Math.min(n - 1, Math.max(0, j)) / (n - 1)) * (SIZE - 1)) * SIZE + Math.round((Math.min(n - 1, Math.max(0, i)) / (n - 1)) * (SIZE - 1))];
+  let slopeSum = 0, cnt = 0, res2 = 0;
+  for (let j = 1; j < n - 1; j++) for (let i = 1; i < n - 1; i++) {
+    slopeSum += (Math.atan(Math.hypot((at(i + 1, j) - at(i - 1, j)) / (2 * res), (at(i, j + 1) - at(i, j - 1)) / (2 * res))) * 180) / Math.PI;
+    let m = 0;
+    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) m += at(i + a, j + b);
+    res2 += (at(i, j) - m / 9) ** 2;
+    cnt++;
+  }
+  return { h, zMin: src.z_min, zMax: src.z_max, meanSlope: slopeSum / cnt, rough: Math.sqrt(res2 / cnt), src };
+}
+
 function writeTiles(dir, shape, T, curve, seed) {
   const { h, zMin, zMax } = T;
+  if (!T.src) {
   // height: 16-bit grey
   const h16 = new Uint16Array(SIZE * SIZE);
   for (let i = 0; i < h.length; i++) h16[i] = Math.round(((h[i] - zMin) / (zMax - zMin || 1)) * 65535);
@@ -146,6 +168,7 @@ function writeTiles(dir, shape, T, curve, seed) {
     for (let k = 0; k < 3; k++) sat[i * 3 + k] = Math.min(255, Math.round((c0[k] + (c1[k] - c0[k]) * t) * shade));
   }
   writePng(path.join(dir, 'sat.png'), sat, SIZE, SIZE, 3, 8);
+  }
   // hourly colour: site curve value, lightly modulated by sun-facing slope (mock only)
   const step = SIZE / THERM;
   for (let hour = 0; hour < 24; hour++) {
@@ -196,23 +219,23 @@ const TARGETS = [
 ];
 
 const SITES = [
-  { id: 'dune_a', name: 'Dune field A', kind: 'candidate', region: 'Liwa, Abu Dhabi, UAE', lat: 23.08, lon: 53.77, shape: 'dune', cls: 0, seed: 1,
+  { id: 'dune_a', name: 'Dune field A', kind: 'candidate', region: 'Liwa, Abu Dhabi, UAE', lat: 23.02, lon: 53.80, shape: 'dune', cls: 0, seed: 1,
     amp: 0.21, ampPct: 92, ati: 12, scenes: 17, source: 'ECOSTRESS', minerals: { basalt: false, clay: false, salt: false },
     cat: { in_esa_cafe: true, literature_hits: 6, status: 'catalogued', checked_by: 'MOCK', notes: 'Liwa is a published analog.' },
     close: { jezero: [48, 62, 33], gale: [40, 45, 33], arcadia: [86, 80, 67] } },
-  { id: 'gravel_plain_b', name: 'Gravel plain B', kind: 'candidate', region: 'Abu Dhabi, UAE', lat: 23.9, lon: 54.8, shape: 'gravel', cls: 1, seed: 2,
+  { id: 'gravel_plain_b', name: 'Wadi gravel plain B', kind: 'candidate', region: 'Ad Dakhiliyah, Oman', lat: 22.30, lon: 57.60, shape: 'gravel', cls: 1, seed: 2,
     amp: 0.16, ampPct: 58, ati: 34, scenes: 14, source: 'ECOSTRESS', minerals: { basalt: true, clay: true, salt: false },
     cat: { in_esa_cafe: false, literature_hits: 0, status: 'uncatalogued', checked_by: 'MOCK', notes: '' },
     close: { jezero: [91, 84, 100], gale: [70, 66, 67], arcadia: [52, 71, 67] } },
-  { id: 'sabkha_c', name: 'Inland sabkha C', kind: 'candidate', region: 'Al Dhafra, UAE', lat: 23.6, lon: 53.1, shape: 'sabkha', cls: 2, seed: 3,
+  { id: 'sabkha_c', name: 'Inland sabkha C', kind: 'candidate', region: 'Sabkhat Matti, UAE', lat: 23.40, lon: 52.30, shape: 'sabkha', cls: 2, seed: 3,
     amp: 0.18, ampPct: 71, ati: 26, scenes: 0, source: 'MODIS_2PT', minerals: { basalt: false, clay: false, salt: true },
     cat: { in_esa_cafe: true, literature_hits: 4, status: 'catalogued', checked_by: 'MOCK', notes: 'Abu Dhabi sabkha is a published analog.' },
     close: { jezero: [64, 78, 33], gale: [55, 60, 33], arcadia: [60, 82, 33] } },
-  { id: 'ridge_d', name: 'Ophiolite ridge D', kind: 'candidate', region: 'Hajar, Oman', lat: 23.2, lon: 57.9, shape: 'bedrock', cls: 3, seed: 4,
+  { id: 'ridge_d', name: 'Hajar ridge D', kind: 'candidate', region: 'Hajar mountains, Oman', lat: 23.05, lon: 58.45, shape: 'bedrock', cls: 3, seed: 4,
     amp: 0.1, ampPct: 18, ati: 71, scenes: 9, source: 'ECOSTRESS', minerals: { basalt: true, clay: true, salt: true },
-    cat: { in_esa_cafe: true, literature_hits: 9, status: 'catalogued', checked_by: 'MOCK', notes: 'Samail ophiolite is a published analog.' },
+    cat: { in_esa_cafe: true, literature_hits: 9, status: 'catalogued', checked_by: 'MOCK', notes: '' },
     close: { jezero: [58, 41, 67], gale: [88, 79, 100], arcadia: [30, 25, 33] } },
-  { id: 'farm_al_ain', name: 'Irrigated farm block', kind: 'negative_control', region: 'Al Ain, UAE', lat: 24.2, lon: 55.7, shape: 'farm', cls: 2, seed: 5,
+  { id: 'farm_liwa', name: 'Irrigated farms', kind: 'negative_control', region: 'Liwa oasis, UAE', lat: 23.13, lon: 53.78, shape: 'farm', cls: 2, seed: 5,
     amp: 0.06, ampPct: 4, ati: 88, scenes: 21, source: 'ECOSTRESS', minerals: { basalt: false, clay: false, salt: false },
     cat: { in_esa_cafe: false, literature_hits: 0, status: 'decoy', checked_by: 'MOCK', notes: 'Negative control.' },
     close: { jezero: [12, 55, 0], gale: [10, 40, 0], arcadia: [15, 50, 0] }, curveOverride: { peak: 14.8, tau: 8, depth: 0.7, p: 0.8 } },
@@ -248,13 +271,13 @@ function verdicts(site, tgt) {
 }
 
 // ---------- build ----------
-fs.rmSync(path.join(PUB, 'tiles'), { recursive: true, force: true });
 const EARTH_EXTENT = 3000, MARS_EXTENT = 12000;
 
 const targets = TARGETS.map((t) => {
-  const T = makeHeight(t.id, MARS_EXTENT, 463, t.seed);
+  const dir = path.join(PUB, 'tiles', 'mars', t.id);
+  const T = loadReal(dir) ?? makeHeight(t.id, MARS_EXTENT, 463, t.seed);
   const curve = makeCurve(t.curve);
-  writeTiles(path.join(PUB, 'tiles', 'mars', t.id), t.id, T, curve, t.seed);
+  writeTiles(dir, t.id, T, curve, t.seed);
   return {
     id: t.id, body: 'mars', name: t.name, lat: t.lat, lon: t.lon, why: t.why,
     curve, curve_source: t.source,
@@ -262,17 +285,19 @@ const targets = TARGETS.map((t) => {
       mean_slope_deg: +T.meanSlope.toFixed(2), roughness_rms_m: +T.rough.toFixed(2), minerals: t.minerals },
     class: CLASSES[t.cls], tes_ti_pct: t.tes, ground_truth: t.truth,
     terrain_tile: `tiles/mars/${t.id}/height.png`, texture_tile: `tiles/mars/${t.id}/colour_{h}.png`, satellite_tile: `tiles/mars/${t.id}/sat.png`,
-    terrain_meta: { z_min: +T.zMin.toFixed(2), z_max: +T.zMax.toFixed(2), pixel_m: +(MARS_EXTENT / SIZE).toFixed(3), source_res_m: 463, thermal_res_m: 3000 },
+    terrain_meta: { z_min: +T.zMin.toFixed(2), z_max: +T.zMax.toFixed(2), pixel_m: T.src?.pixel_m ?? +(MARS_EXTENT / SIZE).toFixed(3), source_res_m: T.src?.source_res_m ?? 463, thermal_res_m: 3000 },
+    ...(T.src ? { tile_source: { elevation: T.src.elevation, imagery: T.src.imagery, centre: T.src.centre } } : {}),
   };
 });
 
 const sites = SITES.map((s) => {
-  const T = makeHeight(s.shape, EARTH_EXTENT, 100, s.seed);
+  const dir = path.join(PUB, 'tiles', 'earth', s.id);
+  const T = loadReal(dir) ?? makeHeight(s.shape, EARTH_EXTENT, 100, s.seed);
   const curve = makeCurve(s.curveOverride ?? CURVES[s.cls]);
-  writeTiles(path.join(PUB, 'tiles', 'earth', s.id), s.shape, T, curve, s.seed);
+  writeTiles(dir, s.shape, T, curve, s.seed);
   const two = s.source === 'MODIS_2PT';
   const site = {
-    id: s.id, name: s.name, kind: s.kind, centroid: { lat: s.lat, lon: s.lon }, area_km2: 9.0, region: s.region,
+    id: s.id, name: s.name, kind: s.kind, centroid: T.src?.centre ?? { lat: s.lat, lon: s.lon }, area_km2: 9.0, region: s.region,
     curve, curve_scenes: s.scenes, curve_source: s.source,
     features: { amplitude_ratio: s.amp, amplitude_pct: s.ampPct, peak_hour: two ? null : peakHour(curve), night_slope: two ? null : nightSlope(curve),
       ati_star_pct: s.ati, mean_slope_deg: +T.meanSlope.toFixed(2), roughness_rms_m: +T.rough.toFixed(2), minerals: s.minerals },
@@ -285,11 +310,12 @@ const sites = SITES.map((s) => {
     limits: [
       'Thermal behaviour, not material: two different materials can share a curve.',
       two ? '1 km MODIS pixel, two local times only; curve shape is not resolved.' : '70 m ECOSTRESS pixel; surface patches smaller than that are averaged.',
-      'Elevation is 100 m on Earth and 463 m on Mars; rover-scale rocks and ripples are not in the terrain.',
+      'Elevation is 30 m on Earth and 20 m on Mars; rover-scale rocks and ripples are not in the terrain.',
       'Earth has moisture, wind and a thick atmosphere; absolute temperatures do not transfer.',
     ],
     terrain_tile: `tiles/earth/${s.id}/height.png`, texture_tile: `tiles/earth/${s.id}/colour_{h}.png`, satellite_tile: `tiles/earth/${s.id}/sat.png`,
-    terrain_meta: { z_min: +T.zMin.toFixed(2), z_max: +T.zMax.toFixed(2), pixel_m: +(EARTH_EXTENT / SIZE).toFixed(3), source_res_m: 100, thermal_res_m: two ? 1000 : 70 },
+    terrain_meta: { z_min: +T.zMin.toFixed(2), z_max: +T.zMax.toFixed(2), pixel_m: T.src?.pixel_m ?? +(EARTH_EXTENT / SIZE).toFixed(3), source_res_m: T.src?.source_res_m ?? 100, thermal_res_m: two ? 1000 : 70 },
+    ...(T.src ? { tile_source: { elevation: T.src.elevation, imagery: T.src.imagery, centre: T.src.centre } } : {}),
     mock: true,
   };
   for (const t of targets) site.verdicts[t.id] = verdicts(site, t);
@@ -316,7 +342,7 @@ const out = {
       { id: 'death_valley', name: 'Death Valley playa', kind: 'positive_control', closeness_jezero: 77, pass: true },
       { id: 'dry_valleys', name: 'McMurdo Dry Valleys', kind: 'positive_control', closeness_jezero: 81, pass: true },
       { id: 'haughton', name: 'Haughton crater floor', kind: 'positive_control', closeness_jezero: 66, pass: true },
-      { id: 'farm_al_ain', name: 'Irrigated farm, Al Ain', kind: 'negative_control', closeness_jezero: 24, pass: true },
+      { id: 'farm_liwa', name: 'Irrigated farms, Liwa', kind: 'negative_control', closeness_jezero: 24, pass: true },
       { id: 'forest_boreal', name: 'Boreal forest patch', kind: 'negative_control', closeness_jezero: 9, pass: true },
     ],
     rover_sites: [
