@@ -46,7 +46,7 @@ export function EvidenceView() {
               <CartesianGrid stroke="#23272e" />
               <XAxis dataKey="hour" type="number" domain={[0, 24]} ticks={[0, 6, 12, 18, 24]} {...AX} label={{ value: 'Local solar time (hours)', position: 'insideBottom', offset: -10, fill: '#99a1ac', fontSize: 12 }} />
               <YAxis domain={[0, 1]} {...AX} label={{ value: 'Normalised temperature (0–1)', angle: -90, position: 'insideLeft', fill: '#99a1ac', fontSize: 12, dy: 80 }} />
-              <Tooltip {...TIP} formatter={(x: number) => x.toFixed(2)} labelFormatter={(h) => `${h} h`} />
+              <Tooltip {...TIP} formatter={(x) => (typeof x === 'number' ? x.toFixed(2) : String(x))} labelFormatter={(h) => `${h} h`} />
               <Legend verticalAlign="top" wrapperStyle={{ fontFamily: 'Geist Mono Variable', fontSize: 12 }} />
               <ReferenceLine x={hour} stroke="#eef0f2" strokeDasharray="2 3" />
               <Line name={`Mars · ${target.name}`} dataKey="target" stroke="#f2b599" strokeWidth={2} dot={false} isAnimationActive={false} />

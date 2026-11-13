@@ -1,11 +1,11 @@
 # Thermal Twin — web app
 
-Static front end. It reads `public/data/sites.json` and the tiles under `public/tiles/`; it computes no scores.
+Static front end. Needs Node.js 20.19 or newer. It reads `public/data/sites.json` and the tiles under `public/tiles/`; it computes no scores.
 
 ```bash
 npm install
 npm run mock     # regenerate mock sites.json and tiles (deterministic)
-npm run dev      # local server
+npm run dev      # local server; open the http://localhost:5173 address it prints
 npm test         # unit tests: selectors and the rover trial
 npm run build    # type-check and build to dist/
 ```
