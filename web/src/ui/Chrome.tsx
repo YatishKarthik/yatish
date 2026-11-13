@@ -20,7 +20,7 @@ export function Chrome({ children }: { children: ReactNode }) {
       <header className="hide-in-director flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line bg-panel px-5 py-2">
         <NavLink to={{ pathname: '/', hash: `#t=${target}` }} className="head">Thermal&nbsp;Twin</NavLink>
         <nav className="flex gap-1" aria-label="Views">
-          {link('/', 'Sol')}{link('/evidence', 'Evidence')}{link('/method', 'Method')}
+          {link('/', 'System')}{link('/sol', 'Sol')}{link('/evidence', 'Evidence')}{link('/method', 'Method')}
         </nav>
         <div className="ml-auto flex flex-wrap items-center gap-3">
           {data && (

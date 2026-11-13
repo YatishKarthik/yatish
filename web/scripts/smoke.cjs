@@ -20,8 +20,16 @@ const fail = (msg) => { throw new Error(msg); };
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('pageerror', (e) => errors.push(e.message));
 
-    // 1. mock data loads and the ribbon list renders
+    // 0. system view: three bodies, pick Mars, pick a target, land on Earth's ranked list
     await page.goto(`${B}/?nointro`);
+    await page.waitForSelector('canvas');
+    await page.getByRole('button', { name: 'Mars', exact: true }).first().click();
+    await page.getByRole('button', { name: /Gale crater/ }).first().click();
+    await page.waitForSelector('text=Ground like Gale crater');
+    if (figDir) { await page.waitForTimeout(2500); await page.screenshot({ path: path.join(figDir, 'system-earth.png') }); }
+
+    // 1. data loads and the ribbon list renders
+    await page.goto(`${B}/sol?nointro`);
     await page.waitForSelector('ol li a');
     const rows = await page.locator('ol li').count();
     if (rows < 1) fail('no site ribbons rendered');

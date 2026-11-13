@@ -9,6 +9,7 @@ import { EvidenceView } from './views/EvidenceView';
 import { MethodView } from './views/MethodView';
 import { NotFound, SeamView } from './views/SeamView';
 import { SolView } from './views/SolView';
+import { SystemView } from './views/SystemView';
 import { TrialView } from './views/TrialView';
 
 export default function App() {
@@ -43,7 +44,8 @@ export default function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || undefined}>
       <Chrome>
         <Routes>
-          <Route path="/" element={<SolView />} />
+          <Route path="/" element={<SystemView />} />
+          <Route path="/sol" element={<SolView />} />
           <Route path="/seam/:siteId" element={<SeamView />} />
           <Route path="/trial/:siteId" element={<TrialView />} />
           <Route path="/evidence" element={<EvidenceView />} />

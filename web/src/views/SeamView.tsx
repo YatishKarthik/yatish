@@ -48,7 +48,7 @@ export function NotFound({ what }: { what: string }) {
   return (
     <div className="mx-auto max-w-xl p-8">
       <h1 className="text-lg font-semibold">{what} not found</h1>
-            <Link to={withTarget('/')} className="btn mt-3">Choose a site</Link>
+            <Link to={withTarget('/sol')} className="btn mt-3">Choose a site</Link>
     </div>
   );
 }

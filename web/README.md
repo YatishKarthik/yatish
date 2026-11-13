@@ -15,7 +15,8 @@ npm run smoke    # browser smoke test on the build (needs: npm i -D playwright &
 
 | Route | What it shows |
 |---|---|
-| `/` | Mars target picker and Earth sites as 24-hour thermal ribbons |
+| `/` | Earth, Mars and the Moon: pick a destination and target, then see matching ground on Earth |
+| `/sol` | Mars target picker and Earth sites as 24-hour thermal ribbons |
 | `/seam/:site` | Earth and Mars terrain at one scale, split by a draggable seam; clock, permits, limits |
 | `/trial/:site` | The same rover drive on both terrains, with slope margin |
 | `/evidence` | Curve overlay, controls, rover ground truth, local readings |
