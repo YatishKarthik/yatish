@@ -89,3 +89,37 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
 
 /* director mode: 2.39:1 frame */
 .letterbox { aspect-ratio: 2.39 / 1; width: 100%; max-height: 82vh; }
+
+/* ---- system view: ship-console styling (this screen only) ---- */
+.console { position: relative; background: rgba(10, 14, 20, 0.78); border: 1px solid rgba(143, 227, 255, 0.28); }
+.console::before, .console::after { content: ''; position: absolute; width: 10px; height: 10px; border-color: #8fe3ff; border-style: solid; pointer-events: none; }
+.console::before { left: -1px; top: -1px; border-width: 1px 0 0 1px; }
+.console::after { right: -1px; bottom: -1px; border-width: 0 1px 1px 0; }
+.console .row:hover, .console .row[aria-pressed='true'], .console .\!border-ink { border-color: #8fe3ff !important; }
+
+.hud { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: rgba(10, 14, 20, 0.78); border: 1px solid rgba(143, 227, 255, 0.28); border-left: 2px solid #8fe3ff; max-width: 560px; }
+.hud-step { display: grid; grid-template-columns: 24px 190px 1fr; align-items: center; gap: 10px; color: #9aa4b2; }
+.hud-n { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; }
+.hud-k { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; }
+.hud-v { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #e6e9ef; }
+.hud-step.is-on .hud-n, .hud-step.is-on .hud-k { color: #8fe3ff; }
+.hud-step.is-done .hud-n { color: #3fb950; }
+.hud-step.is-done .hud-k::after { content: ' ✓'; color: #3fb950; }
+@media (max-width: 799px) { .hud-step { grid-template-columns: 22px 1fr; } .hud-v { grid-column: 2; } .hud { max-width: calc(100vw - 40px); } }
+
+/* target bracket pins */
+.hud-pin { position: relative; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; transform: translate(0, -50%); background: none; border: 0; padding: 0; color: #cbd3dd; font-family: 'IBM Plex Mono', monospace; font-size: 12px; white-space: nowrap; }
+.hud-bracket { width: 14px; height: 14px; position: relative; margin-left: -17px; }
+.hud-bracket::before, .hud-bracket::after { content: ''; position: absolute; width: 5px; height: 5px; border-color: currentColor; border-style: solid; }
+.hud-bracket::before { left: 0; top: 0; border-width: 1px 0 0 1px; }
+.hud-bracket::after { right: 0; bottom: 0; border-width: 0 1px 1px 0; }
+.hud-tag { background: rgba(10, 14, 20, 0.8); border: 1px solid rgba(143, 227, 255, 0.25); padding: 1px 6px; }
+.hud-sub { margin-left: 6px; color: #8fe3ff; }
+.hud-pin:hover { color: #e6e9ef; }
+.hud-pin.is-active { color: #8fe3ff; }
+.hud-pin.is-active .hud-tag { border-color: #8fe3ff; color: #e6e9ef; }
+.hud-pin.is-active .hud-bracket { width: 18px; height: 18px; margin-left: -19px; }
+
+/* warp cut on every jump: a quick radial flash from the edges, 300 ms */
+.warp { position: absolute; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(ellipse at center, transparent 45%, rgba(143, 227, 255, 0.22) 100%); animation: warp var(--motion-300) var(--ease-out) both; }
+@keyframes warp { from { opacity: 1; transform: scale(1.12); } to { opacity: 0; transform: scale(1); } }

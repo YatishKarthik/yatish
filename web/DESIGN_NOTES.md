@@ -56,6 +56,18 @@ The entry screen is deliberately more atmospheric than the working views.
 | Saturation +25 % on this view's canvas only | decorative; data views are untouched so ramp colours stay exact |
 | Slow camera float | decorative; off with reduced motion |
 
+### Console layer on the system view
+
+| Element | Purpose |
+|---|---|
+| Mission steps 01 / 02 / 03 with the live answer to each | information: tells the directive while you use it |
+| Bracket pins with class or closeness readout | information |
+| Scan pulse when a body comes into focus, 900 ms once | decorative, finite |
+| Orbit arcs behind the three bodies | decorative, fade out when a body is in focus; labelled not to scale |
+| Warp cut on each jump, 300 ms | decorative, finite |
+| Mouse parallax on the camera | decorative, small; off with reduced motion |
+| Pale cyan console accent | this screen only; data views keep the spec palette |
+
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).

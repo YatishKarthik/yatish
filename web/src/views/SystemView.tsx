@@ -12,7 +12,7 @@ import { Seg } from '../ui/Seg';
 
 type Body = 'earth' | 'mars' | 'moon';
 type Focus = Body | null;
-interface Pin { id: string; label: string; lat: number; lon: number; active?: boolean; onPick: () => void }
+interface Pin { id: string; label: string; sub?: string; lat: number; lon: number; active?: boolean; onPick: () => void }
 
 const BODIES: Record<Body, { x: number; r: number; name: string; glow: string; k: number }> = {
   earth: { x: -3.5, r: 1.3, name: 'Earth', glow: '#6fb6ff', k: 0.7 },
@@ -45,14 +45,37 @@ function PinMark({ pin, r }: { pin: Pin; r: number }) {
   });
   return (
     <mesh ref={mesh} position={pos}>
-      <sphereGeometry args={[r * 0.008, 12, 12]} />
-      <meshBasicMaterial color={pin.active ? '#ffffff' : '#e6e9ef'} />
+      <sphereGeometry args={[r * 0.006, 12, 12]} />
+      <meshBasicMaterial color={pin.active ? '#9fe8ff' : '#e6e9ef'} />
       <Html center zIndexRange={[20, 0]}>
-        <button ref={el} type="button" onClick={pin.onPick}
-          className={`ml-2 -translate-y-1/2 translate-x-1/2 whitespace-nowrap border px-1.5 py-0.5 font-mono text-xs ${pin.active ? 'z-10 border-ink bg-ink text-page' : 'border-line bg-page text-dim hover:text-ink'}`}>
-          {pin.label}
+        <button ref={el} type="button" onClick={pin.onPick} className={`hud-pin ${pin.active ? 'is-active' : ''}`}>
+          <span className="hud-bracket" aria-hidden />
+          <span className="hud-tag">{pin.label}{pin.sub && <span className="hud-sub">{pin.sub}</span>}</span>
         </button>
       </Html>
+    </mesh>
+  );
+}
+
+/** One expanding ring when a body is selected: the console 'scanning' it. */
+function ScanPulse({ r, trigger }: { r: number; trigger: number }) {
+  const mesh = useRef<THREE.Mesh>(null);
+  const t0 = useRef(-1);
+  useEffect(() => { t0.current = performance.now(); }, [trigger]);
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m) return;
+    const k = REDUCE ? 1 : (performance.now() - t0.current) / 900;
+    m.visible = k >= 0 && k < 1;
+    if (!m.visible) return;
+    const sc = 1 + k * 1.6;
+    m.scale.set(sc, sc, sc);
+    (m.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - k);
+  });
+  return (
+    <mesh ref={mesh} visible={false}>
+      <ringGeometry args={[r * 0.99, r * 1.01, 128]} />
+      <meshBasicMaterial color="#8fe3ff" transparent opacity={0} side={THREE.DoubleSide} depthWrite={false} />
     </mesh>
   );
 }
@@ -66,6 +89,8 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   const group = useRef<THREE.Group>(null);
   const [hover, setHover] = useState(false);
   const focused = focus === body;
+  const [scan, setScan] = useState(0);
+  useEffect(() => { if (focused) setScan((n) => n + 1); }, [focused]);
   useEffect(() => { document.body.style.cursor = hover && !focused ? 'pointer' : ''; return () => { document.body.style.cursor = ''; }; }, [hover, focused]);
 
   useFrame((_, dt) => {
@@ -85,6 +110,7 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   return (
     <group position={[x, 0, 0]}>
       {glowK > 0 && <Atmosphere r={r} colour={glow} strength={glowK} />}
+      <ScanPulse r={r} trigger={scan} />
       <group ref={group}>
         <mesh onClick={(e) => { e.stopPropagation(); onPick(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
           <sphereGeometry args={[r, 160, 112]} />
@@ -101,11 +127,39 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   );
 }
 
+/** Thin orbit arcs through the three bodies: console plotting, not to scale. Fade away when a body is in focus. */
+function OrbitLines({ focus }: { focus: Focus }) {
+  const group = useRef<THREE.Group>(null);
+  const lines = useMemo(() => Object.values(BODIES).map((b) => {
+    const R = Math.abs(b.x) + 8.5, pts = new THREE.EllipseCurve(-6.5 + (b.x < 0 ? 0 : 0), 0, R, R * 0.32, 0, Math.PI * 2, false, 0).getPoints(240);
+    const g = new THREE.BufferGeometry().setFromPoints(pts.map((p) => new THREE.Vector3(p.x, p.y * 0.6, -p.y * 0.8)));
+    return g;
+  }), []);
+  useFrame((_, dt) => {
+    if (!group.current) return;
+    group.current.children.forEach((c) => {
+      const m = (c as THREE.Line).material as THREE.LineBasicMaterial;
+      m.opacity += ((focus ? 0 : 0.16) - m.opacity) * Math.min(1, dt * 4);
+    });
+  });
+  return (
+    <group ref={group} position={[0, -0.4, -1.2]}>
+      {lines.map((g, i) => <primitive key={i} object={new THREE.Line(g, new THREE.LineBasicMaterial({ color: '#8fe3ff', transparent: true, opacity: 0, depthWrite: false }))} />)}
+    </group>
+  );
+}
+
 /** Wide view of all three, or a close view with the chosen body on the left. The lens tightens as it moves in. */
 function Rig({ focus }: { focus: Focus }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const size = useThree((s) => s.size);
   const look = useRef(new THREE.Vector3(0, 0, 0));
+  const mouse = useRef({ x: 0, y: 0 });
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => { mouse.current = { x: e.clientX / window.innerWidth - 0.5, y: e.clientY / window.innerHeight - 0.5 }; };
+    window.addEventListener('pointermove', onMove);
+    return () => window.removeEventListener('pointermove', onMove);
+  }, []);
   useFrame((_, dt) => {
     const narrow = size.width < 800;
     const want = new THREE.Vector3(0, 0.4, narrow ? 24 : 15.5), at = new THREE.Vector3(0, 0, 0);
@@ -117,7 +171,11 @@ function Rig({ focus }: { focus: Focus }) {
       fov = 22;
     }
     const k = REDUCE ? 1 : Math.min(1, dt * 2.6);
-    if (!REDUCE) { const t = performance.now() / 1000; want.x += Math.sin(t * 0.23) * 0.12; want.y += Math.sin(t * 0.31) * 0.08; }   // slow float
+    if (!REDUCE) {
+      const t = performance.now() / 1000;
+      want.x += Math.sin(t * 0.23) * 0.12 + mouse.current.x * (focus ? 0.25 : 0.6);   // slow float plus a little parallax
+      want.y += Math.sin(t * 0.31) * 0.08 - mouse.current.y * (focus ? 0.15 : 0.35);
+    }
     camera.position.lerp(want, k);
     look.current.lerp(at, k);
     camera.lookAt(look.current);
@@ -133,14 +191,16 @@ export function SystemView() {
   const [focus, setFocus] = useState<Focus>(null);
   const [dest, setDest] = useState<'mars' | 'moon'>('mars');
   const [hoverSite, setHoverSite] = useState<string | null>(null);
+  const [jump, setJump] = useState(0);
+  const go = (f: Focus) => { setFocus(f); setJump((n) => n + 1); };
   const target = data.targets[Math.max(0, targetIndex(data, targetId))];
   const ranked = rankedSites(data, target.id);
   const lunar = data.targets.filter((t) => t.body === 'moon');
   const martian = data.targets.filter((t) => t.body === 'mars');
 
-  const marsPins: Pin[] = martian.map((t) => ({ id: t.id, label: t.name, lat: t.lat, lon: t.lon, active: t.id === target.id, onPick: () => { setTarget(t.id); setFocus('earth'); } }));
-  const moonPins: Pin[] = lunar.map((t) => ({ id: t.id, label: t.name, lat: t.lat, lon: t.lon, active: t.id === target.id, onPick: () => { setTarget(t.id); setFocus('earth'); } }));
-  const earthPins: Pin[] = ranked.slice(0, 15).map((s, i) => ({ id: s.id, label: String(i + 1).padStart(2, '0'), lat: s.centroid.lat, lon: s.centroid.lon, active: s.id === hoverSite, onPick: () => setHoverSite(s.id) }));
+  const marsPins: Pin[] = martian.map((t) => ({ id: t.id, label: t.name, sub: t.class?.name, lat: t.lat, lon: t.lon, active: t.id === target.id, onPick: () => { setTarget(t.id); go('earth'); } }));
+  const moonPins: Pin[] = lunar.map((t) => ({ id: t.id, label: t.name, sub: t.class?.name, lat: t.lat, lon: t.lon, active: t.id === target.id, onPick: () => { setTarget(t.id); go('earth'); } }));
+  const earthPins: Pin[] = ranked.slice(0, 15).map((s, i) => ({ id: s.id, label: String(i + 1).padStart(2, '0'), sub: String(s.closeness[target.id]?.total ?? ''), lat: s.centroid.lat, lon: s.centroid.lon, active: s.id === hoverSite, onPick: () => setHoverSite(s.id) }));
 
   const mean = (xs: { lat: number; lon: number }[]) => (xs.length ? { lat: xs.reduce((a, b) => a + b.lat, 0) / xs.length, lon: xs.reduce((a, b) => a + b.lon, 0) / xs.length } : null);
   const face: Record<Body, { lat: number; lon: number } | null> = {
@@ -148,7 +208,7 @@ export function SystemView() {
     mars: target.body === 'mars' ? { lat: target.lat, lon: target.lon } : mean(martian),
     moon: target.body === 'moon' ? { lat: target.lat, lon: target.lon } : mean(lunar) ?? { lat: -60, lon: 0 },
   };
-  const pick = (b: Body) => { setFocus(b); if (b !== 'earth') setDest(b); };
+  const pick = (b: Body) => { go(b); if (b !== 'earth') setDest(b); };
 
   return (
     <div className="relative h-[calc(100vh-53px)] min-h-[520px] overflow-hidden">
@@ -158,6 +218,7 @@ export function SystemView() {
         <directionalLight position={[-4, 2.5, 9]} intensity={3.4} color="#fff6ea" />
         <directionalLight position={[6, -2, -6]} intensity={0.35} color="#9db4ff" />
         <Galaxy />
+        <OrbitLines focus={focus} />
         <Suspense fallback={null}>
           <Planet body="earth" focus={focus} pins={earthPins} face={face.earth} onPick={() => pick('earth')} />
           <Planet body="mars" focus={focus} pins={marsPins} face={face.mars} onPick={() => pick('mars')} />
@@ -166,27 +227,41 @@ export function SystemView() {
         <Rig focus={focus} />
       </Canvas>
 
+      <div key={jump} className="warp" aria-hidden />
+
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-3 p-5">
-        <div className="pointer-events-auto">
-          <h1 className="head">Where are you going?</h1>
-          <div className="mt-2">
-            <Seg label="Destination" value={dest} onChange={(v) => { setDest(v); setFocus(v); }} options={[{ value: 'mars', label: 'Mars' }, { value: 'moon', label: 'Moon' }]} />
-          </div>
-        </div>
-        {focus && <button type="button" className="btn pointer-events-auto" onClick={() => setFocus(null)}>All three</button>}
+        <ol className="hud pointer-events-auto" aria-label="Mission steps">
+          <li className={`hud-step ${focus === null || focus === 'mars' || focus === 'moon' ? 'is-on' : 'is-done'}`}>
+            <span className="hud-n">01</span>
+            <span className="hud-k">Destination</span>
+            <span className="hud-v"><Seg label="Destination" value={dest} onChange={(v) => { setDest(v); go(v); }} options={[{ value: 'mars', label: 'Mars' }, { value: 'moon', label: 'Moon' }]} /></span>
+          </li>
+          <li className={`hud-step ${focus === 'mars' || focus === 'moon' ? 'is-on' : focus === 'earth' ? 'is-done' : ''}`}>
+            <span className="hud-n">02</span>
+            <span className="hud-k">Target site</span>
+            <span className="hud-v">{target.body === dest ? target.name : 'pick one on the globe'}</span>
+          </li>
+          <li className={`hud-step ${focus === 'earth' ? 'is-on' : ''}`}>
+            <span className="hud-n">03</span>
+            <span className="hud-k">Earth ground that behaves like it</span>
+            <span className="hud-v">{ranked[0] ? <>{ranked[0].name} · <Num path={`sites.${siteIndex(data, ranked[0].id)}.closeness.${target.id}.total`} /></> : '—'}</span>
+          </li>
+        </ol>
+        {focus && <button type="button" className="btn pointer-events-auto" onClick={() => go(null)}>All three</button>}
       </div>
 
-      {!focus && <p className="caps pointer-events-none absolute inset-x-0 bottom-5 text-center">Choose a body · not to scale</p>}
+      {!focus && <p className="caps pointer-events-none absolute inset-x-0 bottom-5 text-center">Same ground test, three worlds · choose a body · not to scale</p>}
+      {focus === 'earth' && <p className="caps pointer-events-none absolute bottom-5 left-5 max-w-[48%]">Ranked by day–night temperature curve, slope, roughness and minerals · nothing is scored in the browser</p>}
 
       {focus && (
         <aside className="rise absolute bottom-5 right-5 top-20 flex w-[360px] max-w-[calc(100%-40px)] flex-col gap-3 overflow-y-auto max-md:top-auto max-md:max-h-[46%]" key={focus} aria-label={`${BODIES[focus].name} panel`}>
           {focus === 'mars' && (
-            <div className="panel p-3">
+            <div className="console p-3">
               <h2 className="head mb-2">Mars targets</h2>
               <ul className="space-y-1">
                 {martian.map((t) => (
                   <li key={t.id}>
-                    <button type="button" aria-pressed={t.id === target.id} onClick={() => { setTarget(t.id); setFocus('earth'); }}
+                    <button type="button" aria-pressed={t.id === target.id} onClick={() => { setTarget(t.id); go('earth'); }}
                       className={`row w-full border border-line px-3 py-2 text-left ${t.id === target.id ? '!border-ink' : ''}`}>
                       <span className="block font-semibold">{t.name}</span>
                       <span className="block text-sm text-dim">{t.why}</span>
@@ -198,16 +273,16 @@ export function SystemView() {
             </div>
           )}
           {focus === 'moon' && (
-            <div className="panel p-3">
+            <div className="console p-3">
               <h2 className="head mb-2">Lunar targets</h2>
               {lunar.length
-                ? <ul className="space-y-1">{lunar.map((t) => <li key={t.id}><button type="button" aria-pressed={t.id === target.id} className={`row w-full border border-line px-3 py-2 text-left ${t.id === target.id ? '!border-ink' : ''}`} onClick={() => { setTarget(t.id); setFocus('earth'); }}><span className="block font-semibold">{t.name}</span><span className="block text-sm text-dim">{t.why}</span></button></li>)}</ul>
+                ? <ul className="space-y-1">{lunar.map((t) => <li key={t.id}><button type="button" aria-pressed={t.id === target.id} className={`row w-full border border-line px-3 py-2 text-left ${t.id === target.id ? '!border-ink' : ''}`} onClick={() => { setTarget(t.id); go('earth'); }}><span className="block font-semibold">{t.name}</span><span className="block text-sm text-dim">{t.why}</span></button></li>)}</ul>
                 : <p className="text-sm text-dim">No lunar targets in this data yet. Shackleton rim is planned.</p>}
-              {!lunar.length && <button type="button" className="btn mt-3" onClick={() => { setDest('mars'); setFocus('mars'); }}>Go to Mars</button>}
+              {!lunar.length && <button type="button" className="btn mt-3" onClick={() => { setDest('mars'); go('mars'); }}>Go to Mars</button>}
             </div>
           )}
           {focus === 'earth' && (
-            <div className="panel p-3">
+            <div className="console p-3">
               <h2 className="head mb-1">Ground like {target.name}</h2>
               <p className="caps mb-2">top 10 of {ranked.length} by closeness</p>
               <ol className="space-y-1">
