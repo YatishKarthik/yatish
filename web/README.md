@@ -34,6 +34,8 @@ To re-shoot the submission figures into `report/figures/`: `npm run build && nod
 - Earth imagery: Sentinel-2 L2A true colour (contains modified Copernicus Sentinel data, 2023).
 - Mars elevation and imagery: USGS Astrogeology CTX stereo DTMs and orthoimages (NASA/JPL/MSSS/USGS).
 
+The system view's global maps in `public/textures/` are NASA Blue Marble (Earth), the Viking MDIM2.1 colour mosaic (Mars, NASA/JPL/USGS) and the LRO WAC global mosaic (Moon, NASA/GSFC/ASU); Mars and Moon were downloaded from NASA Trek.
+
 Terrain, imagery and the slope and roughness numbers are real. Thermal curves, closeness, classes and validation numbers are still mock until the pipeline replaces them.
 
 ## Connecting the pipeline
