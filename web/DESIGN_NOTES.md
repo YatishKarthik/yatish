@@ -52,8 +52,8 @@ The entry screen is deliberately more atmospheric than the working views.
 | Planet turns to face the chosen target or sites | information |
 | Camera zoom to the chosen body, lens tightens | information: focus |
 | Coloured dust band, twinkling stars, shooting stars | decorative; off or still with reduced motion |
-| Atmosphere rim on each body | decorative |
-| Saturation +45 % on this view's canvas only | decorative; data views are untouched so ramp colours stay exact |
+| Thin atmosphere rim on Earth, faint on Mars, none on the Moon | information: which bodies have air |
+| Saturation +25 % on this view's canvas only | decorative; data views are untouched so ramp colours stay exact |
 | Slow camera float | decorative; off with reduced motion |
 
 ## Left out on purpose

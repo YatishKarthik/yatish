@@ -27,8 +27,8 @@ function Nebula() {
         float cloud = fbm(d * 2.4 + 3.0), wisps = fbm(d * 6.0 + 11.0), hue = fbm(d * 1.2 + 7.0);
         vec3 violet = vec3(0.42, 0.16, 0.78), teal = vec3(0.08, 0.52, 0.72), rose = vec3(0.95, 0.38, 0.55), gold = vec3(1.0, 0.72, 0.38);
         vec3 col = vec3(0.012, 0.016, 0.04) + vec3(0.02, 0.03, 0.07) * (1.0 - abs(d.y));
-        col += band * cloud * cloud * mix(violet, teal, smoothstep(0.35, 0.65, hue)) * 1.15;
-        col += band * pow(wisps, 3.0) * mix(rose, gold, hue) * 0.55;
+        col += band * cloud * cloud * mix(violet, teal, smoothstep(0.35, 0.65, hue)) * 0.7;
+        col += band * pow(wisps, 3.0) * mix(rose, gold, hue) * 0.3;
         gl_FragColor = vec4(col, 1.0);
       }`,
   }), []);
@@ -116,9 +116,9 @@ export function Atmosphere({ r, colour, strength = 1 }: { r: number; colour: str
     vertexShader: `varying vec3 vN; varying vec3 vV; void main() { vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position, 1.0); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `varying vec3 vN; varying vec3 vV; uniform vec3 uCol; uniform float uK;
       // brightest at the planet's limb, fading to nothing at the outer edge of the shell
-      void main() { float i = pow(clamp(-dot(normalize(vN), normalize(vV)) * 2.1, 0.0, 1.0), 2.2); gl_FragColor = vec4(uCol * i * uK, i * uK); }`,
+      void main() { float i = pow(clamp(-dot(normalize(vN), normalize(vV)) * 3.0, 0.0, 1.0), 2.6); gl_FragColor = vec4(uCol * i * uK, i * uK); }`,
   }), [colour, strength]);
-  return <mesh material={mat}><sphereGeometry args={[r * 1.14, 64, 48]} /></mesh>;
+  return <mesh material={mat}><sphereGeometry args={[r * 1.07, 64, 48]} /></mesh>;
 }
 
 export function Galaxy() {

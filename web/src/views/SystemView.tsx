@@ -15,9 +15,9 @@ type Focus = Body | null;
 interface Pin { id: string; label: string; lat: number; lon: number; active?: boolean; onPick: () => void }
 
 const BODIES: Record<Body, { x: number; r: number; name: string; glow: string; k: number }> = {
-  earth: { x: -3.5, r: 1.3, name: 'Earth', glow: '#4aa3ff', k: 1.1 },
-  mars: { x: 0.35, r: 0.95, name: 'Mars', glow: '#ff7a4a', k: 0.8 },
-  moon: { x: 3.1, r: 0.6, name: 'Moon', glow: '#cfd8ff', k: 0.45 },
+  earth: { x: -3.5, r: 1.3, name: 'Earth', glow: '#6fb6ff', k: 0.7 },
+  mars: { x: 0.35, r: 0.95, name: 'Mars', glow: '#ffb089', k: 0.22 },
+  moon: { x: 3.1, r: 0.6, name: 'Moon', glow: '#ffffff', k: 0 },
 };
 const REDUCE = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DEG = Math.PI / 180;
@@ -61,7 +61,8 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   const { x, r, name, glow, k: glowK } = BODIES[body];
   const tex = useTexture(asset(`textures/${body}.jpg`));
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  tex.anisotropy = 16;
+  tex.generateMipmaps = true;
   const group = useRef<THREE.Group>(null);
   const [hover, setHover] = useState(false);
   const focused = focus === body;
@@ -83,10 +84,10 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
 
   return (
     <group position={[x, 0, 0]}>
-      <Atmosphere r={r} colour={glow} strength={glowK} />
+      {glowK > 0 && <Atmosphere r={r} colour={glow} strength={glowK} />}
       <group ref={group}>
         <mesh onClick={(e) => { e.stopPropagation(); onPick(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
-          <sphereGeometry args={[r, 96, 64]} />
+          <sphereGeometry args={[r, 160, 112]} />
           <meshStandardMaterial map={tex} roughness={1} metalness={0} />
         </mesh>
         {focused && pins.map((p) => <PinMark key={p.id} pin={p} r={r} />)}
@@ -107,13 +108,13 @@ function Rig({ focus }: { focus: Focus }) {
   const look = useRef(new THREE.Vector3(0, 0, 0));
   useFrame((_, dt) => {
     const narrow = size.width < 800;
-    const want = new THREE.Vector3(0, 0.5, narrow ? 17 : 10.5), at = new THREE.Vector3(0, 0, 0);
-    let fov = 38;
+    const want = new THREE.Vector3(0, 0.4, narrow ? 24 : 15.5), at = new THREE.Vector3(0, 0, 0);
+    let fov = 26;
     if (focus) {
       const b = BODIES[focus], off = narrow ? 0 : b.r * 0.75;
-      want.set(b.x + off, b.r * 0.15, b.r * (narrow ? 5.2 : 3.6));
+      want.set(b.x + off, b.r * 0.12, b.r * (narrow ? 7.2 : 5.0));
       at.set(b.x + off, 0, 0);
-      fov = 30;
+      fov = 22;
     }
     const k = REDUCE ? 1 : Math.min(1, dt * 2.6);
     if (!REDUCE) { const t = performance.now() / 1000; want.x += Math.sin(t * 0.23) * 0.12; want.y += Math.sin(t * 0.31) * 0.08; }   // slow float
@@ -151,10 +152,11 @@ export function SystemView() {
 
   return (
     <div className="relative h-[calc(100vh-53px)] min-h-[520px] overflow-hidden">
-      <Canvas style={{ filter: 'saturate(1.45) contrast(1.06)' }} camera={{ position: [0, 0.5, 10.5], fov: 38, near: 0.1, far: 300 }} dpr={[1, 2]}
+      <Canvas style={{ filter: 'saturate(1.25)' }} camera={{ position: [0, 0.4, 15.5], fov: 26, near: 0.1, far: 300 }} dpr={[1, 2]}
         aria-label="Earth, Mars and the Moon. Choose a destination, then find matching ground on Earth.">
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[-3, 3, 10]} intensity={3.0} color="#fff4e6" />
+        <hemisphereLight args={['#dfe8ff', '#1a1612', 0.9]} />
+        <directionalLight position={[-4, 2.5, 9]} intensity={3.4} color="#fff6ea" />
+        <directionalLight position={[6, -2, -6]} intensity={0.35} color="#9db4ff" />
         <Galaxy />
         <Suspense fallback={null}>
           <Planet body="earth" focus={focus} pins={earthPins} face={face.earth} onPick={() => pick('earth')} />
