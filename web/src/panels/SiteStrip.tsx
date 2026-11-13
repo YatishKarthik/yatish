@@ -22,7 +22,6 @@ function BarFill({ path, colour }: { path: string; colour: string }) {
 }
 
 export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target; si: number; ti: number }) {
-  const c = `sites.${si}.closeness.${target.id}`;
   return (
     <section className={`panel space-y-3 p-3 ${site.mock ? 'mock' : ''}`} aria-label="Site numbers">
       <div className="flex items-end justify-between">
@@ -30,17 +29,7 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
           <h2 className="head">{site.name}</h2>
           <p className="text-sm text-dim">{site.region} · <Num path={`sites.${si}.area_km2`} digits={0} unit=" km²" /></p>
         </div>
-        <div className="text-right">
-          <Num path={`${c}.total`} className="text-xl text-ink" />
-          <p className="caps">closeness to {target.name}</p>
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Bar label="Thermal" path={`${c}.thermal`} />
-        <Bar label="Terrain" path={`${c}.terrain`} />
-        {site.closeness[target.id]?.minerals != null
-          ? <Bar label="Minerals" path={`${c}.minerals`} />
-          : <p className="caps">Minerals: no data</p>}
+        <div className="text-right"><p className="caps">site numbers</p></div>
       </div>
       <div>
         <p className="caps mb-1">Percentile within each planet</p>

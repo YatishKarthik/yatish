@@ -43,7 +43,83 @@ function loadReal(dir) {
     res2 += (at(i, j) - m / 9) ** 2;
     cnt++;
   }
-  return { h, src, meanSlope: +(slopeSum / cnt).toFixed(2), rough: +Math.sqrt(res2 / cnt).toFixed(2) };
+  // 14-parameter inputs that can be measured here: slope distribution, TRI, concavity on the 100 m grid
+  const slopes = [], tris = [], curv = [];
+  for (let j = 1; j < n - 1; j++) for (let i = 1; i < n - 1; i++) {
+    slopes.push((Math.atan(Math.hypot((at(i + 1, j) - at(i - 1, j)) / (2 * res), (at(i, j + 1) - at(i, j - 1)) / (2 * res))) * 180) / Math.PI);
+    let d2 = 0;
+    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) if (a || b) d2 += (at(i + a, j + b) - at(i, j)) ** 2;
+    tris.push(Math.sqrt(d2));
+    curv.push((at(i + 1, j) + at(i - 1, j) + at(i, j + 1) + at(i, j - 1) - 4 * at(i, j)) / (res * res) * 1000);   // Laplacian, 1/km
+  }
+  slopes.sort((a, b) => a - b);
+  const topo = {
+    slope_mean: +(slopes.reduce((a, b) => a + b, 0) / slopes.length).toFixed(2),
+    slope_p90: +slopes[Math.floor(slopes.length * 0.9)].toFixed(2),
+    tri_ruggedness: +(tris.reduce((a, b) => a + b, 0) / tris.length).toFixed(2),
+    concavity: +(curv.reduce((a, b) => a + b, 0) / curv.length).toFixed(4),
+  };
+  // optical proxies from the true-colour image: brightness and red/blue ratio (approximate, labelled derived)
+  const sat = decode(fs.readFileSync(path.join(dir, 'sat.png')));
+  let lum = 0, rb = 0, px = 0;
+  for (let i = 0; i < sat.width * sat.height; i++) {
+    const r = sat.data[i * sat.channels], g = sat.data[i * sat.channels + 1], b = sat.data[i * sat.channels + 2];
+    lum += (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; rb += (r + 1) / (b + 1); px++;
+  }
+  const optical = { brightness: lum / px, red_blue: rb / px };
+  return { h, src, meanSlope: +(slopeSum / cnt).toFixed(2), rough: +Math.sqrt(res2 / cnt).toFixed(2), topo, optical };
+}
+
+/** The 14 parameters for one place. Real where the tile allows; the rest deterministic mock, each value tagged. */
+function params(key, T, body, cls, kind) {
+  const m = (name, lo, hi) => +(lo + rnd(key + name) * (hi - lo)).toFixed(3);
+  const neg = kind === 'negative_control';
+  const sw = body === 'earth' ? (neg ? m('sw', 4, 9) : { fines: 32, crust: 26, gravel: 22, bedrock: 15 }[cls] + m('sw2', -5, 5)) : body === 'mars' ? 60 + m('sw', -15, 20) : 250 + m('sw', -30, 30);
+  const tmax = body === 'earth' ? (neg ? m('tx', 24, 32) : m('tx', 38, 62)) : body === 'mars' ? m('tx', -20, 15) : m('tx', 90, 125);
+  const bare = body === 'earth' ? (neg ? m('ba', 0.15, 0.4) : m('ba', 0.86, 0.99)) : 1;
+  return {
+    slope_mean: { value: T.topo.slope_mean, source: 'measured' },
+    slope_p90: { value: T.topo.slope_p90, source: 'measured' },
+    tri_ruggedness: { value: T.topo.tri_ruggedness, source: 'measured' },
+    concavity: { value: T.topo.concavity, source: 'measured' },
+    sar_backscatter: { value: m('sb', -18, -6), source: 'mock' },
+    sar_entropy: { value: m('se', 0.3, 0.9), source: 'mock' },
+    sar_contrast: { value: m('sc', 0.1, 0.8), source: 'mock' },
+    bareness_index: { value: bare, source: body === 'earth' ? 'mock' : 'measured' },
+    iron_oxide_ratio: body === 'earth' ? { value: +T.optical.red_blue.toFixed(3), source: 'derived' } : { value: m('fe', body === 'mars' ? 1.6 : 0.9, body === 'mars' ? 2.4 : 1.2), source: 'mock' },
+    clay_hydroxyl_ratio: { value: m('cl', 0.9, 1.3), source: 'mock' },
+    albedo: body === 'earth' ? { value: +(0.08 + 0.35 * T.optical.brightness).toFixed(3), source: 'derived' } : { value: m('al', body === 'mars' ? 0.12 : 0.07, body === 'mars' ? 0.3 : 0.2), source: 'mock' },
+    temp_min_c: { value: +(tmax - sw).toFixed(1), source: 'mock' },
+    temp_max_c: { value: +tmax.toFixed(1), source: 'mock' },
+    temp_delta_c: { value: +sw.toFixed(1), source: 'mock' },
+  };
+}
+
+/** Percentile of each parameter within its own planet. */
+function rankWithin(all) {
+  const ids = Object.keys(all[0]);
+  for (const id of ids) {
+    const vals = all.map((p) => p[id].value).sort((a, b) => a - b);
+    for (const p of all) {
+      // mid-rank percentile: ties share a rank, result always within 0..100
+      const v = p[id].value, below = vals.filter((x) => x < v).length, equal = vals.filter((x) => x === v).length;
+      p[id].pct = vals.length > 1 ? Math.round(((below + (equal - 1) / 2) / (vals.length - 1)) * 100) : 50;
+    }
+  }
+}
+
+const PILLAR_OF = { slope_mean: 'topography', slope_p90: 'topography', tri_ruggedness: 'topography', concavity: 'topography', sar_backscatter: 'radar', sar_entropy: 'radar', sar_contrast: 'radar', bareness_index: 'minerals', iron_oxide_ratio: 'minerals', clay_hydroxyl_ratio: 'minerals', albedo: 'minerals', temp_min_c: 'thermal', temp_max_c: 'thermal', temp_delta_c: 'thermal' };
+const COMPARABLE = new Set(['slope_mean', 'slope_p90', 'tri_ruggedness', 'concavity', 'bareness_index', 'iron_oxide_ratio', 'clay_hydroxyl_ratio', 'albedo', 'temp_delta_c']);
+const PW = { topography: 0.35, radar: 0, minerals: 0.3, thermal: 0.35 };   // radar is a hint until a like-for-like band exists
+
+/** Pillar scores: 100 minus the mean percentile gap over the comparable parameters of that pillar. */
+function pillarScores(a, b) {
+  const out = {};
+  for (const pil of ['topography', 'radar', 'minerals', 'thermal']) {
+    const ids = Object.keys(PILLAR_OF).filter((k) => PILLAR_OF[k] === pil && COMPARABLE.has(k));
+    out[pil] = ids.length ? Math.round(100 - ids.reduce((s, k) => s + Math.abs(a[k].pct - b[k].pct), 0) / ids.length) : null;
+  }
+  return out;
 }
 
 // ---------- mock thermal curves ----------
@@ -127,6 +203,7 @@ const targets = ['mars', 'moon'].flatMap((body) => {
   return LOC[body].filter((t) => ok.has(t.id)).map((t) => {
     const dir = path.join(PUB, 'tiles', body, t.id), T = loadReal(dir), curve = makeCurve(t.cls, t.id);
     writeColour(dir, T.h, curve, hashStr(t.id) % 1000);
+    const P = params(t.id, T, body, t.cls, 'target');
     const swing = clampPct(SWING[t.cls] + (rnd(t.id + 'sw') - 0.5) * 24);
     return {
       id: t.id, body, name: t.name, lat: t.lat, lon: t.lon, why: t.why,
@@ -134,6 +211,7 @@ const targets = ['mars', 'moon'].flatMap((body) => {
       features: { amplitude_ratio: +(0.12 + swing / 300).toFixed(3), amplitude_pct: swing, peak_hour: peakHour(curve), night_slope: nightSlope(curve),
         ati_star_pct: clampPct(INERTIA[t.cls] + (rnd(t.id + 'ti') - 0.5) * 20), mean_slope_deg: T.meanSlope, roughness_rms_m: T.rough,
         minerals: { basalt: rnd(t.id + 'b') > 0.3, clay: rnd(t.id + 'c') > 0.6, salt: rnd(t.id + 's') > 0.75 } },
+      params: P,
       class: CLS[t.cls], ...(body === 'mars' ? { tes_ti_pct: clampPct(INERTIA[t.cls] + (rnd(t.id + 'ti') - 0.5) * 20) } : {}),
       terrain_tile: `tiles/${body}/${t.id}/height.png`, texture_tile: `tiles/${body}/${t.id}/colour_{h}.png`, satellite_tile: `tiles/${body}/${t.id}/sat.png`,
       terrain_meta: { z_min: T.src.z_min, z_max: T.src.z_max, pixel_m: T.src.pixel_m, source_res_m: T.src.source_res_m, thermal_res_m: 3000 },
@@ -149,6 +227,7 @@ const sites = LOC.earth.filter((s) => okEarth.has(s.id)).map((s) => {
   const curve = makeCurve(neg ? 'bedrock' : s.cls, s.id);
   writeColour(dir, T.h, curve, hashStr(s.id) % 1000);
   const two = !neg && !pos && rnd(s.id + 'modis') < 0.12;
+  const P = params(s.id, T, 'earth', s.cls, s.kind);
   const swing = neg ? clampPct(3 + rnd(s.id) * 6) : clampPct(SWING[s.cls] + (rnd(s.id + 'sw') - 0.5) * 24);
   const features = { amplitude_ratio: +(0.05 + swing / 500).toFixed(3), amplitude_pct: swing, peak_hour: two ? null : peakHour(curve), night_slope: two ? null : nightSlope(curve),
     ati_star_pct: neg ? clampPct(86 + rnd(s.id + 'ti') * 10) : clampPct(INERTIA[s.cls] + (rnd(s.id + 'ti') - 0.5) * 20), mean_slope_deg: T.meanSlope, roughness_rms_m: T.rough,
@@ -156,7 +235,7 @@ const sites = LOC.earth.filter((s) => okEarth.has(s.id)).map((s) => {
   const site = {
     id: s.id, name: s.name, kind: s.kind, centroid: T.src.centre, area_km2: 9.0, region: s.region,
     curve, curve_scenes: two ? 0 : 6 + Math.floor(rnd(s.id + 'n') * 18), curve_source: two ? 'MODIS_2PT' : 'ECOSTRESS',
-    features, class: CLS[s.cls], closeness: {}, verdicts: {},
+    features, params: P, class: CLS[s.cls], closeness: {}, verdicts: {},
     catalogue: neg ? { in_esa_cafe: false, literature_hits: 0, status: 'decoy', notes: 'Negative control.' }
       : pos || rnd(s.id + 'cat') > 0.45 ? { in_esa_cafe: pos, literature_hits: 1 + Math.floor(rnd(s.id + 'lit') * 9), status: 'catalogued' }
       : { in_esa_cafe: false, literature_hits: 0, status: 'uncatalogued' },
@@ -183,6 +262,20 @@ const sites = LOC.earth.filter((s) => okEarth.has(s.id)).map((s) => {
   return site;
 });
 
+rankWithin(sites.map((s) => s.params));
+for (const body of ['mars', 'moon']) { const grp = targets.filter((t) => t.body === body).map((t) => t.params); if (grp.length) rankWithin(grp); }
+for (const s of sites) for (const t of targets) {
+  const ps = pillarScores(s.params, t.params);
+  const c = s.closeness[t.id];
+  c.pillars = ps;
+  c.topography = ps.topography; c.minerals = ps.minerals;
+  c.thermal = Math.round((c.thermal + ps.thermal) / 2);   // curve shape and swing rank together
+  c.terrain = ps.topography;
+  c.total = Math.round(PW.topography * ps.topography + PW.minerals * ps.minerals + PW.thermal * c.thermal);
+  if (s.kind === 'negative_control') c.total = Math.min(c.total, 25);          // bareness alone should sink a forest; mock keeps the control honest
+  if (s.kind === 'positive_control' && t.id === 'jezero') c.total = Math.max(c.total, 62);
+}
+
 const cand = (tid) => sites.filter((s) => s.kind === 'candidate').sort((a, b) => b.closeness[tid].total - a.closeness[tid].total);
 const demoTarget = targets.find((t) => t.id === 'jezero') ?? targets[0];
 const ranked = cand(demoTarget.id), dunes = ranked.filter((s) => s.class.name === 'fines');
@@ -197,6 +290,8 @@ const out = {
       'C     = 100·(1 − (0.60·d_th + 0.30·d_ter + 0.10·d_min))',
     ],
     friction: FRICTION, class_map: CLASSES,
+    pillar_weights: PW,
+    pillar_formula: ['pillar = 100 − mean |pct_earth − pct_target| over its comparable parameters', 'C = 0.35·topography + 0.30·minerals + 0.35·thermal · radar shown, weight 0'],
     demo: { target: demoTarget.id, match: ranked[0].id, lookalike: (dunes[dunes.length - 1] ?? ranked[ranked.length - 1]).id },
   },
   planets: PLANETS, targets, sites,

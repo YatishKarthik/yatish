@@ -212,6 +212,18 @@
             "number",
             "null"
           ]
+        },
+        "pillars": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "topography": {
+          "type": "number"
         }
       }
     },
@@ -235,6 +247,377 @@
         },
         "pressure_bar": {
           "type": "number"
+        }
+      }
+    },
+    "params": {
+      "type": "object",
+      "required": [
+        "slope_mean",
+        "slope_p90",
+        "tri_ruggedness",
+        "concavity",
+        "sar_backscatter",
+        "sar_entropy",
+        "sar_contrast",
+        "bareness_index",
+        "iron_oxide_ratio",
+        "clay_hydroxyl_ratio",
+        "albedo",
+        "temp_min_c",
+        "temp_max_c",
+        "temp_delta_c"
+      ],
+      "properties": {
+        "slope_mean": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "slope_p90": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "tri_ruggedness": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "concavity": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "sar_backscatter": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "sar_entropy": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "sar_contrast": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "bareness_index": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "iron_oxide_ratio": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "clay_hydroxyl_ratio": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "albedo": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "temp_min_c": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "temp_max_c": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
+        },
+        "temp_delta_c": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "derived",
+                "mock"
+              ]
+            }
+          }
         }
       }
     }
@@ -304,6 +687,18 @@
             "match": {
               "type": "string"
             }
+          }
+        },
+        "pillar_weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "pillar_formula": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }
@@ -400,6 +795,9 @@
                 "type": "object"
               }
             }
+          },
+          "params": {
+            "$ref": "#/definitions/params"
           }
         }
       }
@@ -566,6 +964,9 @@
                 "type": "object"
               }
             }
+          },
+          "params": {
+            "$ref": "#/definitions/params"
           }
         }
       }

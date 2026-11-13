@@ -1,17 +1,8 @@
 import { useStore } from '../state/store';
 import { Num } from '../ui/Num';
 
-const DATA_ROWS = [
-  ['Earth surface temperature', 'NASA ECOSTRESS L2T LSTE v2', '70 m', 'many local times (ISS orbit)'],
-  ['Earth temperature fallback', 'NASA MODIS MYD11A2', '1 km', '13:30 and 01:30 only'],
-  ['Earth elevation', 'Copernicus DEM GLO-30 (© DLR e.V. 2010–2014, © Airbus Defence and Space GmbH 2014–2018)', '30 m', '—'],
-  ['Earth minerals', 'NASA EMIT L2A reflectance', '60 m', 'presence flags only'],
-  ['Earth imagery', 'Copernicus Sentinel-2 L2A true colour', '10 m', 'one clear scene'],
-  ['Mars terrain and imagery (3D view)', 'USGS Astrogeology CTX stereo DTM and orthoimage', '≈ 20 m / 6 m', '—'],
-  ['Mars surface temperature', 'Hope EMIRS L3 (MBRSC / EMM)', '100–300 km', 'all local times'],
-  ['Mars thermal inertia', 'MGS TES (Putzig & Mellon)', '≈ 3 km', 'night side'],
-  ['Mars elevation', 'MOLA MEGDR', '463 m', 'upsampled for display'],
-];
+import { PARAMS, PILLARS } from '../data/pillars';
+
 
 function Box({ x, label, sub }: { x: number; label: string; sub: string }) {
   return (
@@ -57,14 +48,26 @@ export function MethodView() {
         </table>
       </section>
 
-      <section className="panel p-3" aria-label="Data and resolutions">
-        <h2 className="mb-2 text-lg font-semibold">Data sources</h2>
+      <section className="panel p-3" aria-label="Pillars and parameters">
+        <h2 className="mb-2 text-lg font-semibold">Four pillars, fourteen parameters</h2>
+        {m.pillar_formula && <pre className="mb-3 overflow-x-auto rounded bg-page p-3 font-mono text-sm leading-relaxed" title="sites.json → meta.pillar_formula">{m.pillar_formula.join('\n')}</pre>}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead><tr className="caps text-left"><th className="py-1">Quantity</th><th>Dataset</th><th>Resolution</th><th>Local time coverage</th></tr></thead>
-            <tbody>{DATA_ROWS.map((r) => <tr key={r[0]} className="border-t border-line">{r.map((c, i) => <td key={i} className={`py-1 pr-3 ${i ? 'text-dim' : ''}`}>{c}</td>)}</tr>)}</tbody>
+          <table className="w-full min-w-[720px] text-sm">
+            <thead><tr className="caps text-left"><th className="py-1 font-normal">Pillar</th><th className="font-normal">Parameter</th><th className="font-normal">Earth</th><th className="font-normal">Mars</th><th className="font-normal">Moon</th><th className="text-right font-normal">Weight</th><th className="font-normal">Scored</th></tr></thead>
+            <tbody>
+              {PILLARS.flatMap((p) => PARAMS.filter((d) => d.pillar === p.id).map((d, i, arr) => (
+                <tr key={d.id} className="border-t border-line">
+                  <td className="py-1 pr-3 font-mono text-xs uppercase" style={{ color: p.colour }}>{i === 0 ? p.label : ''}</td>
+                  <td className="pr-3">{d.label}{d.note && <span className="caps block">{d.note}</span>}</td>
+                  <td className="pr-3 text-dim">{d.earth}</td><td className="pr-3 text-dim">{d.mars}</td><td className="pr-3 text-dim">{d.moon}</td>
+                  <td className="text-right font-mono">{i === 0 ? <Num path={`meta.pillar_weights.${p.id}`} digits={2} /> : ''}{i === 0 && arr.length ? '' : ''}</td>
+                  <td className={`font-mono text-xs ${d.comparable ? 'text-permit' : 'text-amber'}`}>{d.comparable ? 'yes' : 'shown only'}</td>
+                </tr>
+              )))}
+            </tbody>
           </table>
         </div>
+        <p className="mt-2 text-sm text-dim">Every parameter is ranked within its own planet before comparison. Radar carries weight 0 because Earth C-band and lunar S-band are not like-for-like; absolute temperatures are shown but never compared across planets.</p>
         <p className="caps mt-2">Earth thermal source in this build: <span className="text-ink" title="sites.json → meta.earth_thermal_source">{m.earth_thermal_source}</span> · common grid <Num path="meta.common_resolution_m" unit=" m" /></p>
       </section>
 

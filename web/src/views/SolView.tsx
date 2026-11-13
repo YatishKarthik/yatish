@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Fingerprint } from '../charts/Fingerprint';
 import { Ribbon, RibbonAxis } from '../charts/Ribbon';
 import { asset } from '../data/load';
 import { bodyName, rankedSites, resolutionLabel, siteIndex, targetIndex, tempColour } from '../data/select';
@@ -62,8 +63,8 @@ export function SolView() {
             <Seg label="Filter by catalogue status" value={cat} onChange={setCat} options={cats.map((c) => ({ value: c, label: c }))} /></span>
         </div>
 
-        <div className="panel grid grid-cols-[1fr] gap-x-5 px-3 py-2 md:grid-cols-[220px_1fr_150px]">
-          <span className="caps self-center !text-mars">Reference · {target.name}</span>
+        <div className="panel grid grid-cols-[1fr] gap-x-5 px-3 py-2 md:grid-cols-[56px_220px_1fr_150px]">
+          <span className="caps self-center !text-mars md:col-span-2">Reference · {target.name}</span>
           <div><Ribbon curve={target.curve} source={target.curve_source} swingPct={target.features.amplitude_pct} label="Target thermal day" /><RibbonAxis /></div>
           <span className="caps self-center md:text-right">local solar time</span>
         </div>
@@ -77,7 +78,8 @@ export function SolView() {
             return (
               <li key={s.id} data-key={s.id}>
                 <Link to={withTarget(`/seam/${s.id}`)}
-                  className={`panel row grid grid-cols-[1fr] items-center gap-x-5 gap-y-1 px-3 py-3 md:grid-cols-[220px_1fr_150px] ${s.mock ? 'mock' : ''}`}>
+                  className={`panel row grid grid-cols-[1fr] items-center gap-x-5 gap-y-1 px-3 py-3 md:grid-cols-[56px_220px_1fr_150px] ${s.mock ? 'mock' : ''}`}>
+                  {s.params && target.params ? <Fingerprint a={s.params} b={target.params} size={56} title={`${s.name} fingerprint over ${target.name}`} /> : <span />}
                   <span>
                     <span className="block font-semibold"><span className="mr-2 font-mono text-sm font-normal text-dim">{String(rank + 1).padStart(2, '0')}</span>{s.name}</span>
                     <span className="caps !normal-case">{s.region}</span>
@@ -108,6 +110,7 @@ export function SolView() {
           <span className="h-1 w-40" style={{ background: `linear-gradient(90deg, ${[0, 0.25, 0.5, 0.75, 1].map(tempColour).join(',')})` }} />
           <span className="caps">warmest</span>
         </span>
+        <span>Small glyph: the site's 14-parameter fingerprint (blue) over the target's (orange).</span>
         <span>Thicker band = larger day–night swing.</span>
         <span>Dashed = no data at that hour.</span>
       </section>

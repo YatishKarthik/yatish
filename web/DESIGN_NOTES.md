@@ -70,6 +70,17 @@ The entry screen is deliberately more atmospheric than the working views.
 | Earth: city lights on the night side, glossy oceans, relief; a visible sun | information: day and night, where the light comes from |
 | Bloom (threshold 0.8, intensity 0.6), vignette, SMAA on the system view | decorative, capped; off on phones and low-core machines |
 
+## Fingerprint and pillars
+
+| Element | Purpose |
+|---|---|
+| 14-spoke fingerprint, site over target, radius = within-planet percentile | information: a site as one shape; agreement is visible before any number |
+| Pillar sectors tinted behind the spokes | information: which spokes belong together |
+| Dashed spokes and ghosted labels | information: parameters shown but not scored across planets (radar bands, absolute temperatures) |
+| Amber dot on a spoke | information: the value is mock until the pipeline runs |
+| Small fingerprint at the head of every site row | information: scan the list by shape |
+| Pillar tiles with score and bar; one pillar's table open at a time | information, keeps the rail short |
+
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).

@@ -5,6 +5,7 @@ import { bodyName, curveAt, siteIndex } from '../data/select';
 import type { Scenario } from '../data/types';
 import { DossierDrawer } from '../panels/Drawers';
 import { PermitCard } from '../panels/PermitCard';
+import { Pillars } from '../panels/Pillars';
 import { SiteStrip } from '../panels/SiteStrip';
 import { SeamCanvas } from '../scenes/SeamCanvas';
 import { useStore, withTarget } from '../state/store';
@@ -115,6 +116,7 @@ export function SeamView() {
 
       {showRail && (
         <aside className="flex flex-col gap-3" aria-label="Permits and site numbers">
+          {!director && <Pillars site={site} target={target} si={siteIndex(data, site.id)} ti={ti} />}
           {!director && <SiteStrip site={site} target={target} si={siteIndex(data, site.id)} ti={ti} />}
           {verdicts
             ? (['driving', 'landing', 'thermal'] as Scenario[]).map((sc) => (
