@@ -5,6 +5,9 @@ import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { asset } from '../data/load';
 import { rankedSites, siteIndex, targetIndex } from '../data/select';
+import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
+import { EarthMaterial, SUN_DIR, Sun } from '../scenes/Earth';
 import { Atmosphere, Galaxy } from '../scenes/Galaxy';
 import { useStore, withTarget } from '../state/store';
 import { Num } from '../ui/Num';
@@ -15,11 +18,13 @@ type Focus = Body | null;
 interface Pin { id: string; label: string; sub?: string; lat: number; lon: number; active?: boolean; onPick: () => void }
 
 const BODIES: Record<Body, { x: number; r: number; name: string; glow: string; k: number }> = {
-  earth: { x: -3.5, r: 1.3, name: 'Earth', glow: '#6fb6ff', k: 0.7 },
+  earth: { x: -3.5, r: 1.3, name: 'Earth', glow: '#5fb0ff', k: 0.9 },
   mars: { x: 0.35, r: 0.95, name: 'Mars', glow: '#ffb089', k: 0.22 },
   moon: { x: 3.1, r: 0.6, name: 'Moon', glow: '#ffffff', k: 0 },
 };
 const REDUCE = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// post-processing only where it will hold frame rate
+const POST = typeof window !== 'undefined' && window.innerWidth >= 800 && (navigator.hardwareConcurrency ?? 8) >= 4;
 const DEG = Math.PI / 180;
 
 /** Point on a unit sphere textured with an equirectangular map whose centre is longitude 0. */
@@ -86,11 +91,13 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 16;
   tex.generateMipmaps = true;
+  const bump = useTexture(asset(`textures/${body}.jpg`));   // planet maps double as faint relief
   const group = useRef<THREE.Group>(null);
   const [hover, setHover] = useState(false);
   const focused = focus === body;
   const [scan, setScan] = useState(0);
   useEffect(() => { if (focused) setScan((n) => n + 1); }, [focused]);
+  useEffect(() => { if (group.current) group.current.rotation.y = (-90 - (body === 'earth' ? 45 : 0)) * DEG; }, [body]);   // Earth opens on the Gulf
   useEffect(() => { document.body.style.cursor = hover && !focused ? 'pointer' : ''; return () => { document.body.style.cursor = ''; }; }, [hover, focused]);
 
   useFrame((_, dt) => {
@@ -114,7 +121,7 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
       <group ref={group}>
         <mesh onClick={(e) => { e.stopPropagation(); onPick(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
           <sphereGeometry args={[r, 160, 112]} />
-          <meshStandardMaterial map={tex} roughness={1} metalness={0} />
+          {body === 'earth' ? <EarthMaterial /> : <meshStandardMaterial map={tex} bumpMap={bump} bumpScale={body === 'moon' ? 0.02 : 0.012} roughness={0.95} metalness={0} />}
         </mesh>
         {focused && pins.map((p) => <PinMark key={p.id} pin={p} r={r} />)}
       </group>
@@ -212,11 +219,12 @@ export function SystemView() {
 
   return (
     <div className="relative h-[calc(100vh-53px)] min-h-[520px] overflow-hidden">
-      <Canvas style={{ filter: 'saturate(1.25)' }} camera={{ position: [0, 0.4, 15.5], fov: 26, near: 0.1, far: 300 }} dpr={[1, 2]}
+      <Canvas style={{ filter: 'saturate(1.15) contrast(1.04)' }} camera={{ position: [0, 0.4, 15.5], fov: 26, near: 0.1, far: 300 }} dpr={[1, 2]}
         aria-label="Earth, Mars and the Moon. Choose a destination, then find matching ground on Earth.">
-        <hemisphereLight args={['#dfe8ff', '#1a1612', 0.9]} />
-        <directionalLight position={[-4, 2.5, 9]} intensity={3.4} color="#fff6ea" />
-        <directionalLight position={[6, -2, -6]} intensity={0.35} color="#9db4ff" />
+        <hemisphereLight args={['#c9d8ff', '#0a0806', 0.55]} />
+        <directionalLight position={[SUN_DIR.x * 10, SUN_DIR.y * 10, SUN_DIR.z * 10]} intensity={3.8} color="#fff6ea" />
+        <directionalLight position={[6, -2, -6]} intensity={0.22} color="#8fa8ff" />
+        <Sun />
         <Galaxy />
         <OrbitLines focus={focus} />
         <Suspense fallback={null}>
@@ -225,6 +233,14 @@ export function SystemView() {
           <Planet body="moon" focus={focus} pins={moonPins} face={face.moon} onPick={() => pick('moon')} />
         </Suspense>
         <Rig focus={focus} />
+        {POST && (
+          <EffectComposer multisampling={0}>
+            <Bloom luminanceThreshold={0.8} luminanceSmoothing={0.2} intensity={0.6} mipmapBlur radius={0.55} />
+            <Vignette eskil={false} offset={0.25} darkness={0.55} />
+            <SMAA />
+            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          </EffectComposer>
+        )}
       </Canvas>
 
       <div key={jump} className="warp" aria-hidden />

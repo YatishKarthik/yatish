@@ -11,7 +11,8 @@ float n3(vec3 p) {
   return mix(mix(mix(h3(i), h3(i + vec3(1, 0, 0)), f.x), mix(h3(i + vec3(0, 1, 0)), h3(i + vec3(1, 1, 0)), f.x), f.y),
              mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
 }
-float fbm(vec3 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * n3(p); p *= 2.02; a *= 0.5; } return s; }`;
+float fbm(vec3 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 6; i++) { s += a * n3(p); p *= 2.02; a *= 0.5; } return s; }
+float ridge(vec3 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * (1.0 - abs(2.0 * n3(p) - 1.0)); p *= 2.1; a *= 0.5; } return s; }`;
 
 /** Sky dome: a soft band of coloured dust across a deep blue-black, drifting very slowly. */
 function Nebula() {
@@ -23,12 +24,15 @@ function Nebula() {
       varying vec3 vDir;
       void main() {
         vec3 d = normalize(vDir);
-        float band = exp(-pow(d.y * 1.7 + 0.45 * sin(d.x * 2.2 + 1.0) - 0.1, 2.0) * 2.6);
-        float cloud = fbm(d * 2.4 + 3.0), wisps = fbm(d * 6.0 + 11.0), hue = fbm(d * 1.2 + 7.0);
-        vec3 violet = vec3(0.42, 0.16, 0.78), teal = vec3(0.08, 0.52, 0.72), rose = vec3(0.95, 0.38, 0.55), gold = vec3(1.0, 0.72, 0.38);
-        vec3 col = vec3(0.012, 0.016, 0.04) + vec3(0.02, 0.03, 0.07) * (1.0 - abs(d.y));
-        col += band * cloud * cloud * mix(violet, teal, smoothstep(0.35, 0.65, hue)) * 0.7;
-        col += band * pow(wisps, 3.0) * mix(rose, gold, hue) * 0.3;
+        float band = exp(-pow(d.y * 1.7 + 0.45 * sin(d.x * 2.2 + 1.0) - 0.1, 2.0) * 2.2);
+        float cloud = fbm(d * 2.4 + 3.0), wisps = ridge(d * 5.0 + 11.0), hue = fbm(d * 1.2 + 7.0);
+        float lane = smoothstep(0.35, 0.75, fbm(d * 3.1 + 21.0));          // dark dust lanes cut through the band
+        vec3 violet = vec3(0.40, 0.14, 0.80), teal = vec3(0.05, 0.55, 0.80), rose = vec3(1.0, 0.40, 0.55), gold = vec3(1.0, 0.76, 0.40);
+        vec3 col = vec3(0.004, 0.006, 0.016) + vec3(0.01, 0.015, 0.04) * (1.0 - abs(d.y));
+        col += band * cloud * cloud * mix(violet, teal, smoothstep(0.35, 0.65, hue)) * 1.1 * (0.35 + 0.65 * lane);
+        col += band * pow(wisps, 4.0) * mix(rose, gold, hue) * 0.55 * lane;
+        col += pow(band, 3.0) * pow(cloud, 3.0) * vec3(0.9, 0.85, 1.0) * 0.35;   // bright core of the band
+        col = pow(col * 0.6, vec3(1.15));   // deeper blacks, quieter mid-tones
         gl_FragColor = vec4(col, 1.0);
       }`,
   }), []);
@@ -41,12 +45,12 @@ function Stars() {
   const { geo, mat } = useMemo(() => {
     let s = 11;
     const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    const n = 2600, pos = new Float32Array(n * 3), size = new Float32Array(n), phase = new Float32Array(n), col = new Float32Array(n * 3);
+    const n = 4200, pos = new Float32Array(n * 3), size = new Float32Array(n), phase = new Float32Array(n), col = new Float32Array(n * 3);
     const tints = [[1, 1, 1], [0.78, 0.86, 1], [1, 0.9, 0.76], [0.86, 0.8, 1], [1, 0.8, 0.82]];
     for (let i = 0; i < n; i++) {
       const u = rnd() * 2 - 1, t = rnd() * Math.PI * 2, q = Math.sqrt(1 - u * u), R = 80;
       pos.set([R * q * Math.cos(t), R * u, R * q * Math.sin(t)], i * 3);
-      size[i] = 1.2 + Math.pow(rnd(), 6) * 5.5;
+      size[i] = 1.0 + Math.pow(rnd(), 7) * 7.0;
       phase[i] = rnd() * 6.283;
       col.set(tints[Math.floor(rnd() * tints.length)], i * 3);
     }
@@ -62,7 +66,7 @@ function Stars() {
         void main() { vCol = aCol; vTw = 0.72 + 0.28 * sin(uTime * 1.6 + aPhase);
           gl_PointSize = aSize * uDpr * vTw; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: `varying vec3 vCol; varying float vTw;
-        void main() { float r = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, r); gl_FragColor = vec4(vCol * vTw, a * a); }`,
+        void main() { float r = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, r); gl_FragColor = vec4(vCol * vTw * (1.0 + 1.5 * a * a), a * a); }`,
     });
     return { geo, mat };
   }, []);
@@ -115,8 +119,8 @@ export function Atmosphere({ r, colour, strength = 1 }: { r: number; colour: str
     uniforms: { uCol: { value: new THREE.Color(colour) }, uK: { value: strength } },
     vertexShader: `varying vec3 vN; varying vec3 vV; void main() { vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position, 1.0); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `varying vec3 vN; varying vec3 vV; uniform vec3 uCol; uniform float uK;
-      // brightest at the planet's limb, fading to nothing at the outer edge of the shell
-      void main() { float i = pow(clamp(-dot(normalize(vN), normalize(vV)) * 3.0, 0.0, 1.0), 2.6); gl_FragColor = vec4(uCol * i * uK, i * uK); }`,
+      // brightest at the planet's limb, fading to nothing at the outer edge of the shell; a little warmer where the sun grazes it
+      void main() { float i = pow(clamp(-dot(normalize(vN), normalize(vV)) * 3.0, 0.0, 1.0), 2.4); vec3 c = mix(uCol, vec3(1.0, 0.95, 0.9), 0.25 * i); gl_FragColor = vec4(c * i * uK * 1.4, i * uK); }`,
   }), [colour, strength]);
   return <mesh material={mat}><sphereGeometry args={[r * 1.07, 64, 48]} /></mesh>;
 }

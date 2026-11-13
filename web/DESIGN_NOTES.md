@@ -67,6 +67,8 @@ The entry screen is deliberately more atmospheric than the working views.
 | Warp cut on each jump, 300 ms | decorative, finite |
 | Mouse parallax on the camera | decorative, small; off with reduced motion |
 | Pale cyan console accent | this screen only; data views keep the spec palette |
+| Earth: city lights on the night side, glossy oceans, relief; a visible sun | information: day and night, where the light comes from |
+| Bloom (threshold 0.8, intensity 0.6), vignette, SMAA on the system view | decorative, capped; off on phones and low-core machines |
 
 ## Left out on purpose
 
