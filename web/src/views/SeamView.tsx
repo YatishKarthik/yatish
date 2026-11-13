@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Ribbon } from '../charts/Ribbon';
 import { curveAt, siteIndex } from '../data/select';
 import type { Scenario } from '../data/types';
 import { DossierDrawer } from '../panels/Drawers';
@@ -8,6 +10,7 @@ import { SeamCanvas } from '../scenes/SeamCanvas';
 import { useStore, withTarget } from '../state/store';
 import { ClockBar } from '../ui/ClockBar';
 import { Seg } from '../ui/Seg';
+import { startDrone, stopDrone } from '../ui/sound';
 import { useSeam } from './useSeam';
 
 export function Hud({ extra }: { extra?: string }) {
@@ -59,6 +62,13 @@ export function SeamView() {
   const dirRail = useStore((s) => s.dirRail);
   const director = useStore((s) => s.director);
   const set = useStore((s) => s.set);
+  const cam = useStore((s) => s.cam);
+  const sound = useStore((s) => s.sound);
+  const swing = site?.features.amplitude_pct;
+  useEffect(() => {
+    if (sound && swing != null) startDrone(swing);
+    return stopDrone;
+  }, [sound, swing]);
   if (!site) return <NotFound what="Site" />;
   const verdicts = site.verdicts[target.id];
   const showRail = !director || dirRail;
@@ -66,10 +76,11 @@ export function SeamView() {
   return (
     <div className={`grid gap-3 p-3 ${showRail ? 'lg:grid-cols-[1fr_380px]' : ''}`}>
       <div className="flex min-w-0 flex-col gap-3">
-        <div className={`viewport ${director ? 'h-[78vh]' : 'h-[46vh] min-h-[300px] lg:h-[58vh]'}`}>
+        <div className={`viewport ${director ? 'letterbox' : 'h-[46vh] min-h-[300px] lg:h-[58vh]'}`}>
           {tiles
-            ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode={mode} earthLabel={site.name} marsLabel={target.name} />
+            ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode={mode} earthLabel={site.name} marsLabel={target.name} earthClass={site.class.name} marsClass={target.class?.name} />
             : <div className="flex h-full items-center justify-center font-mono text-sm text-dim">Loading terrain…</div>}
+          <div className="fx" />
           <Hud />
           {tiles && <MissingTiles earth={tiles.earth.missing} mars={tiles.mars.missing} />}
           <div className="pointer-events-none absolute right-2 top-2 rounded-sm bg-page/85 px-2 py-1 font-mono text-xs uppercase text-dim">
@@ -77,11 +88,19 @@ export function SeamView() {
           </div>
         </div>
         <ClockBar />
+        <div className="hide-in-director grid grid-cols-[64px_1fr] items-center gap-x-3 gap-y-1">
+          <span className="caps !text-earth">Earth</span>
+          <Ribbon curve={site.curve} source={site.curve_source} swingPct={site.features.amplitude_pct} label={`${site.name} thermal day`} />
+          <span className="caps !text-mars">Mars</span>
+          <Ribbon curve={target.curve} source={target.curve_source} swingPct={target.features.amplitude_pct} label={`${target.name} thermal day`} />
+        </div>
         <div className="hide-in-director flex flex-wrap items-center gap-x-5 gap-y-2">
           <Seg label="Terrain layer" value={layer} onChange={(v) => set({ layer: v })}
             options={[{ value: 'temperature', label: 'Temperature' }, { value: 'satellite', label: 'Satellite' }]} />
           <Seg label="Layout" value={mode} onChange={(v) => set({ mode: v })}
             options={[{ value: 'wipe', label: 'Seam' }, { value: 'split', label: 'Side by side' }]} />
+          <Seg label="Camera" value={cam} onChange={(v) => set({ cam: v })}
+            options={[{ value: 'survey', label: 'Survey' }, { value: 'walk', label: 'Walk' }, { value: 'overhead', label: 'Overhead' }]} />
           <button type="button" className="btn" aria-pressed={grid} onClick={() => set({ grid: !grid })}>Pixel grid</button>
           <TempReadout si={si} ti={ti} />
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { rankedSites } from '../data/select';
 import { useStore } from '../state/store';
@@ -13,6 +13,13 @@ export function Director() {
   const caption = useStore((s) => s.caption);
   const navigate = useNavigate();
   // navigate changes identity on every route change; keep it in a ref so the script is not restarted.
+  const [tc, setTc] = useState(0);
+  useEffect(() => {
+    if (!director) return;
+    const t0 = performance.now();
+    const id = window.setInterval(() => setTc((performance.now() - t0) / 1000), 100);
+    return () => window.clearInterval(id);
+  }, [director]);
   const nav = useRef(navigate);
   nav.current = navigate;
 
@@ -64,10 +71,15 @@ export function Director() {
     return () => { timers.forEach(clearTimeout); cancelAnimationFrame(raf); };
   }, [director]);
 
-  if (!director || !caption) return null;
+  if (!director) return null;
   return (
+    <>
+    <div className="pointer-events-none fixed left-5 top-3 z-50 font-mono text-sm tabular-nums text-dim">T+{tc.toFixed(1).padStart(4, '0')} s</div>
+    {caption && (
     <div className="pointer-events-none fixed inset-x-0 bottom-8 z-50 flex justify-center px-5">
       <p key={caption} className="rise border-t border-line bg-page px-5 py-3 text-center font-mono text-base uppercase tracking-[0.14em]">{caption}</p>
     </div>
+    )}
+    </>
   );
 }

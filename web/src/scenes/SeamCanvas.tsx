@@ -1,28 +1,29 @@
 import { Html, Line, OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { cropPoint, heightAt, slopeAt, type TileSet } from '../data/tiles';
 import type { World } from '../data/types';
 import { sampleAt, type TrialResult } from '../sim/rover';
 import { useStore, type Mode } from '../state/store';
-import { buildTerrainGeometry, cropBase, EXAG, KM, makeTerrainMaterial, sceneY, sunAt } from './terrain';
+import { buildTerrainGeometry, CLASS_ROUGH, cropBase, EXAG, KM, makeTerrainMaterial, sceneY, sunAt, sunColour } from './terrain';
 
 export interface TrialRun { earth: TrialResult; mars: TrialResult; lengthM: number }
 interface Props {
   earth: TileSet; mars: TileSet; extentM: number; mode: Mode;
   earthLabel: string; marsLabel: string;
+  earthClass?: string; marsClass?: string;
   trial?: TrialRun;
 }
 
 const isSmall = () => typeof window !== 'undefined' && (window.innerWidth < 800 || (navigator.hardwareConcurrency ?? 8) < 4);
 
-function Half({ world, tiles, extentM, offsetX, mode, segments, trialMode }: {
-  world: World; tiles: TileSet; extentM: number; offsetX: number; mode: Mode; segments: number; trialMode: boolean;
+function Half({ world, tiles, extentM, offsetX, mode, segments, trialMode, rough }: {
+  world: World; tiles: TileSet; extentM: number; offsetX: number; mode: Mode; segments: number; trialMode: boolean; rough: number;
 }) {
   const E = extentM * KM;
   const geom = useMemo(() => buildTerrainGeometry(tiles.hf, extentM, segments), [tiles, extentM, segments]);
-  const mat = useMemo(() => makeTerrainMaterial(tiles, extentM, world === 'earth' ? -1 : 1), [tiles, extentM, world]);
+  const mat = useMemo(() => makeTerrainMaterial(tiles, extentM, world === 'earth' ? -1 : 1, rough), [tiles, extentM, world, rough]);
   const sun = useMemo(() => new THREE.Vector3(), []);
   useEffect(() => () => { geom.dispose(); mat.dispose(); }, [geom, mat]);
 
@@ -31,12 +32,13 @@ function Half({ world, tiles, extentM, offsetX, mode, segments, trialMode }: {
     u.uHour.value = s.hour;
     u.uDay.value = sunAt(s.hour, sun);
     (u.uSun.value as THREE.Vector3).copy(sun);
+    sunColour(s.hour, u.uSunCol.value as THREE.Vector3);
     u.uSeamX.value = (s.seam - 0.5) * E;
     u.uSide.value = mode === 'wipe' ? (world === 'earth' ? -1 : 1) : 0;
     u.uGrid.value = s.grid ? 1 : 0;
     const want = s.layer === 'satellite' ? 1 : 0;
     if (Math.abs(want - u.uSatMix.value) > 0.004) {
-      u.uSatMix.value += (want - u.uSatMix.value) * Math.min(1, delta * 10);   // ~300 ms crossfade
+      u.uSatMix.value = Math.min(1, Math.max(0, u.uSatMix.value + Math.sign(want - u.uSatMix.value) * (delta / 0.3)));   // 300 ms wipe
       state.invalidate();
     } else u.uSatMix.value = want;
   });
@@ -120,6 +122,8 @@ function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel:
   const group = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
   const dragging = useRef(false);
+  const [drag, setDrag] = useState(false);
+  const seamPct = useStore((s) => Math.round(s.seam * 100));
   const H = E * 0.16;
   useFrame(() => { if (group.current) group.current.position.x = (useStore.getState().seam - 0.5) * E; });
 
@@ -144,36 +148,100 @@ function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel:
           <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-earth">EARTH · {earthLabel}</span>
           <button
             type="button" role="slider" aria-label="Seam position: drag to show more Earth or more Mars"
-            aria-valuemin={15} aria-valuemax={85} aria-valuenow={Math.round(useStore.getState().seam * 100)}
+            aria-valuemin={15} aria-valuemax={85} aria-valuenow={seamPct}
             className="seam-handle hide-in-director"
-            onPointerDown={(e) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); }}
+            onPointerDown={(e) => { dragging.current = true; setDrag(true); e.currentTarget.setPointerCapture(e.pointerId); }}
             onPointerMove={(e) => dragging.current && setFromClientX(e.clientX)}
-            onPointerUp={() => { dragging.current = false; }}
+            onPointerUp={() => { dragging.current = false; setDrag(false); }}
             onDoubleClick={() => useStore.getState().set({ seam: 0.5 })}
             onKeyDown={(e) => { if (e.key === 'ArrowLeft') nudge(-0.05); if (e.key === 'ArrowRight') nudge(0.05); }}
           >
             <span aria-hidden className="flex gap-[3px]"><i className="block h-3 w-px bg-current" /><i className="block h-3 w-px bg-current" /><i className="block h-3 w-px bg-current" /></span>
           </button>
           <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-mars">MARS · {marsLabel}</span>
+          {drag && <span className="absolute left-1/2 top-full mt-1 -translate-x-1/2 bg-page px-1.5 py-0.5 text-ink">{seamPct} / {100 - seamPct}</span>}
         </div>
       </Html>
     </group>
   );
 }
 
-function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, trial }: Props) {
+const REDUCE = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DEG = Math.PI / 180;
+
+/** Three named views, each a 900 ms ease. After 20 s idle the camera drifts 4 degrees over 30 s, never a spin. */
+function CameraRig({ span, split }: { span: number; split: boolean }) {
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls) as unknown as { update: () => void; addEventListener: (t: string, f: () => void) => void; removeEventListener: (t: string, f: () => void) => void } | null;
+  const invalidate = useThree((s) => s.invalidate);
+  const cam = useStore((s) => s.cam);
+  const anim = useRef<{ from: THREE.Spherical; to: THREE.Spherical; t0: number } | null>(null);
+  const drift = useRef<{ theta: number; t0: number } | null>(null);
+  const first = useRef(true);
+  const idle = useRef(0);
+
+  const armIdle = () => {
+    drift.current = null;
+    window.clearTimeout(idle.current);
+    if (REDUCE) return;
+    idle.current = window.setTimeout(() => {
+      drift.current = { theta: new THREE.Spherical().setFromVector3(camera.position).theta, t0: performance.now() };
+      invalidate();
+    }, 20000);
+  };
+
+  useEffect(() => {
+    const narrow = window.innerWidth < 800 ? 1.25 : 1;
+    const k = (split ? 1.05 : 1.75) * span * narrow;
+    const to = { survey: new THREE.Spherical(k, 35 * DEG, 0), walk: new THREE.Spherical(k * 0.62, 72 * DEG, 0), overhead: new THREE.Spherical(k * 1.05, 2 * DEG, 0) }[cam];
+    const from = first.current ? new THREE.Spherical(to.radius * 1.6, 8 * DEG, 0) : new THREE.Spherical().setFromVector3(camera.position);
+    first.current = false;
+    anim.current = { from, to, t0: REDUCE ? -1e9 : performance.now() };
+    invalidate();
+  }, [cam, span, split]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!controls) return;
+    const stop = () => { anim.current = null; armIdle(); };
+    controls.addEventListener('start', stop);
+    armIdle();
+    return () => { controls.removeEventListener('start', stop); window.clearTimeout(idle.current); };
+  }, [controls]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useFrame(() => {
+    const now = performance.now(), a = anim.current, d = drift.current;
+    if (a) {
+      const k = Math.min(1, (now - a.t0) / 900), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      camera.position.setFromSpherical(new THREE.Spherical(a.from.radius + (a.to.radius - a.from.radius) * e, a.from.phi + (a.to.phi - a.from.phi) * e, a.from.theta + (a.to.theta - a.from.theta) * e));
+      camera.lookAt(0, 0, 0);
+      controls?.update();
+      if (k < 1) invalidate(); else { anim.current = null; armIdle(); }
+    } else if (d) {
+      const k = Math.min(1, (now - d.t0) / 30000);
+      const s = new THREE.Spherical().setFromVector3(camera.position);
+      s.theta = d.theta + 4 * DEG * k;
+      camera.position.setFromSpherical(s);
+      camera.lookAt(0, 0, 0);
+      if (k < 1) invalidate(); else drift.current = null;
+    }
+  });
+  return null;
+}
+
+function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, earthClass, marsClass, trial }: Props) {
   const E = extentM * KM, gap = E * 0.12;
   const off = mode === 'split' ? E / 2 + gap / 2 : 0;
+  const span = mode === 'split' ? 2 * E + gap : E;
   const invalidate = useThree((s) => s.invalidate);
   const segments = useMemo(() => (isSmall() ? 127 : 255), []);
   useEffect(() => useStore.subscribe(() => invalidate()), [invalidate]);
   useEffect(() => { invalidate(); }, [invalidate, earth, mars, mode, trial]);
 
-  const span = mode === 'split' ? 2 * E + gap : E;
   return (
     <>
-      <Half world="earth" tiles={earth} extentM={extentM} offsetX={-off} mode={mode} segments={segments} trialMode={!!trial} />
-      <Half world="mars" tiles={mars} extentM={extentM} offsetX={off} mode={mode} segments={segments} trialMode={!!trial} />
+      <Half world="earth" tiles={earth} extentM={extentM} offsetX={-off} mode={mode} segments={segments} trialMode={!!trial} rough={CLASS_ROUGH[earthClass ?? ''] ?? 0.2} />
+      <Half world="mars" tiles={mars} extentM={extentM} offsetX={off} mode={mode} segments={segments} trialMode={!!trial} rough={CLASS_ROUGH[marsClass ?? ''] ?? 0.2} />
+      <CameraRig span={span} split={mode === 'split'} />
       {mode === 'wipe' && <Seam extentM={extentM} earthLabel={earthLabel} marsLabel={marsLabel} />}
       {mode === 'split' && (
         <>
@@ -196,16 +264,16 @@ function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, trial }: Pro
         <planeGeometry args={[span * 1.04, E * 1.04]} /><meshBasicMaterial color="#12161c" />
       </mesh>
       <mesh position={[-span / 2 + 0.5, 0, E / 2 + E * 0.05]}>
-        <boxGeometry args={[1, E * 0.002, E * 0.004]} /><meshBasicMaterial color="#e6e9ef" />
+        <boxGeometry args={[1, E * 0.001, E * 0.003]} /><meshBasicMaterial color="#e6e9ef" />
       </mesh>
       <Html position={[-span / 2 + 0.5, 0, E / 2 + E * 0.05]} center zIndexRange={[10, 0]}>
         <div className="translate-y-3 whitespace-nowrap font-mono text-xs text-dim">1 km · vertical ×{EXAG}</div>
       </Html>
       <OrbitControls
         makeDefault enablePan={false} target={[0, 0, 0]}
-        minPolarAngle={(20 * Math.PI) / 180} maxPolarAngle={(70 * Math.PI) / 180}
+        minPolarAngle={(1 * Math.PI) / 180} maxPolarAngle={(75 * Math.PI) / 180}
         minAzimuthAngle={-Math.PI / 3} maxAzimuthAngle={Math.PI / 3}
-        minDistance={span * 0.45} maxDistance={span * 3}
+        minDistance={span * 0.45} maxDistance={span * 3.4}
       />
     </>
   );

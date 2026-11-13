@@ -3,6 +3,7 @@ import type { SitesJson, World } from '../data/types';
 
 export type Layer = 'temperature' | 'satellite';
 export type Mode = 'wipe' | 'split';
+export type Cam = 'survey' | 'walk' | 'overhead';
 export interface Hover { world: World; slopeDeg: number; heightM: number }
 
 interface Store {
@@ -17,6 +18,8 @@ interface Store {
   layer: Layer;
   mode: Mode;
   grid: boolean;         // draw source-pixel grid
+  cam: Cam;
+  sound: boolean;        // opt-in, off by default
   hover: Hover | null;
   trial: { a: [number, number]; b: [number, number]; t: number; running: boolean };
   director: boolean;
@@ -40,6 +43,8 @@ export const useStore = create<Store>((set) => ({
   layer: 'temperature',
   mode: 'wipe',
   grid: false,
+  cam: 'survey',
+  sound: false,
   hover: null,
   trial: { a: [0.12, 0.85], b: [0.88, 0.15], t: 0, running: false },
   director: false,

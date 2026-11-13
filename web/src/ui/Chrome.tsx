@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useStore } from '../state/store';
+import { setSound } from './sound';
 
 export function Chrome({ children }: { children: ReactNode }) {
   const data = useStore((s) => s.data);
   const target = useStore((s) => s.target);
   const setTarget = useStore((s) => s.setTarget);
+  const sound = useStore((s) => s.sound);
   const { hash } = useLocation();
   const link = (to: string, label: string) => (
     <NavLink to={{ pathname: to, hash: hash || `#t=${target}` }} end
@@ -29,6 +31,9 @@ export function Chrome({ children }: { children: ReactNode }) {
               ))}
             </div>
           )}
+          <button type="button" className="btn" aria-pressed={sound} onClick={() => { setSound(!sound); useStore.getState().set({ sound: !sound }); }}>
+            Sound {sound ? 'on' : 'off'}
+          </button>
           {data?.meta.mock && <span className="chip mock !text-amber" title="sites.json → meta.mock">Mock data</span>}
         </div>
       </header>

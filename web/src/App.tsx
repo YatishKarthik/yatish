@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { loadSites } from './data/load';
 import { Director } from './director/Director';
-import { initClock } from './state/clock';
+import { initClock, runIntro } from './state/clock';
 import { useStore } from './state/store';
 import { Chrome } from './ui/Chrome';
 import { EvidenceView } from './views/EvidenceView';
@@ -22,6 +22,7 @@ export default function App() {
       .then((data) => {
         const t = useStore.getState().target;
         set({ data, loadState: 'ready', target: data.targets.some((x) => x.id === t) ? t : data.targets[0].id });
+        runIntro();
       })
       .catch((e: Error) => set({ loadState: 'error', error: e.message }));
   }, []);

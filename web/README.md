@@ -8,6 +8,7 @@ npm run mock     # regenerate mock sites.json and tiles (deterministic)
 npm run dev      # local server; open the http://localhost:5173 address it prints
 npm test         # unit tests: selectors and the rover trial
 npm run build    # type-check and build to dist/
+npm run smoke    # browser smoke test on the build (needs: npm i -D playwright && npx playwright install chromium)
 ```
 
 ## Views
@@ -20,7 +21,9 @@ npm run build    # type-check and build to dist/
 | `/evidence` | Curve overlay, controls, rover ground truth, local readings |
 | `/method` | Formula, weights, data table, classes, AI statement |
 
-The Mars target is kept in the URL hash (`#t=jezero`). Press `D` or open `/?director=1` for the scripted 30-second demo.
+The Mars target is kept in the URL hash (`#t=jezero`). Press `D` or open `/?director=1` for the scripted 30-second demo. Add `?nointro` to skip the opening sequence.
+
+To re-shoot the submission figures into `report/figures/`: `npm run build && node scripts/smoke.cjs --figures ../report/figures`.
 
 ## Data contract
 

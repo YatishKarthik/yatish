@@ -3,16 +3,17 @@ import { Link } from 'react-router-dom';
 import { PERMIT, SCENARIO_TITLE } from '../data/select';
 import type { Scenario, Verdict } from '../data/types';
 import { withTarget } from '../state/store';
+import { stampClick } from '../ui/sound';
 
 export function PermitCard({ scenario, verdict, siteId, defaultOpen = false }: { scenario: Scenario; verdict: Verdict; siteId: string; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   const p = PERMIT[verdict.level];
   return (
-    <div className="rounded-[10px] border border-line bg-paper p-1">
+    <div className="permit rounded-[10px] border border-line bg-paper p-1">
       <div className="rounded-[8px] border border-dashed border-line p-3">
-        <button type="button" className="flex w-full flex-col items-start gap-2 text-left" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <button type="button" className="flex w-full flex-col items-start gap-2 text-left" aria-expanded={open} onClick={() => { if (!open) stampClick(); setOpen(!open); }}>
           <span className="flex w-full items-center justify-between gap-2">
-            <span className="stamp" style={{ color: p.colour, borderColor: p.colour }}>{p.word}</span>
+            <span key={String(open)} className={`stamp ${open ? 'stamp-land' : ''}`} style={{ color: p.colour, borderColor: p.colour }}>{p.word}</span>
             <span className="caps">{open ? 'Hide' : 'Details'}</span>
           </span>
           <span className="font-mono text-sm tracking-wide">{SCENARIO_TITLE[scenario]}</span>

@@ -26,10 +26,23 @@ The app is a mission-ops console: a dark bench with instruments on it, where the
 |---|---|
 | Hour crossfade on terrain colour | information: temperature at the clock hour |
 | Sun direction on terrain shading | information: local solar time, landform |
+| Sun colour, warm at low sun and neutral at noon (satellite layer only) | information: time of day |
 | Pixel grid toggle | information: real elevation pixel size |
 | Hour cursor across all ribbons | information: same hour on every site |
 | Ribbon thickness | information: size of the day–night swing |
-| Row rise on load (300 ms, staggered 50 ms) | decorative, capped at 300 ms; off with reduced motion |
-| Viewport corner marks | decorative, static |
+| Ribbon hover previews that hour, restores on leave | information |
+| Layer change wipes left to right, 300 ms | information: same ground, different reading |
+| Row reorder slides (FLIP), 300 ms | information: follow a site when the target changes |
+| Seam handle shows the Earth / Mars split while dragging | information |
+| Camera presets Survey / Walk / Overhead, 900 ms ease; entry dolly-in | information: three ways to read relief |
+| Opening sequence: clock runs 06:00 to 14:00 in 1.8 s, chrome fades in last | decorative, first load only, skippable, off with reduced motion |
+| Idle drift: 4° over 30 s after 20 s idle | decorative, capped at 4°, off with reduced motion |
+| Fine surface relief by class (satellite layer only) | decorative, capped at strength 0.3; not measured terrain |
+| Vignette and 1.5 % grain over the viewport | decorative, CSS only, capped at 30 % edge darkening |
+| Permit card lifts 2 px; stamp lands in 150 ms | decorative |
+| Director frame 2.39:1 with timecode | decorative, director mode only |
+| Sound: site tone, stamp click, slip hiss | decorative, off by default, opt-in |
 
-Later steps of the cinematic pass add to this table.
+## Left out on purpose
+
+Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).

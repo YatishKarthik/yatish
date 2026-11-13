@@ -1,10 +1,11 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { pathProfile } from '../data/tiles';
 import type { World } from '../data/types';
 import { SeamCanvas } from '../scenes/SeamCanvas';
 import { runTrial, sampleAt, STEP_M, type TrialResult } from '../sim/rover';
 import { useStore, withTarget } from '../state/store';
+import { slipHiss } from '../ui/sound';
 import { Hud, MissingTiles, NotFound } from './SeamView';
 import { useSeam } from './useSeam';
 
@@ -51,6 +52,7 @@ export function TrialView() {
   const setTrial = useStore((s) => s.setTrial);
   const director = useStore((s) => s.director);
   const friction = data.meta.friction;
+  const [aCmd, setACmd] = useState(0.2);
 
   const run = useMemo(() => {
     if (!tiles || !site || !friction) return null;
@@ -58,10 +60,10 @@ export function TrialView() {
     if (muE == null || muM == null) return null;
     const hE = pathProfile(tiles.earth.hf, extentM, trial.a, trial.b, STEP_M);
     const hM = pathProfile(tiles.mars.hf, extentM, trial.a, trial.b, STEP_M);
-    const earth = runTrial(hE, { g: data.planets.earth.gravity, mu: muE });
-    const mars = runTrial(hM, { g: data.planets[target.body].gravity, mu: muM });
+    const earth = runTrial(hE, { g: data.planets.earth.gravity, mu: muE, aCmd });
+    const mars = runTrial(hM, { g: data.planets[target.body].gravity, mu: muM, aCmd });
     return { earth, mars, hE, hM, muE, muM, lengthM: (hE.length - 1) * STEP_M, end: Math.max(earth.duration, mars.duration) };
-  }, [tiles, site, target, friction, extentM, trial.a, trial.b, data]);
+  }, [tiles, site, target, friction, extentM, trial.a, trial.b, data, aCmd]);
 
   // playback: simulated seconds are compressed so the whole drive takes about ten seconds
   useEffect(() => {
@@ -74,6 +76,7 @@ export function TrialView() {
       last = now;
       if (t >= run.end) { s.setTrial({ t: run.end, running: false }); return; }
       s.setTrial({ t });
+      if (s.sound && (sampleAt(run.earth, t).slip > 0.3 || sampleAt(run.mars, t).slip > 0.3)) slipHiss();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -99,12 +102,13 @@ export function TrialView() {
         <Link to={withTarget(`/seam/${site.id}`)} className="btn">Back to the seam</Link>
         <h1 className="head">Rover trial · {site.name} vs {target.name}</h1>
       </div>
-      <div className={`viewport ${director ? 'h-[60vh]' : 'h-[44vh] min-h-[280px]'}`}>
+      <div className={`viewport ${director ? 'letterbox !max-h-[60vh]' : 'h-[44vh] min-h-[280px]'}`}>
         {tiles && run
-          ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode="split" earthLabel={site.name} marsLabel={target.name} trial={run} />
+          ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode="split" earthLabel={site.name} marsLabel={target.name} earthClass={site.class.name} marsClass={target.class?.name} trial={run} />
           : <div className="flex h-full items-center justify-center px-5 text-center font-mono text-sm text-dim">
               {tiles && !friction ? 'The trial needs a friction table in sites.json.' : 'Loading terrain…'}
             </div>}
+        <div className="fx" />
         <Hud extra="Click the terrain to move the path" />
         {tiles && <MissingTiles earth={tiles.earth.missing} mars={tiles.mars.missing} />}
       </div>
@@ -114,6 +118,13 @@ export function TrialView() {
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className="btn btn-primary hide-in-director" onClick={() => setTrial({ t: 0, running: true })}>{done || trial.t > 0 ? 'Run again' : 'Run the trial'}</button>
             <button type="button" className="btn hide-in-director" onClick={() => setTrial({ a: [0.12, 0.85], b: [0.88, 0.15], t: 0, running: false })}>Reset path</button>
+            <label className="hide-in-director flex items-center gap-2">
+              <span className="caps">Acceleration</span>
+              <input type="range" className="scrub w-32" min={0.1} max={0.5} step={0.05} value={aCmd}
+                onChange={(e) => { setACmd(Number(e.target.value)); setTrial({ t: 0, running: false }); }}
+                aria-valuetext={`${aCmd.toFixed(2)} metres per second squared`} />
+              <span className="font-mono text-sm tabular-nums">{aCmd.toFixed(2)} m/s²</span>
+            </label>
             <div aria-live="polite" className="flex flex-wrap items-center gap-3">
               {done && (
                 <>

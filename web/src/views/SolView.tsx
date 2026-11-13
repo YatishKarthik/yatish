@@ -7,6 +7,7 @@ import { useStore, withTarget } from '../state/store';
 import { ClockBar } from '../ui/ClockBar';
 import { Num } from '../ui/Num';
 import { Seg } from '../ui/Seg';
+import { useFlip } from '../ui/useFlip';
 
 export function SolView() {
   const data = useStore((s) => s.data)!;
@@ -16,6 +17,7 @@ export function SolView() {
   const [cat, setCat] = useState('all');
   const target = data.targets[Math.max(0, targetIndex(data, targetId))];
   const ranked = rankedSites(data, target.id).filter((s) => (cls === 'all' || s.class.name === cls) && (cat === 'all' || s.catalogue.status === cat));
+  const listRef = useFlip<HTMLOListElement>(`${target.id}|${cls}|${cat}`);
   const classes = ['all', ...new Set(data.sites.map((s) => s.class.name))];
   const cats = ['all', ...new Set(data.sites.map((s) => s.catalogue.status))];
 
@@ -67,11 +69,11 @@ export function SolView() {
         {ranked.length === 0 && (
           <div className="panel p-5 text-dim">No sites match. <button type="button" className="btn ml-2" onClick={() => { setCls('all'); setCat('all'); }}>Clear filters</button></div>
         )}
-        <ol className="space-y-2">
+        <ol className="space-y-2" ref={listRef}>
           {ranked.map((s, rank) => {
             const si = siteIndex(data, s.id);
             return (
-              <li key={`${target.id}-${s.id}`} className="rise" style={{ animationDelay: `${rank * 50}ms` }}>
+              <li key={s.id} data-key={s.id}>
                 <Link to={withTarget(`/seam/${s.id}`)}
                   className={`panel row grid grid-cols-[1fr] items-center gap-x-5 gap-y-1 px-3 py-3 md:grid-cols-[220px_1fr_150px] ${s.mock ? 'mock' : ''}`}>
                   <span>

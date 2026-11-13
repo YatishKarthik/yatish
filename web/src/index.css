@@ -67,3 +67,25 @@ input[type='range'].scrub::-moz-range-thumb { width: 3px; height: 24px; backgrou
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
 }
+
+/* permit card: lifts on hover; the stamp lands when the card opens */
+.permit { transition: transform var(--motion-150) var(--ease-out), border-color var(--motion-150) var(--ease-out); }
+.permit:hover { transform: translateY(-2px); border-color: #9aa4b2; }
+.stamp-land { animation: land var(--motion-150) var(--ease-out) both; }
+@keyframes land { from { opacity: 0; transform: rotate(-6deg) scale(1.35); } to { opacity: 1; transform: rotate(-6deg) scale(1); } }
+
+/* viewport finish: light vignette and 1.5% grain. Decorative, sits above the canvas, never above labels. */
+.fx {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.3) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.015 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* opening sequence, first load only: content first, chrome last */
+html.intro main { animation: fade var(--motion-300) var(--ease-out) both; }
+html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* director mode: 2.39:1 frame */
+.letterbox { aspect-ratio: 2.39 / 1; width: 100%; max-height: 82vh; }
