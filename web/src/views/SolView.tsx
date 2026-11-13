@@ -25,14 +25,14 @@ export function SolView() {
 
       <section aria-label="Mars targets" className="space-y-1">
         <div className="flex items-baseline justify-between">
-          <h2 className="display text-sm">Mars targets</h2>
-          <span className="caps">one band = one day of ground temperature, 00 to 24 h</span>
+          <h2 className="head">Mars targets</h2>
+          <span className="caps">ground temperature over one day</span>
         </div>
         {data.targets.map((t) => {
           const ti = targetIndex(data, t.id), on = t.id === target.id;
           return (
             <button key={t.id} type="button" aria-pressed={on} onClick={() => setTarget(t.id)}
-              className={`panel row grid w-full grid-cols-[1fr] items-center gap-x-5 gap-y-1 border-l-2 px-3 py-2 text-left md:grid-cols-[220px_1fr_150px] ${on ? '!border-l-accent' : ''}`}>
+              className={`panel row grid w-full grid-cols-[1fr] items-center gap-x-5 gap-y-1 border-l-2 px-3 py-2 text-left md:grid-cols-[220px_1fr_150px] ${on ? '!border-l-ink' : ''}`}>
               <span className="flex items-center gap-3">
                 {t.satellite_tile && <img src={asset(t.satellite_tile)} alt="" width={40} height={40} className="h-10 w-10 object-cover" />}
                 <span>
@@ -51,7 +51,7 @@ export function SolView() {
 
       <section aria-label="Earth sites ranked for the chosen target" className="space-y-2">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <h2 className="display text-sm">Earth sites for {target.name}</h2>
+          <h2 className="head">Earth sites for {target.name}</h2>
           <span className="flex items-center gap-2"><span className="caps">Class</span>
             <Seg label="Filter by surface class" value={cls} onChange={setCls} options={classes.map((c) => ({ value: c, label: c }))} /></span>
           <span className="flex items-center gap-2"><span className="caps">Catalogue</span>
@@ -65,7 +65,7 @@ export function SolView() {
         </div>
 
         {ranked.length === 0 && (
-          <div className="panel p-5 text-dim">No sites match these filters. <button type="button" className="btn ml-2" onClick={() => { setCls('all'); setCat('all'); }}>Clear filters</button></div>
+          <div className="panel p-5 text-dim">No sites match. <button type="button" className="btn ml-2" onClick={() => { setCls('all'); setCat('all'); }}>Clear filters</button></div>
         )}
         <ol className="space-y-2">
           {ranked.map((s, rank) => {
@@ -81,15 +81,14 @@ export function SolView() {
                       {s.class.name} · {s.catalogue.status}
                       {s.kind === 'negative_control' && s.catalogue.status !== 'decoy' && <span className="text-denied"> · decoy</span>}
                       {s.kind === 'positive_control' && <span className="text-permit"> · known analog</span>}
-                      {s.mock && <span className="text-amber"> · mock</span>}
-                    </span>
+                                          </span>
                   </span>
                   <span>
                     <Ribbon curve={s.curve} source={s.curve_source} swingPct={s.features.amplitude_pct} label={`${s.name} thermal day`} />
                     <span className="caps">{resolutionLabel(s)} · swing P<Num path={`sites.${si}.features.amplitude_pct`} /></span>
                   </span>
                   <span className="md:text-right">
-                    <Num path={`sites.${si}.closeness.${target.id}.total`} className="text-2xl text-ink" />
+                    <Num path={`sites.${si}.closeness.${target.id}.total`} className="text-xl text-ink" />
                     <span className="caps block">closeness</span>
                   </span>
                 </Link>
@@ -103,10 +102,10 @@ export function SolView() {
         <span className="flex items-center gap-2">
           <span className="caps">coolest</span>
           <span className="h-1 w-40" style={{ background: `linear-gradient(90deg, ${[0, 0.25, 0.5, 0.75, 1].map(tempColour).join(',')})` }} />
-          <span className="caps">warmest of that site's day</span>
+          <span className="caps">warmest</span>
         </span>
-        <span>Band thickness: size of the day–night swing, as a percentile within its own planet.</span>
-        <span>Dashed cells: no data at that hour (2-point MODIS).</span>
+        <span>Thicker band = larger day–night swing.</span>
+        <span>Dashed = no data at that hour.</span>
       </section>
     </div>
   );

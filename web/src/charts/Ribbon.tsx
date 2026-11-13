@@ -14,7 +14,7 @@ export function Ribbon({ curve, source, swingPct, label }: { curve: number[]; so
           const shown = !twoPoint || i === 1 || i === 13;
           return (
             <div key={i} className="flex-1"
-              style={shown ? { background: tempColour(v) } : { border: '1px dashed #23272e' }} />
+              style={shown ? { background: tempColour(v) } : { border: '1px dashed #262d37' }} />
           );
         })}
       </div>

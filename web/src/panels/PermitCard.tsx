@@ -13,7 +13,7 @@ export function PermitCard({ scenario, verdict, siteId, defaultOpen = false }: {
         <button type="button" className="flex w-full flex-col items-start gap-2 text-left" aria-expanded={open} onClick={() => setOpen(!open)}>
           <span className="flex w-full items-center justify-between gap-2">
             <span className="stamp" style={{ color: p.colour, borderColor: p.colour }}>{p.word}</span>
-            <span className="caps">{open ? 'Hide fine print' : 'Read fine print'}</span>
+            <span className="caps">{open ? 'Hide' : 'Details'}</span>
           </span>
           <span className="font-mono text-sm tracking-wide">{SCENARIO_TITLE[scenario]}</span>
           <span className="text-sm font-semibold">{verdict.rule}</span>
@@ -23,10 +23,10 @@ export function PermitCard({ scenario, verdict, siteId, defaultOpen = false }: {
             <p className="text-sm text-dim">{verdict.detail}</p>
             {scenario === 'driving'
               ? <Link to={withTarget(`/trial/${siteId}`)} className="btn btn-primary">Run this trial</Link>
-              : <p className="caps" title="Plume and drill outcomes would be scripted, not simulated, so we do not animate them.">Illustration only · not simulated</p>}
+              : null}
           </div>
         )}
-        <p className="caps mt-2">Issued by rule engine{verdict.rule_id ? ` · rule ${verdict.rule_id}` : ''}</p>
+        <p className="caps mt-2">{verdict.rule_id ? `Rule ${verdict.rule_id}` : 'Rule engine'}</p>
       </div>
     </div>
   );

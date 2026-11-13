@@ -99,15 +99,15 @@ function Rover({ world, tiles, extentM, offsetX, result, lengthM }: {
   });
 
   const stuck = result.outcome === 'STUCK';
-  const body = world === 'earth' ? '#6ea8ff' : '#f2b599';
+  const body = world === 'earth' ? '#4f8df7' : '#e0673a';
   return (
     <>
-      <Line points={pathPts} color={stuck ? '#f85149' : '#eef0f2'} lineWidth={2} dashed dashSize={E * 0.02} gapSize={E * 0.012} />
+      <Line points={pathPts} color={stuck ? '#f85149' : '#e6e9ef'} lineWidth={2} dashed dashSize={E * 0.02} gapSize={E * 0.012} />
       <group ref={ref}>
         <mesh><boxGeometry args={[size * 1.1, size * 0.5, size * 1.6]} /><meshBasicMaterial color={body} /></mesh>
         {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz], i) => (
           <mesh key={i} position={[sx * size * 0.65, -size * 0.25, sz * size * 0.6]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[size * 0.32, size * 0.32, size * 0.25, 12]} /><meshBasicMaterial color="#eef0f2" />
+            <cylinderGeometry args={[size * 0.32, size * 0.32, size * 0.25, 12]} /><meshBasicMaterial color="#e6e9ef" />
           </mesh>
         ))}
       </group>
@@ -138,7 +138,7 @@ function Seam({ extentM, earthLabel, marsLabel }: { extentM: number; earthLabel:
         <planeGeometry args={[E, H]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
-      <Line points={[[0, H, -E / 2], [0, H, E / 2], [0, 0, E / 2]]} color="#eef0f2" lineWidth={1.5} transparent opacity={0.7} />
+      <Line points={[[0, H, -E / 2], [0, H, E / 2], [0, 0, E / 2]]} color="#e6e9ef" lineWidth={1.5} transparent opacity={0.7} />
       <Html position={[0, H, E / 2]} center zIndexRange={[20, 0]}>
         <div className="flex -translate-y-5 select-none items-center gap-2 whitespace-nowrap font-mono text-xs">
           <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-earth">EARTH · {earthLabel}</span>
@@ -193,10 +193,10 @@ function Scene({ earth, mars, extentM, mode, earthLabel, marsLabel, trial }: Pro
       )}
       {/* bench plate and a 1 km scale bar on the ground */}
       <mesh position={[0, -E * 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[span * 1.04, E * 1.04]} /><meshBasicMaterial color="#0d0f12" />
+        <planeGeometry args={[span * 1.04, E * 1.04]} /><meshBasicMaterial color="#12161c" />
       </mesh>
       <mesh position={[-span / 2 + 0.5, 0, E / 2 + E * 0.05]}>
-        <boxGeometry args={[1, E * 0.002, E * 0.004]} /><meshBasicMaterial color="#eef0f2" />
+        <boxGeometry args={[1, E * 0.002, E * 0.004]} /><meshBasicMaterial color="#e6e9ef" />
       </mesh>
       <Html position={[-span / 2 + 0.5, 0, E / 2 + E * 0.05]} center zIndexRange={[10, 0]}>
         <div className="translate-y-3 whitespace-nowrap font-mono text-xs text-dim">1 km · vertical ×{EXAG}</div>

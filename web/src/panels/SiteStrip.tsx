@@ -3,7 +3,7 @@ import type { Site, Target } from '../data/types';
 import { useStore } from '../state/store';
 import { Num } from '../ui/Num';
 
-function Bar({ label, path, colour = '#eef0f2' }: { label: string; path: string; colour?: string }) {
+function Bar({ label, path, colour = '#e6e9ef' }: { label: string; path: string; colour?: string }) {
   return (
     <div className="grid grid-cols-[124px_1fr_36px] items-center gap-2">
       <span className="caps">{label}</span>
@@ -27,11 +27,11 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
     <section className={`panel space-y-3 p-3 ${site.mock ? 'mock' : ''}`} aria-label="Site numbers">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="display text-sm">{site.name}</h2>
+          <h2 className="head">{site.name}</h2>
           <p className="text-sm text-dim">{site.region} · <Num path={`sites.${si}.area_km2`} digits={0} unit=" km²" /></p>
         </div>
         <div className="text-right">
-          <Num path={`${c}.total`} className="text-2xl text-ink" />
+          <Num path={`${c}.total`} className="text-xl text-ink" />
           <p className="caps">closeness to {target.name}</p>
         </div>
       </div>
@@ -40,15 +40,15 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
         <Bar label="Terrain" path={`${c}.terrain`} />
         {site.closeness[target.id]?.minerals != null
           ? <Bar label="Minerals" path={`${c}.minerals`} />
-          : <p className="caps">Minerals: no EMIT scene · term excluded</p>}
+          : <p className="caps">Minerals: no data</p>}
       </div>
       <div>
-        <p className="caps mb-1">Within-planet percentiles · Earth vs Mars</p>
+        <p className="caps mb-1">Percentile within each planet</p>
         <div className="space-y-1.5">
-          <Bar label="Swing · Earth" path={`sites.${si}.features.amplitude_pct`} colour="#6ea8ff" />
-          <Bar label="Swing · Mars" path={`targets.${ti}.features.amplitude_pct`} colour="#f2b599" />
-          <Bar label="Inertia · Earth" path={`sites.${si}.features.ati_star_pct`} colour="#6ea8ff" />
-          <Bar label="Inertia · Mars" path={`targets.${ti}.features.ati_star_pct`} colour="#f2b599" />
+          <Bar label="Swing · Earth" path={`sites.${si}.features.amplitude_pct`} colour="#4f8df7" />
+          <Bar label="Swing · Mars" path={`targets.${ti}.features.amplitude_pct`} colour="#e0673a" />
+          <Bar label="Inertia · Earth" path={`sites.${si}.features.ati_star_pct`} colour="#4f8df7" />
+          <Bar label="Inertia · Mars" path={`targets.${ti}.features.ati_star_pct`} colour="#e0673a" />
         </div>
       </div>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
@@ -60,7 +60,7 @@ export function SiteStrip({ site, target, si, ti }: { site: Site; target: Target
         <dt className="caps">Thermal data</dt><dd className="font-mono text-xs uppercase">{resolutionLabel(site)}</dd>
         <dt className="caps">Mars data</dt><dd className="font-mono text-xs uppercase">{resolutionLabel(target)}</dd>
         <dt className="caps">Catalogue</dt>
-        <dd>{site.catalogue.status}{site.catalogue.checked_by ? <span className="text-dim"> · checked by {site.catalogue.checked_by}</span> : null}</dd>
+        <dd>{site.catalogue.status}</dd>
       </dl>
       <p className="text-sm text-dim">{site.class.label}</p>
     </section>

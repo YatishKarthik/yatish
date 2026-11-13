@@ -31,9 +31,8 @@ export default function App() {
   if (loadState === 'error')
     return (
       <div className="mx-auto max-w-xl p-8" role="alert">
-        <h1 className="text-lg font-semibold">The site data could not be used</h1>
+        <h1 className="text-lg font-semibold">Could not load site data</h1>
         <pre className="mt-3 whitespace-pre-wrap rounded border border-line bg-panel p-3 font-mono text-sm text-amber">{error}</pre>
-        <p className="mt-3 text-dim">Nothing is shown rather than showing numbers that failed the contract. Run <code className="font-mono">npm run mock</code> to restore mock data.</p>
         <button type="button" className="btn mt-3" onClick={load}>Try again</button>
       </div>
     );

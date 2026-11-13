@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { PERMIT } from '../data/select';
 import { pathProfile } from '../data/tiles';
 import type { World } from '../data/types';
 import { SeamCanvas } from '../scenes/SeamCanvas';
@@ -21,7 +20,7 @@ function Profile({ world, heights, result, lengthM }: { world: World; heights: F
   for (let i = 0; i < heights.length; i += step) d += `${i === 0 ? 'M' : 'L'}${((i / (heights.length - 1)) * W).toFixed(1)},${(H - 6 - ((heights[i] - min) / span) * (H - 14)).toFixed(1)}`;
   const slipBands = result.samples.filter((s) => s.slip > 0.3).map((s) => (s.dist / lengthM) * W);
   const x = (st.dist / lengthM) * W;
-  const colour = world === 'earth' ? '#6ea8ff' : '#f2b599';
+  const colour = world === 'earth' ? '#4f8df7' : '#e0673a';
   const done = t >= result.duration;
   return (
     <div className="panel p-3">
@@ -31,15 +30,15 @@ function Profile({ world, heights, result, lengthM }: { world: World; heights: F
         <span>speed {st.speed.toFixed(2)} m/s</span>
         <span>slope {st.slopeDeg.toFixed(1)}°</span>
         <span>{st.dist.toFixed(0)} / {lengthM.toFixed(0)} m</span>
-        <span className="font-semibold" style={{ color: done ? (result.outcome === 'PASS' ? '#3fb950' : '#f85149') : '#99a1ac' }}>{done ? result.outcome : 'RUNNING'}</span>
+        <span className="font-semibold" style={{ color: done ? (result.outcome === 'PASS' ? '#3fb950' : '#f85149') : '#9aa4b2' }}>{done ? result.outcome : 'RUNNING'}</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${world} elevation along the path, relief ${span.toFixed(0)} metres`}>
         {slipBands.map((bx, i) => <rect key={i} x={bx - 1} y={0} width={3} height={H} fill="#f85149" opacity={0.35} />)}
         <path d={d} fill="none" stroke={colour} strokeWidth={1.5} />
-        <line x1={x} x2={x} y1={0} y2={H} stroke="#eef0f2" strokeWidth={1} />
+        <line x1={x} x2={x} y1={0} y2={H} stroke="#e6e9ef" strokeWidth={1} />
       </svg>
       <p className="caps">
-        Steepest climb {result.maxSlopeDeg.toFixed(1)}° · stuck threshold here {result.stuckSlopeDeg.toFixed(1)}° · margin {(result.stuckSlopeDeg - result.maxSlopeDeg).toFixed(1)}° · relief {span.toFixed(0)} m
+        Steepest climb {result.maxSlopeDeg.toFixed(1)}° · slip limit {result.stuckSlopeDeg.toFixed(1)}° · relief {span.toFixed(0)} m
       </p>
     </div>
   );
@@ -84,31 +83,29 @@ export function TrialView() {
 
   if (!site) return <NotFound what="Site" />;
   const done = !!run && trial.t >= run.end;
-  const permit = site.verdicts[target.id]?.driving;
   let sentence = '';
   if (run && done) {
     const e = run.earth, m = run.mars;
     if (e.outcome === 'PASS' && m.outcome === 'PASS')
-      sentence = `Both rovers finish. The steepest climb is ${e.maxSlopeDeg.toFixed(1)}° on Earth and ${m.maxSlopeDeg.toFixed(1)}° on Mars; slip would stop them at ${e.stuckSlopeDeg.toFixed(1)}° and ${m.stuckSlopeDeg.toFixed(1)}°.`;
-    else if (e.outcome === 'PASS') sentence = `The drive that passes on Earth sticks on Mars: lower gravity and the target's surface cut the traction margin to below the ${m.maxSlopeDeg.toFixed(1)}° climb.`;
-    else if (m.outcome === 'PASS') sentence = 'The Earth rover sticks where the Mars rover passes: the two terrains differ more than the gravity does.';
-    else sentence = 'Both rovers stick on this path. Pick a gentler line.';
-    if (permit) sentence += ` Driving permit for this pair: ${PERMIT[permit.level].word}.`;
+      sentence = `Both rovers finish. Steepest climb ${e.maxSlopeDeg.toFixed(1)}° on Earth, ${m.maxSlopeDeg.toFixed(1)}° on Mars.`;
+    else if (e.outcome === 'PASS') sentence = `Passes on Earth, sticks on Mars on a ${m.maxSlopeDeg.toFixed(1)}° climb.`;
+    else if (m.outcome === 'PASS') sentence = 'Sticks on Earth, passes on Mars.';
+    else sentence = 'Both rovers stick on this path.';
   }
 
   return (
     <div className="flex flex-col gap-3 p-3">
       <div className="hide-in-director flex flex-wrap items-center gap-3">
         <Link to={withTarget(`/seam/${site.id}`)} className="btn">Back to the seam</Link>
-        <h1 className="display text-sm">Rover trial · {site.name} vs {target.name}</h1>
+        <h1 className="head">Rover trial · {site.name} vs {target.name}</h1>
       </div>
       <div className={`viewport ${director ? 'h-[60vh]' : 'h-[44vh] min-h-[280px]'}`}>
         {tiles && run
           ? <SeamCanvas earth={tiles.earth} mars={tiles.mars} extentM={extentM} mode="split" earthLabel={site.name} marsLabel={target.name} trial={run} />
           : <div className="flex h-full items-center justify-center px-5 text-center font-mono text-sm text-dim">
-              {tiles && !friction ? 'meta.friction is missing from sites.json, so the trial cannot run. See the driving permit for the rule-engine result.' : 'Loading terrain…'}
+              {tiles && !friction ? 'The trial needs a friction table in sites.json.' : 'Loading terrain…'}
             </div>}
-        <Hud extra="Click the terrain to move the nearest end of the path · rover drawn oversize" />
+        <Hud extra="Click the terrain to move the path" />
         {tiles && <MissingTiles earth={tiles.earth.missing} mars={tiles.mars.missing} />}
       </div>
 
@@ -132,11 +129,8 @@ export function TrialView() {
             <Profile world="earth" heights={run.hE} result={run.earth} lengthM={run.lengthM} />
             <Profile world="mars" heights={run.hM} result={run.mars} lengthM={run.lengthM} />
           </div>
-          <p className="hide-in-director max-w-4xl text-sm text-dim">
-            Same code on both worlds; only gravity ({data.planets.earth.gravity} vs {data.planets[target.body].gravity} m/s²) and friction
-            (μ {run.muE} for {site.class.name} here, μ {run.muM} for the target's class) differ. The static friction angle does not depend on gravity.
-            Gravity matters because the commanded acceleration (0.2 m/s²) is not scaled by it, so the same climb uses more of the available traction on Mars.
-            Terrain is {tiles?.earth.hf.sourceResM} m on Earth and {tiles?.mars.hf.sourceResM} m on Mars: rover-scale rocks and ripples are not in it, so a PASS here is about slope, not obstacles.
+          <p className="hide-in-director caps">
+            Gravity {data.planets.earth.gravity} / {data.planets[target.body].gravity} m/s² · friction μ {run.muE} / {run.muM} · terrain {tiles?.earth.hf.sourceResM} m / {tiles?.mars.hf.sourceResM} m (Earth / Mars)
           </p>
         </>
       )}
