@@ -11,7 +11,7 @@ npm run build    # type-check and build to dist/
 npm run smoke    # browser smoke test on the build (needs: npm i -D playwright && npx playwright install chromium)
 ```
 
-If `npm run dev` stops with "Cannot find native binding", npm skipped the build tool's native module for your platform (a known npm bug with lockfiles made on another OS). Delete `node_modules` and `package-lock.json`, then run `npm install` again.
+No lockfile is committed: lockfiles written on one operating system have made npm skip the build tool's native module on another. If `npm run dev` ever stops with "Cannot find native binding", delete `node_modules` and `package-lock.json` and run `npm install` again.
 
 ## Views
 
