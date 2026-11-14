@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2, AlertTriangle, Search } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
 import AnalyticsView, { MatchPayload, EarthMatch } from "@/components/AnalyticsView";
 import { ThemeToggle } from "@/components/ui";
-import { Tour, HelpButton, type TourStep } from "@/components/Tutorial";
+import { Tour, HelpButton, TourPrompt, type TourStep } from "@/components/Tutorial";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 const DualSimulator = dynamic(() => import("@/components/DualSimulator"), { ssr: false });
@@ -58,6 +58,9 @@ export default function Home() {
   const [matchResult, setMatchResult] = useState<MatchPayload | null>(null);
   const [simMatch, setSimMatch] = useState<EarthMatch | null>(null);
   const [tour, setTour] = useState(false);
+  const [prompt, setPrompt] = useState(false);
+  useEffect(() => { try { if (!localStorage.getItem("tt-tour-seen")) { const id = window.setTimeout(() => setPrompt(true), 900); return () => window.clearTimeout(id); } } catch { /* ignore */ } }, []);
+  const seen = () => { try { localStorage.setItem("tt-tour-seen", "1"); } catch { /* ignore */ } };
 
   const loadTargets = () => {
     setBackendError(false);
@@ -93,7 +96,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen app-bg relative flex flex-col">
+    <main className={`min-h-screen relative flex flex-col ${selectedBody ? "app-bg" : "space-page"}`}>
       <header className="relative z-10 flex items-center justify-between gap-4 px-5 py-3 border-b line">
         <div className="flex items-center gap-3" data-tour="brand">
           <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />
@@ -123,10 +126,10 @@ export default function Home() {
       {!selectedBody && (
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-5">
           <div className="text-center max-w-2xl mb-5">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Where do you want to go?</h2>
-            <p className="text-sm muted mt-2">Pick a destination. You will see ten candidate base sites on its globe, find the Earth places that behave most like each one, and test hardware on both.</p>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: "#eef2f7" }}>Where do you want to go?</h2>
+            <p className="text-sm mt-2" style={{ color: "#a3adbb" }}>Pick a destination. You will see ten candidate base sites on its globe, find the Earth places that behave most like each one, and test hardware on both.</p>
           </div>
-          <div className="w-full max-w-5xl card overflow-hidden" style={{ borderRadius: 24 }}>
+          <div className="w-full max-w-5xl overflow-hidden" style={{ borderRadius: 24, border: "1px solid rgba(125, 211, 252, 0.18)", boxShadow: "0 30px 80px -30px rgba(0,0,0,0.9)" }}>
             <SystemPicker onPick={(w) => setSelectedBody(w)} />
           </div>
         </div>
@@ -185,6 +188,7 @@ export default function Home() {
       )}
 
       <HelpButton onClick={() => setTour(true)} />
+      {prompt && !tour && <TourPrompt onSkip={() => { seen(); setPrompt(false); }} onStart={() => { seen(); setPrompt(false); setTour(true); }} />}
       <Tour steps={TOUR} open={tour} onClose={() => setTour(false)} />
     </main>
   );

@@ -7,7 +7,7 @@ export interface TourStep {
   target: string;           // value of data-tour="…" on the element to point at
   title: string;
   body: string;
-  side?: "top" | "bottom" | "left" | "right";
+  side?: "top" | "bottom" | "left" | "right" | "inside";
 }
 
 interface Box { x: number; y: number; w: number; h: number }
@@ -46,7 +46,13 @@ function TourInner({ steps, onClose }: { steps: TourStep[]; onClose: () => void 
     if (side === "left" && b.x - pw - 16 < 0) side = "bottom";
     let left = 0, top = 0, arrow = 0;
     const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
-    if (side === "bottom" || side === "top") {
+    const fitsBelow = b.y + b.h + ph + 16 <= H, fitsAbove = b.y - ph - 16 >= 0, fitsRight = b.x + b.w + pw + 16 <= W, fitsLeft = b.x - pw - 16 >= 0;
+    if (!fitsBelow && !fitsAbove && !fitsRight && !fitsLeft) side = "inside";
+    if (side === "inside") {
+      // the element fills the screen: sit the card at its lower edge, over it
+      left = Math.max(12, Math.min(W - pw - 12, cx - pw / 2));
+      top = Math.max(12, Math.min(H - ph - 12, b.y + b.h - ph - 24));
+    } else if (side === "bottom" || side === "top") {
       left = Math.max(12, Math.min(W - pw - 12, cx - pw / 2));
       top = side === "bottom" ? b.y + b.h + 14 : b.y - 14 - ph;
       arrow = Math.max(18, Math.min(pw - 18, cx - left));
@@ -55,6 +61,7 @@ function TourInner({ steps, onClose }: { steps: TourStep[]; onClose: () => void 
       left = side === "right" ? b.x + b.w + 14 : b.x - 14 - pw;
       arrow = Math.max(18, Math.min(ph - 18, cy - top));
     }
+    top = Math.max(12, Math.min(H - ph - 12, top)); left = Math.max(12, Math.min(W - pw - 12, left));
     setPop({ left, top, side, arrow });
   }, [open, step]);
 
@@ -99,6 +106,22 @@ function TourInner({ steps, onClose }: { steps: TourStep[]; onClose: () => void 
         </div>
       </div>
     </>
+  );
+}
+
+/* Shown once, on the first visit: take the tour or skip it. */
+export function TourPrompt({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[96] flex items-center justify-center p-4" style={{ background: "rgba(3, 6, 11, 0.55)", backdropFilter: "blur(3px)" }}>
+      <div className="card-solid p-6 max-w-md w-full rise" role="dialog" aria-label="Welcome">
+        <h3 className="text-lg font-semibold">First time here?</h3>
+        <p className="text-sm muted mt-2 leading-relaxed">A short walkthrough points at each part of the screen and explains what it tells you. It takes about a minute and you can leave at any time. You can restart it later from the ? button.</p>
+        <div className="flex justify-end gap-2 mt-5">
+          <button type="button" className="btn" onClick={onSkip}>Skip</button>
+          <button type="button" className="btn btn-primary" onClick={onStart}>Show me around</button>
+        </div>
+      </div>
+    </div>
   );
 }
 

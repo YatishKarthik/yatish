@@ -70,6 +70,15 @@ body {
     linear-gradient(var(--bg), var(--bg-deep));
 }
 
+/* The landing page is space in both themes. */
+.space-page { background: radial-gradient(1200px 700px at 50% 0%, #0b1a33 0%, #04070d 55%, #000 100%); color: #eef2f7; }
+.space-page .btn { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); color: #eef2f7; }
+.space-page .card-solid { background: #0f1620; border-color: rgba(255, 255, 255, 0.12); color: #eef2f7; }
+.space-page .muted { color: #a3adbb; }
+.space-page header { border-color: rgba(255, 255, 255, 0.1); }
+.space-page h1, .space-page header p { color: #eef2f7; }
+.space-page header p { color: #a3adbb; }
+
 /* ---------- glass ---------- */
 .card {
   position: relative;

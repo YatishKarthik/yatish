@@ -122,7 +122,7 @@ function PinMarker({
         <sphereGeometry args={[0.09, 8, 8]} />
       </mesh>
 
-      {(isTop || isSelected || isHovered) && (
+      {(isSelected || isHovered) && (
         <mesh ref={haloRef} position={[0, 0, 0.002]}>
           <ringGeometry args={[foot * 0.7, foot * 0.78, 48]} />
           <meshBasicMaterial color={colour} transparent opacity={0.4} side={THREE.DoubleSide} depthWrite={false} />
@@ -161,13 +161,7 @@ function LabelProjector({ pins, groupRef, nodes, selectedPinId, hoveredPinId, bo
   const resting = useMemo(() => {
     const out = new Set<string>();
     if (body === "earth") { pins.forEach((p) => { if (p.rank !== undefined && p.rank <= 3) out.add(p.id); }); return out; }
-    if (pins.length > 12) return out;
-    const unit = pins.map((p) => latLonToVector3(p.lat, p.lon, 1));
-    pins.forEach((p, i) => {
-      const crowded = pins.some((_, j) => j < i && out.has(pins[j].id) && unit[i].angleTo(unit[j]) < (5 * Math.PI) / 180);
-      if (!crowded) out.add(p.id);
-    });
-    return out;
+    return out;   // Moon and Mars: a point until hovered or selected, so clustered sites never overlap
   }, [pins, body]);
   useFrame(({ camera, size }) => {
     const g = groupRef.current;

@@ -64,9 +64,9 @@ const TEST_HELP: Record<string, { ask: string; why: string }> = {
   "Thermal & Vacuum Motor Cooling": { ask: "Will motors overheat like they would in vacuum?", why: "No: Earth's air cools motors by convection. This test never transfers from Earth." },
 };
 const STATUS_WORD: Record<MatrixRow["status"], { word: string; level: "good" | "warn" | "bad" }> = {
-  REPRESENTATIVE: { word: "Good test site", level: "good" },
-  PARTIAL: { word: "Partly useful", level: "warn" },
-  NOT_REPRESENTATIVE: { word: "Not useful for this", level: "bad" },
+  REPRESENTATIVE: { word: "Good Test Site", level: "good" },
+  PARTIAL: { word: "Partly Useful", level: "warn" },
+  NOT_REPRESENTATIVE: { word: "Not Useful For This", level: "bad" },
 };
 
 type View = "summary" | "tests" | "best" | "day" | "measure" | "expert";
@@ -317,25 +317,29 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
               {view === "expert" && (
                 <div className="flex flex-col gap-4 rise text-xs">
+                  <p className="muted leading-relaxed">How the numbers are made. Each of the 14 measurements is standardised across all 80 sites (z-scores), the two sites are compared per measurement with exp(−0.55·|Δz|), those are averaged within each of the four groups, and the groups are blended with the weights below. That blend is the match score. Separately, a small neural-network ensemble predicts how well each hardware scenario would transfer, and its disagreement gives the uncertainty.</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Kpi label="Similarity" value={m.similarity_score.toFixed(3)} sub="weighted mean of pillar means of exp(−0.55·|Δz|)" />
-                    <Kpi label="Epistemic σ" value={m.epistemic_uncertainty.toFixed(3)} sub="7-model deep ensemble spread" />
-                    <Kpi label="90% interval" value={`${m.conformal_90_interval[0].toFixed(2)}–${m.conformal_90_interval[1].toFixed(2)}`} sub="split-conformal, 14-site calibration set" />
-                    <Kpi label="Search time" value={`${data.search_time_ms} ms`} sub={`${data.earth_sites_scanned} sites`} />
+                    <Kpi label="Similarity" value={m.similarity_score.toFixed(3)} sub="The match score before rounding: weighted mean of the four group means." />
+                    <Kpi label="Epistemic σ" value={m.epistemic_uncertainty.toFixed(3)} sub="How much the 7 ensemble models disagree. Big σ means this site is unlike the training sites." />
+                    <Kpi label="90% interval" value={`${m.conformal_90_interval[0].toFixed(2)}–${m.conformal_90_interval[1].toFixed(2)}`} sub="Conformal band: 9 times in 10 the true value should fall inside it (calibrated on 14 held-out sites)." />
+                    <Kpi label="Search time" value={`${data.search_time_ms} ms`} sub={`Time to compare all ${data.earth_sites_scanned} Earth sites on the server.`} />
                   </div>
                   <div className="card-solid p-3">
-                    <div className="font-semibold mb-2">Scenario model (ensemble outputs, not used for ranking)</div>
+                    <div className="font-semibold mb-1">Scenario model</div>
+                    <p className="muted mb-2">Ensemble predictions of how well a rover, landing or mining test would transfer (0 to 1). They inform the Tests tab and the uncertainty; they do not change the ranking.</p>
                     <table className="w-full text-xs">
                       <thead><tr className="muted text-left"><th className="font-normal pb-1">Scenario</th><th className="font-normal">Score</th><th className="font-normal">σ</th><th className="font-normal">90% interval</th><th className="font-normal">Status</th></tr></thead>
                       <tbody className="font-mono">{Object.entries(m.scenarios).map(([k, s]) => <tr key={k}><td className="py-0.5 font-sans">{k}</td><td>{s.score.toFixed(3)}</td><td>{s.uncertainty.toFixed(3)}</td><td>{s.conformal_interval[0].toFixed(2)}–{s.conformal_interval[1].toFixed(2)}</td><td className="font-sans">{s.status}</td></tr>)}</tbody>
                     </table>
                   </div>
                   <div className="card-solid p-3">
-                    <div className="font-semibold mb-2">Pillar weights</div>
-                    <div className="flex flex-wrap gap-3 font-mono">{PILLARS.map((p) => <span key={p.key}>{p.key} {p.weight.toFixed(2)}</span>)}</div>
+                    <div className="font-semibold mb-1">Group weights</div>
+                    <p className="muted mb-2">Terrain and radar carry the most weight because they decide whether vehicles can move and land at all; temperatures carry the least because Earth can never match them in absolute terms.</p>
+                    <div className="flex flex-wrap gap-3 font-mono">{PILLARS.map((p) => <span key={p.key}>{p.label} {p.weight.toFixed(2)}</span>)}</div>
                   </div>
                   <div className="card-solid p-3">
-                    <div className="font-semibold mb-2">Data sources per parameter</div>
+                    <div className="font-semibold mb-1">Data sources per parameter</div>
+                    <p className="muted mb-2">Which instrument each value came from on each world. &quot;Measured&quot; is read directly from the sensor, &quot;derived&quot; is computed from sensor data, &quot;calibrated&quot; is adjusted to a common scale.</p>
                     <table className="w-full text-[11px]">
                       <thead><tr className="muted text-left"><th className="font-normal pb-1">Parameter</th><th className="font-normal">Earth</th><th className="font-normal">{world}</th><th className="font-normal">Status</th></tr></thead>
                       <tbody>{params.map(([k, v]) => <tr key={k} className="border-t line"><td className="py-1 pr-2">{PARAM_HELP[k]?.name ?? v.label}</td><td className="pr-2">{v.earth_agency}: {v.earth_instrument}</td><td className="pr-2">{v.space_agency}: {v.space_instrument}</td><td>{v.status}</td></tr>)}</tbody>

@@ -67,10 +67,10 @@ export function Kpi({ label, value, sub, tour }: { label: string; value: ReactNo
 
 /* plain words for a 0..1 similarity */
 export function similarityWord(v: number): { word: string; level: "good" | "warn" | "bad" } {
-  if (v >= 0.8) return { word: "very similar", level: "good" };
-  if (v >= 0.6) return { word: "fairly similar", level: "good" };
-  if (v >= 0.4) return { word: "somewhat different", level: "warn" };
-  return { word: "quite different", level: "bad" };
+  if (v >= 0.8) return { word: "Very Similar", level: "good" };
+  if (v >= 0.6) return { word: "Fairly Similar", level: "good" };
+  if (v >= 0.4) return { word: "Somewhat Different", level: "warn" };
+  return { word: "Quite Different", level: "bad" };
 }
 
 export const PCT = (v: number, d = 0) => `${(v * 100).toFixed(d)}%`;
