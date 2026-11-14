@@ -16,9 +16,9 @@ interface Props {
   trial?: TrialRun;
 }
 
-const isSmall = () => typeof window !== 'undefined' && (window.innerWidth < 800 || (navigator.hardwareConcurrency ?? 8) < 4);
+export const isSmall = () => typeof window !== 'undefined' && (window.innerWidth < 800 || (navigator.hardwareConcurrency ?? 8) < 4);
 
-function Half({ world, tiles, extentM, offsetX, mode, segments, trialMode, rough }: {
+export function Half({ world, tiles, extentM, offsetX, mode, segments, trialMode, rough }: {
   world: World; tiles: TileSet; extentM: number; offsetX: number; mode: Mode; segments: number; trialMode: boolean; rough: number;
 }) {
   const E = extentM * KM;
@@ -118,7 +118,7 @@ function Rover({ world, tiles, extentM, offsetX, result, lengthM }: {
   );
 }
 
-function Seam({ extentM, earthLabel, marsLabel, body }: { extentM: number; earthLabel: string; marsLabel: string; body: string }) {
+export function Seam({ extentM, earthLabel, marsLabel, body }: { extentM: number; earthLabel: string; marsLabel: string; body: string }) {
   const E = extentM * KM;
   const group = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();

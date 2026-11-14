@@ -68,6 +68,23 @@ const fail = (msg) => { throw new Error(msg); };
     await page.getByRole('button', { name: 'Run the trial' }).click();
     await page.waitForSelector('text=/EARTH (PASS|STUCK) \\/ MARS (PASS|STUCK)/', { timeout: 20000 });
 
+    // 5b. holographic table: terrain loads, stations change the view, a panel button navigates
+    await page.goto(`${B}/table?nointro`);
+    await page.waitForSelector('canvas');
+    await page.waitForTimeout(3500);
+    const over = await page.locator('canvas').first().screenshot();
+    await page.keyboard.press('2');
+    await page.waitForTimeout(1600);
+    if ((await page.locator('canvas').first().screenshot()).equals(over)) fail('table: station change did not move the camera');
+    await page.locator('.table-console').getByRole('button', { name: 'Slope' }).click();
+    await page.waitForTimeout(400);
+
+    // 5c. test bench and analysis render
+    for (const [route, text] of [['/analysis', 'Parameter space'], ['/challenge', 'Blind match'], ['/survey', 'Badges']]) {
+      await page.goto(`${B}${route}?nointro`);
+      await page.waitForSelector(`text=${text}`);
+    }
+
     // 6. evidence and method render
     for (const [route, text] of [['/evidence', 'Controls'], ['/method', 'Closeness formula']]) {
       await page.goto(`${B}${route}?nointro`);

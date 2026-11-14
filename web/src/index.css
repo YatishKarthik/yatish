@@ -150,3 +150,32 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
 .title-stats dt { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #aeb7c2; }
 .title-stats dd { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-variant-numeric: tabular-nums; color: #f4f6f8; margin: 0; }
 @media (max-width: 799px) { .title-screen { padding: 20px; background: linear-gradient(0deg, rgba(8, 10, 14, 0.9) 0%, rgba(8, 10, 14, 0.5) 60%, rgba(8, 10, 14, 0.1) 100%); } .title-stats dd { font-size: 20px; } }
+
+/* ---- holographic table ---- */
+.table-room { position: relative; height: calc(100vh - 53px); min-height: 560px; overflow: hidden; background: #05070a; }
+.holo-panel { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #e9f6ff; background: rgba(6, 16, 24, 0.78); border: 1px solid rgba(143, 227, 255, 0.55); box-shadow: 0 0 28px rgba(143, 227, 255, 0.16), inset 0 0 44px rgba(143, 227, 255, 0.05); position: relative; }
+.holo-panel::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(143, 227, 255, 0.045) 0 1px, transparent 1px 4px); }
+.holo-panel.is-active { border-color: #dff6ff; box-shadow: 0 0 36px rgba(143, 227, 255, 0.3), inset 0 0 44px rgba(143, 227, 255, 0.07); }
+.holo-title { display: flex; width: 100%; justify-content: space-between; align-items: baseline; padding: 8px 12px; border-bottom: 1px solid rgba(143, 227, 255, 0.35); font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: #8fe3ff; background: rgba(143, 227, 255, 0.07); }
+.holo-title span:last-child { font-size: 11px; letter-spacing: 0.1em; color: #b7c9d6; }
+.holo-title:hover span:last-child { color: #fff; }
+.holo-body { padding: 12px; }
+.holo-k { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #9fc3d6; }
+.holo-dim { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #9fb4c2; }
+.holo-big { font-size: 20px; font-weight: 600; line-height: 1.2; }
+.holo-score { font-size: 40px; line-height: 1; color: #fff; }
+.holo-num { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-variant-numeric: tabular-nums; }
+.holo-warn { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #f85149; }
+.holo-tile { border: 1px solid rgba(143, 227, 255, 0.25); padding: 5px 6px; }
+.holo-row { display: flex; width: 100%; justify-content: space-between; gap: 12px; padding: 5px 8px; border: 1px solid transparent; font-size: 14px; text-align: left; }
+.holo-row:hover, .holo-row.is-on { border-color: rgba(143, 227, 255, 0.6); background: rgba(143, 227, 255, 0.08); }
+.holo-permit { padding: 8px 0; border-top: 1px solid rgba(143, 227, 255, 0.2); }
+.holo-permit:first-child { border-top: 0; padding-top: 0; }
+.holo-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 10px; border: 1px solid rgba(143, 227, 255, 0.5); background: rgba(6, 16, 24, 0.85); color: #e9f6ff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; transition: background-color var(--motion-150) var(--ease-out), border-color var(--motion-150) var(--ease-out); }
+.holo-btn:hover:not(:disabled) { border-color: #fff; background: rgba(143, 227, 255, 0.14); }
+.holo-btn:disabled { opacity: 0.4; cursor: default; }
+.holo-btn[aria-pressed='true'] { background: #8fe3ff; border-color: #8fe3ff; color: #05070a; }
+.table-console { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(880px, calc(100% - 24px)); padding: 10px 12px; background: rgba(6, 16, 24, 0.86); border: 1px solid rgba(143, 227, 255, 0.5); border-top: 2px solid #8fe3ff; box-shadow: 0 0 28px rgba(143, 227, 255, 0.14); z-index: 30; }
+.table-clock { font-family: 'IBM Plex Mono', monospace; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
+.table-console .btn { background: rgba(6, 16, 24, 0.85); border-color: rgba(143, 227, 255, 0.5); min-height: 34px; }
+.table-console .btn[aria-pressed='true'] { background: #8fe3ff; border-color: #8fe3ff; color: #05070a; }

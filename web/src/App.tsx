@@ -17,6 +17,7 @@ import { MethodView } from './views/MethodView';
 import { NotFound, SeamView } from './views/SeamView';
 import { SolView } from './views/SolView';
 import { SystemView } from './views/SystemView';
+import { TableView } from './views/TableView';
 import { TrialView } from './views/TrialView';
 
 /** A short tunnel whenever the visitor moves between the system view and the ground. */
@@ -25,7 +26,7 @@ function WarpTunnel() {
   const prev = useRef(pathname);
   const [n, setN] = useState(0);
   useEffect(() => {
-    const space = (p: string) => p === '/', ground = (p: string) => p.startsWith('/seam') || p.startsWith('/trial');
+    const space = (p: string) => p === '/', ground = (p: string) => p.startsWith('/seam') || p.startsWith('/trial') || p.startsWith('/table');
     if ((space(prev.current) && ground(pathname)) || (ground(prev.current) && space(pathname))) { setN((k) => k + 1); warpWhoosh(); }
     prev.current = pathname;
   }, [pathname]);
@@ -65,6 +66,8 @@ export default function App() {
       <Chrome>
         <Routes>
           <Route path="/" element={<SystemView />} />
+          <Route path="/table" element={<TableView />} />
+          <Route path="/table/:siteId" element={<TableView />} />
           <Route path="/sol" element={<SolView />} />
           <Route path="/seam/:siteId" element={<SeamView />} />
           <Route path="/trial/:siteId" element={<TrialView />} />

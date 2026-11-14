@@ -349,7 +349,7 @@ export function SystemView() {
               <ol className="space-y-1">
                 {ranked.slice(0, 10).map((s, i) => (
                   <li key={s.id}>
-                    <Link to={withTarget(`/seam/${s.id}`)} onPointerEnter={() => setHoverSite(s.id)} onFocus={() => setHoverSite(s.id)}
+                    <Link to={withTarget(`/table/${s.id}`)} onPointerEnter={() => setHoverSite(s.id)} onFocus={() => setHoverSite(s.id)}
                       className={`row flex items-center justify-between gap-3 border border-line px-3 py-2 ${hoverSite === s.id ? '!border-ink' : ''}`}>
                       <span>
                         <span className="mr-2 font-mono text-sm text-dim">{String(i + 1).padStart(2, '0')}</span>

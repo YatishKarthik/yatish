@@ -18,6 +18,7 @@ No lockfile is committed: lockfiles written on one operating system have made np
 | Route | What it shows |
 |---|---|
 | `/` | Earth, Mars and the Moon: pick a destination and target, then see matching ground on Earth |
+| `/table/:site` | The holographic table: terrain projected on a table, panels of light around it, the parameter space overhead. Keys 1 to 7 fly between stations |
 | `/sol` | Mars target picker and Earth sites as 24-hour thermal ribbons |
 | `/seam/:site` | Earth and Mars terrain at one scale, split by a draggable seam; clock, permits, limits |
 | `/trial/:site` | The same rover drive on both terrains, with slope margin |

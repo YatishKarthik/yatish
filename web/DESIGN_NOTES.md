@@ -107,6 +107,22 @@ Progress is stored in the visitor's browser only (`localStorage`) and can be cle
 | Solar power and thermal cycling charts | information: simulation output per world; temperatures drawn on separate scales |
 | Slow auto-rotation of the parameter space | decorative; pauses on hover, off with reduced motion |
 
+## Holographic table
+
+The main view. One dark room, one table; the camera flies between seven stations instead of changing pages.
+
+| Element | Purpose |
+|---|---|
+| Terrain projected above the table, Earth and target on one seam | information: the same real tiles and layers as the seam view |
+| Panels of light: mission, fingerprint, permits, test bench | information: live DOM, so text stays selectable and readable by screen readers |
+| Parameter space overhead, target joined to its nearest five | information: PCA from the Python analysis; click a star to load that site |
+| World tokens with a thread to their half of the terrain | information: which half comes from which world |
+| Console at the table's front edge: clock, layer, ribbons, stations | control; plain DOM, always in reach |
+| Projection rings, light walls, floor grid, motes, panel scanlines | decorative; rings and motes stop with reduced motion |
+| Cyan hologram tint on room and panels | decorative; terrain data colours are not tinted |
+
+No post-processing runs here, so terrain colours are exactly the tile colours.
+
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).

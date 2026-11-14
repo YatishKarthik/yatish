@@ -5,6 +5,7 @@ import { useProgress } from './progress';
 export type Layer = 'temperature' | 'satellite' | 'slope';
 export type Mode = 'wipe' | 'split';
 export type Cam = 'survey' | 'walk' | 'overhead';
+export type Station = 'overview' | 'terrain' | 'mission' | 'fingerprint' | 'permits' | 'bench' | 'space';
 export interface Hover { world: World; slopeDeg: number; heightM: number }
 
 interface Store {
@@ -20,6 +21,7 @@ interface Store {
   mode: Mode;
   grid: boolean;         // draw source-pixel grid
   cam: Cam;
+  station: Station;      // where the camera stands at the holographic table
   sound: boolean;        // opt-in, off by default
   hover: Hover | null;
   trial: { a: [number, number]; b: [number, number]; t: number; running: boolean };
@@ -45,6 +47,7 @@ export const useStore = create<Store>((set) => ({
   mode: 'wipe',
   grid: false,
   cam: 'survey',
+  station: 'overview',
   sound: false,
   hover: null,
   trial: { a: [0.12, 0.85], b: [0.88, 0.15], t: 0, running: false },
