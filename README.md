@@ -1,4 +1,4 @@
-# TERRA-TWIN
+# Celestra
 
 Multi-agency planetary analog finder and dual-world simulator. Pick a base site on the Moon or Mars, rank 60 Earth test sites against it with a deep ensemble + conformal prediction, and run the same hardware test on both worlds.
 

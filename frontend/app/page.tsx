@@ -60,8 +60,9 @@ export default function Home() {
   const [simMatch, setSimMatch] = useState<EarthMatch | null>(null);
   const [tour, setTour] = useState(false);
   const [prompt, setPrompt] = useState(false);
-  useEffect(() => { try { if (!localStorage.getItem("tt-tour-seen")) { const id = window.setTimeout(() => setPrompt(true), 900); return () => window.clearTimeout(id); } } catch { /* ignore */ } }, []);
-  const seen = () => { try { localStorage.setItem("tt-tour-seen", "1"); } catch { /* ignore */ } };
+  // offered once per visit (a new tab or window asks again)
+  useEffect(() => { try { if (!sessionStorage.getItem("celestra-tour")) { const id = window.setTimeout(() => setPrompt(true), 900); return () => window.clearTimeout(id); } } catch { /* ignore */ } }, []);
+  const seen = () => { try { sessionStorage.setItem("celestra-tour", "1"); } catch { /* ignore */ } };
 
   const loadTargets = () => {
     setBackendError(false);
@@ -102,7 +103,7 @@ export default function Home() {
         <div className="flex items-center gap-3" data-tour="brand">
           <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />
           <div>
-            <h1 className="text-[15px] font-semibold tracking-tight">TERRA-TWIN</h1>
+            <h1 className="text-[15px] font-semibold tracking-tight">Celestra</h1>
             <p className="text-xs muted">Find Earth test sites that behave like a Moon or Mars base site</p>
           </div>
         </div>

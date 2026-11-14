@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, OrbitControls, Stars } from "@react-three/drei";
-import { ArrowLeft, RotateCcw, Rocket, Car, Drill, CheckCircle2, XCircle, Eye, Play, Trophy } from "lucide-react";
+import { ArrowLeft, RotateCcw, Rocket, Car, CheckCircle2, XCircle, Eye, Play, Trophy } from "lucide-react";
 import type { EarthMatch, MatchPayload } from "@/components/AnalyticsView";
 import { Status } from "@/components/ui";
 
@@ -40,7 +40,8 @@ const CORE_TARGET_M = 1.0;
 const DRILL_LIMIT_C = 110;
 const LAND_SPEED_LIMIT = 3.0;
 const PAD_RADIUS = 5.0;
-const POINTS = { landing: 30, waypoint: 8, rockClean: 10, rockFumbled: 5, core: 25, timeMax: 25 };
+const POINTS = { landing: 30, waypoint: 8, rockClean: 10, rockFumbled: 6, core: 25, timeMax: 25 };
+const STUCK_SECONDS = 4.5;
 const MAX_SCORE = POINTS.landing + 10 + WAYPOINTS * POINTS.waypoint + ROCKS * POINTS.rockClean + STATIONS * POINTS.core + POINTS.timeMax;
 
 /* ---------- terrain helpers: heights come from the site's elevation data ---------- */
@@ -107,7 +108,7 @@ function groundPalette(body: Body, mineral: string, sensor: Sensor) {
   // radar: a grey backscatter image, bright where the ground is rough or slopes face the beam
   if (sensor === "sar") return { base: "#3a3f47", grain: "#8b949e", speck: "#d0d6dd", low: "#2b3036", mid: "#6b7480", rock: "#e5e9ee" };
   if (sensor === "thermal") return body === "earth" ? { base: "#7c2d12", grain: "#ea580c", speck: "#facc15", low: "#9a3412", mid: "#ea580c", rock: "#fde047" } : { base: "#1e3a8a", grain: "#2563eb", speck: "#93c5fd", low: "#1e3a8a", mid: "#2563eb", rock: "#93c5fd" };
-  if (body === "moon") return { base: "#6b7280", grain: "#9ca3af", speck: "#374151", low: "#4b5563", mid: "#737a85", rock: "#a1a7b0" };
+  if (body === "moon") return { base: "#9aa0a8", grain: "#c3c8cf", speck: "#5b616b", low: "#7c838c", mid: "#a4abb4", rock: "#d2d6db" };
   if (body === "mars") return mineral === "basalt_ice" ? { base: "#8a3a1e", grain: "#b4552c", speck: "#d9d9d9", low: "#7c2d12", mid: "#a3431f", rock: "#cbd5e1" } : { base: "#9a3f1c", grain: "#c2602e", speck: "#5a1f0c", low: "#7c2d12", mid: "#c2410c", rock: "#451a03" };
   if (mineral === "biomass_wet") return { base: "#2f5e2a", grain: "#4a7c3a", speck: "#1b3d17", low: "#14532d", mid: "#3f7a32", rock: "#5b7a2a" };
   if (mineral === "evaporite_sulfate") return { base: "#d8d4cc", grain: "#eeeae2", speck: "#8c8578", low: "#c9c4ba", mid: "#e2ded6", rock: "#8c8578" };
@@ -116,7 +117,7 @@ function groundPalette(body: Body, mineral: string, sensor: Sensor) {
 }
 
 /* ---------- terrain ---------- */
-function Terrain({ siteId, grid, reliefM, body, mineral, sensor, roughness }: { siteId: string; grid: number[] | null; reliefM: number; body: Body; mineral: string; sensor: Sensor; roughness: number }) {
+function Terrain({ siteId, grid, reliefM, body, mineral, sensor }: { siteId: string; grid: number[] | null; reliefM: number; body: Body; mineral: string; sensor: Sensor }) {
   const relief = Math.max(0.8, reliefM / 36);
   const pal = useMemo(() => groundPalette(body, mineral, sensor), [body, mineral, sensor]);
   const map = useMemo(() => tex(noiseCanvas(hashString(siteId), pal.base, pal.grain, pal.speck), 14), [siteId, pal]);
@@ -135,19 +136,6 @@ function Terrain({ siteId, grid, reliefM, body, mineral, sensor, roughness }: { 
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     return geo;
   }, [grid, relief, pal, sensor]);
-  const rocks = useRef<THREE.InstancedMesh>(null);
-  const count = Math.round(60 + roughness * 160);
-  useEffect(() => {
-    if (!rocks.current || !grid) return;
-    const d = new THREE.Object3D(), r = rng(hashString(siteId));
-    for (let i = 0; i < count; i++) {
-      const wx = (r() - 0.5) * (WORLD_SIZE - 9), wz = (r() - 0.5) * (WORLD_SIZE - 9);
-      if (Math.hypot(wx, wz) < 5.5) d.scale.set(0, 0, 0);
-      else { const { h } = sample(grid, relief, wx, wz); const s = 0.12 + r() * 0.4; d.position.set(wx, h + s * 0.3, wz); d.rotation.set(r() * 3, r() * 3, r() * 3); d.scale.set(s * (0.8 + r() * 0.6), s * 0.7, s * (0.8 + r() * 0.6)); }
-      d.updateMatrix(); rocks.current.setMatrixAt(i, d.matrix);
-    }
-    rocks.current.instanceMatrix.needsUpdate = true;
-  }, [siteId, grid, relief, count]);
   const half = WORLD_SIZE / 2, ext = 160;
   return (
     <group>
@@ -155,10 +143,6 @@ function Terrain({ siteId, grid, reliefM, body, mineral, sensor, roughness }: { 
       {[[0, -(half + ext / 2), WORLD_SIZE + ext * 2, ext], [0, half + ext / 2, WORLD_SIZE + ext * 2, ext], [-(half + ext / 2), 0, ext, WORLD_SIZE], [half + ext / 2, 0, ext, WORLD_SIZE]].map(([x, z, w, h], i) => (
         <mesh key={i} position={[x, 0, z]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[w, h]} /><meshStandardMaterial color={pal.low} map={map} roughness={0.95} /></mesh>
       ))}
-      <instancedMesh ref={rocks} args={[undefined, undefined, count]} castShadow>
-        <dodecahedronGeometry args={[1, 1]} />
-        <meshStandardMaterial color={pal.rock} roughness={0.95} />
-      </instancedMesh>
     </group>
   );
 }
@@ -261,30 +245,39 @@ function StationRig({ x, y, z, state, carriageRef, bitMat }: { x: number; y: num
 }
 
 function Waypoint({ x, y, z, state, index }: { x: number; y: number; z: number; state: "done" | "next" | "later"; index: number }) {
-  const lamp = useRef<THREE.Mesh>(null);
-  useFrame(({ clock }) => { if (lamp.current && state === "next") (lamp.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.5 + Math.sin(clock.elapsedTime * 5) * 1.2; });
+  const lamp = useRef<THREE.Mesh>(null), beam = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => {
+    const pulse = state === "next" ? 1.6 + Math.sin(clock.elapsedTime * 4) * 1.0 : state === "done" ? 1.2 : 0.4;
+    if (lamp.current) (lamp.current.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
+    if (beam.current) (beam.current.material as THREE.MeshBasicMaterial).opacity = state === "next" ? 0.18 + Math.sin(clock.elapsedTime * 4) * 0.06 : state === "done" ? 0.06 : 0.04;
+  });
   const col = state === "done" ? "#22c55e" : state === "next" ? "#38bdf8" : "#94a3b8";
   return (
     <group position={[x, y, z]}>
-      {[0, 1, 2].map((i) => { const a = (i * Math.PI * 2) / 3; return <mesh key={i} position={[Math.cos(a) * 0.35, 0.55, Math.sin(a) * 0.35]} rotation={[Math.sin(a) * 0.32, 0, -Math.cos(a) * 0.32]}><cylinderGeometry args={[0.02, 0.025, 1.15, 8]} /><meshStandardMaterial color="#d1d5db" metalness={0.6} /></mesh>; })}
-      <mesh position={[0, 1.6, 0]}><cylinderGeometry args={[0.025, 0.025, 1.3, 8]} /><meshStandardMaterial color="#e5e7eb" metalness={0.6} /></mesh>
-      <mesh ref={lamp} position={[0, 2.3, 0]}><sphereGeometry args={[0.14, 16, 12]} /><meshStandardMaterial color={col} emissive={col} emissiveIntensity={state === "later" ? 0.3 : 1.5} /></mesh>
-      <mesh position={[0.22, 2.0, 0]}><planeGeometry args={[0.4, 0.26]} /><meshStandardMaterial color={col} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[2.3, 2.6, 40]} /><meshBasicMaterial color={col} transparent opacity={state === "later" ? 0.25 : 0.6} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-      <group position={[0, 2.75, 0]}>{Array.from({ length: index + 1 }, (_, i) => <mesh key={i} position={[(i - index / 2) * 0.12, 0, 0]}><sphereGeometry args={[0.04, 8, 8]} /><meshBasicMaterial color="#ffffff" /></mesh>)}</group>
+      <mesh position={[0, 0.9, 0]}><cylinderGeometry args={[0.035, 0.05, 1.8, 10]} /><meshStandardMaterial color="#e5e7eb" metalness={0.6} roughness={0.35} /></mesh>
+      <mesh position={[0, 0.05, 0]}><cylinderGeometry args={[0.32, 0.4, 0.1, 16]} /><meshStandardMaterial color="#374151" metalness={0.5} /></mesh>
+      <mesh ref={lamp} position={[0, 1.95, 0]}><sphereGeometry args={[0.16, 18, 14]} /><meshStandardMaterial color={col} emissive={col} emissiveIntensity={1} /></mesh>
+      <mesh ref={beam} position={[0, 6, 0]}><cylinderGeometry args={[0.12, 0.5, 9, 16, 1, true]} /><meshBasicMaterial color={col} transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} blending={THREE.AdditiveBlending} /></mesh>
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[2.25, 2.5, 48]} /><meshBasicMaterial color={col} transparent opacity={state === "later" ? 0.22 : 0.55} side={THREE.DoubleSide} depthWrite={false} /></mesh>
+      {Array.from({ length: index + 1 }, (_, i) => <mesh key={i} position={[0, 1.45 - i * 0.14, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[0.07, 0.015, 6, 16]} /><meshBasicMaterial color="#ffffff" /></mesh>)}
     </group>
   );
 }
 
-/* a marked sample rock: the geologists flagged it; a soft ring shows where to stop */
-function SampleRock({ x, y, z, taken, near }: { x: number; y: number; z: number; taken: boolean; near: boolean }) {
+/* a flagged sample rock: a stone with a small survey light beside it and a ring that brightens as you approach */
+function SampleRock({ x, y, z, taken, near, seed }: { x: number; y: number; z: number; taken: boolean; near: boolean; seed: number }) {
+  const geo = useMemo(() => {
+    const g = new THREE.IcosahedronGeometry(0.26, 1); const pos = g.attributes.position; const r = rng(seed);
+    for (let i = 0; i < pos.count; i++) { const k = 0.82 + r() * 0.36; pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * k * 0.7, pos.getZ(i) * k); }
+    g.computeVertexNormals(); return g;
+  }, [seed]);
   if (taken) return null;
   return (
     <group position={[x, y, z]}>
-      <mesh position={[0, 0.16, 0]} rotation={[0.4, 0.8, 0.2]} castShadow><dodecahedronGeometry args={[0.22, 1]} /><meshStandardMaterial color="#8b5e3c" emissive={near ? "#fbbf24" : "#000000"} emissiveIntensity={0.35} roughness={0.9} /></mesh>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.6, 0.72, 24]} /><meshBasicMaterial color={near ? "#fbbf24" : "#fde68a"} transparent opacity={near ? 0.9 : 0.45} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-      <mesh position={[0.45, 0.45, 0]}><cylinderGeometry args={[0.012, 0.012, 0.9, 6]} /><meshStandardMaterial color="#e5e7eb" /></mesh>
-      <mesh position={[0.55, 0.8, 0]}><planeGeometry args={[0.22, 0.15]} /><meshStandardMaterial color="#fbbf24" side={THREE.DoubleSide} /></mesh>
+      <mesh geometry={geo} position={[0, 0.17, 0]} rotation={[0.2, seed % 3, 0.1]} castShadow><meshStandardMaterial color="#6f655c" roughness={0.95} emissive={near ? "#38bdf8" : "#000000"} emissiveIntensity={0.25} /></mesh>
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.7, 0.8, 32]} /><meshBasicMaterial color="#38bdf8" transparent opacity={near ? 0.9 : 0.35} side={THREE.DoubleSide} depthWrite={false} /></mesh>
+      <mesh position={[0.55, 0.35, 0]}><cylinderGeometry args={[0.012, 0.016, 0.7, 6]} /><meshStandardMaterial color="#e5e7eb" metalness={0.5} /></mesh>
+      <mesh position={[0.55, 0.74, 0]}><sphereGeometry args={[0.05, 10, 8]} /><meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={near ? 2 : 0.8} /></mesh>
     </group>
   );
 }
@@ -316,7 +309,7 @@ function SimScene(p: {
   const layout = useMemo(() => {
     if (!grid) return { route: [] as { x: number; z: number; y: number }[], rocks: [] as { x: number; z: number; y: number }[], stations: [] as { x: number; z: number; y: number }[], path: [] as [number, number, number][] };
     const r = rng(hashString(siteId) + 11);
-    const base = [[4, -6], [-6, -12], [6, -19], [-5, -25], [1, -29]];
+    const base = [[4, -5], [-5, -10], [5, -15], [-4, -20], [1, -24]];
     const route = base.map(([x, z]) => { const px = x + (r() - 0.5) * 4, pz = z + (r() - 0.5) * 2; return { x: px, z: pz, y: sample(grid, relief, px, pz).h }; });
     const path: [number, number, number][] = []; let ax = 0, az = 0;
     const rocks: { x: number; z: number; y: number }[] = [];
@@ -346,7 +339,7 @@ function SimScene(p: {
     return { label: mineral.replace(/_/g, " "), hardness: THREE.MathUtils.clamp(0.75 + iron * 0.45 - clay * 0.35, 0.55, 1.65), dry: true };
   }, [bareness, iron, clay, mineral]);
 
-  const s = useRef({ t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: 30, hot: false, wp: 0, slip: 0, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false,
+  const s = useRef({ t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: 30, hot: false, wp: 0, slip: 0, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false, pitchS: 0, rollS: 0, blindUntil: -1,
     lx: 2.5, lz: 7, ly: 26, vx: 0, vy: 0, vz: 0, fuel: 100, heat: 0, landed: false, dock: -1, depth: 0, bit: 30, pulses: 0, lastDrill: false, emit: 0, pad: 0, done: false });
 
   // reset on a new run
@@ -354,7 +347,7 @@ function SimScene(p: {
     const padH = grid ? sample(grid, relief, 0, 0).h : 0;
     const startT = THREE.MathUtils.clamp(ambientC, -35, 45);
     lookRef.current = { yaw: 0, pitch: 0 };
-    s.current = { t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: startT, hot: false, wp: 0, slip: 0, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false,
+    s.current = { t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: startT, hot: false, wp: 0, slip: 0, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false, pitchS: 0, rollS: 0, blindUntil: -1,
       lx: 2.5, lz: 7, ly: padH + 22, vx: 0, vy: -0.4, vz: 0, fuel: 100, heat: 0, landed: false, dock: -1, depth: 0, bit: startT, pulses: 0, lastDrill: false, emit: 0, pad: padH, done: false };
     const camera = getState().camera;
     prevFocus.current.set(2.5, padH + 22, 7); camera.position.set(13, padH + 28, 21);
@@ -380,14 +373,15 @@ function SimScene(p: {
       st.t += dt;
       const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; if (f.lengthSq() < 1e-4) f.set(0, 0, -1); f.normalize();
       const r = new THREE.Vector3().crossVectors(f, new THREE.Vector3(0, 1, 0)).normalize();
-      const g = (gravity / 9.81) * 4.2, drag = (pressure / 1.013) * 0.45, power = thrust && st.fuel > 0 ? 8.6 : 0;
-      if (thrust && st.fuel > 0) st.fuel = Math.max(0, st.fuel - dt * (3.5 + (gravity / 9.81) * 7.0));
+      const g = (gravity / 9.81) * 4.2, drag = (pressure / 1.013) * 0.45, power = thrust && st.fuel > 0 ? g * 1.8 : 0;
+      if (thrust && st.fuel > 0) st.fuel = Math.max(0, st.fuel - dt * (3.0 + (gravity / 9.81) * 5.5));
       st.vy += (-g + power - st.vy * drag) * dt;
       st.vx = THREE.MathUtils.lerp(st.vx, (f.x * fi + r.x * ri) * 5, dt * 3); st.vz = THREE.MathUtils.lerp(st.vz, (f.z * fi + r.z * ri) * 5, dt * 3);
       st.lx = THREE.MathUtils.clamp(st.lx + st.vx * dt, -24, 24); st.lz = THREE.MathUtils.clamp(st.lz + st.vz * dt, -24, 24); st.ly += st.vy * dt;
       const { h: gh, slopeDeg } = sample(grid, relief, st.lx, st.lz), alt = Math.max(0, st.ly - gh), padDist = Math.hypot(st.lx, st.lz);
       if (landerRef.current) landerRef.current.position.set(st.lx, Math.max(gh + 0.55, st.ly), st.lz);
       const firing = Boolean(thrust && st.fuel > 0);
+      if (firing && alt < 9 && pressure < 0.05) st.blindUntil = st.t + 3.2;   // the warning stays readable after a short burn
       if (flameRef.current) { flameRef.current.visible = firing; if (firing) flameRef.current.scale.set(1, 0.85 + Math.sin(clock.elapsedTime * 45) * 0.25, 1); }
       const want = firing && alt < 11 ? 1 - alt / 11 : 0;
       st.heat = want > st.heat ? Math.min(1, st.heat + dt * 1.1 * want) : Math.max(0, st.heat - dt * (pressure > 0.5 ? 0.22 : 0.07));
@@ -417,7 +411,7 @@ function SimScene(p: {
         st.done = phase === "land" && !ok;   // a failed landing ends the run; a good one continues (parent flips the phase)
         if (ok) st.done = false;
       }
-      if (st.t - st.emit > 0.1) { st.emit = st.t; setGuide(makeGuide(st.lx, Math.max(gh + 0.55, st.ly), st.lz, st.pad)); onTelemetry({ time: st.t.toFixed(1), alt: alt.toFixed(1), vspeed: st.vy.toFixed(1), fuel: st.fuel.toFixed(0), pad: padDist.toFixed(1), blind: firing && alt < 9 && pressure < 0.05 }); }
+      if (st.t - st.emit > 0.1) { st.emit = st.t; setGuide(makeGuide(st.lx, Math.max(gh + 0.55, st.ly), st.lz, st.pad)); onTelemetry({ time: st.t.toFixed(1), alt: alt.toFixed(1), vspeed: st.vy.toFixed(1), fuel: st.fuel.toFixed(0), pad: padDist.toFixed(1), blind: st.t < st.blindUntil }); }
       return;
     }
 
@@ -456,11 +450,15 @@ function SimScene(p: {
     const steer = (k["KeyA"] || k["ArrowLeft"] ? 1 : 0) - (k["KeyD"] || k["ArrowRight"] ? 1 : 0);
     st.t += dt;
     const { slopeDeg } = sample(grid, relief, st.rx, st.rz), slopeRad = THREE.MathUtils.degToRad(slopeDeg);
+    // uphill component: positive when the rover points up the slope it stands on
+    const ahead = sample(grid, relief, st.rx - Math.sin(st.yaw) * 1.2, st.rz - Math.cos(st.yaw) * 1.2).h - sample(grid, relief, st.rx, st.rz).h;
+    const climb = THREE.MathUtils.clamp(ahead / 1.2, -1, 1);
     const normalN = MASS_KG * gravity * Math.cos(slopeRad);
-    const mu = (body === "earth" ? 0.75 : body === "mars" ? 0.58 : 0.44) * rover.grip;
+    const mu = (body === "earth" ? 0.75 : body === "mars" ? 0.6 : 0.5) * rover.grip;
     const gripN = mu * normalN;
-    const demandN = MASS_KG * gravity * Math.sin(slopeRad) + (fwd ? 1150 : 250);
-    const slipRatio = THREE.MathUtils.clamp((demandN / (gripN + 1e-4)) * 0.42, 0.04, 1);
+    // what the wheels must deliver: the climb (when going uphill), rolling resistance, and a gentle acceleration
+    const demandN = Math.max(0, climb) * MASS_KG * gravity * Math.sin(slopeRad) + 0.08 * normalN + (fwd ? MASS_KG * 0.35 : 0);
+    const slipRatio = THREE.MathUtils.clamp((demandN / (gripN + 1e-4)) * 0.36, 0.03, 1);
     st.slip = Math.round(slipRatio * 100); st.peakSlip = Math.max(st.peakSlip, st.slip);
     const moving = Math.abs(st.speed) > 0.2;
     st.yaw += steer * (body === "earth" ? 1.5 : body === "mars" ? 1.25 : 1.05) * rover.grip * dt * (moving ? 1 : 0.6) * (st.grabbing ? 0 : 1);
@@ -469,8 +467,8 @@ function SimScene(p: {
     const maxSpd = (st.hot ? 0.3 : 1) * rover.topSpeed * (1 - slipRatio * 0.7);
     const drive = st.grabbing ? 0 : fwd;
     st.speed = THREE.MathUtils.lerp(st.speed, drive ? drive * maxSpd * Math.max(0.2, 1 - penalty) : 0, dt * (drive ? 2.4 : 4));
-    st.rx = THREE.MathUtils.clamp(st.rx - Math.sin(st.yaw) * st.speed * dt, -27, 27);
-    st.rz = THREE.MathUtils.clamp(st.rz - Math.cos(st.yaw) * st.speed * dt, -27, 27);
+    st.rx = THREE.MathUtils.clamp(st.rx - Math.sin(st.yaw) * st.speed * dt, -26, 26);
+    st.rz = THREE.MathUtils.clamp(st.rz - Math.cos(st.yaw) * st.speed * dt, -26, 26);
     const v = Math.abs(st.speed);
     const wear = (v * (body === "earth" ? 0.45 : 1.25) * rock.hardness * (0.7 + roughness * 0.5)) / rover.armor;
     st.wheel = Math.max(0, st.wheel - wear * dt * 0.75);
@@ -480,10 +478,10 @@ function SimScene(p: {
     st.motor = Math.max(ambientC, st.motor + (heat - airCool - radCool) * dt * 2);
     if (st.motor >= rover.maxTempC) st.hot = true;
     if (st.hot && st.motor < rover.maxTempC * 0.78) st.hot = false;
-    st.stuckFor = fwd && st.slip >= 92 ? st.stuckFor + dt : 0;
+    st.stuckFor = fwd && st.slip >= 90 ? st.stuckFor + dt : Math.max(0, st.stuckFor - dt * 2);
 
     if (st.wheel <= 0) { st.done = true; onDrive({ type: "fail", headline: "Wheels worn through", reason: `The ${rover.wheels.toLowerCase()} on the ${rover.name} wore down to nothing on ${rock.label}${body !== "earth" ? ", and without air there is no moisture film to ease the abrasion" : ""}. A tougher wheel (see the rover list) or less time at full speed on rough ground would have finished the route.` }); }
-    else if (st.stuckFor > 2.5) { st.done = true; onDrive({ type: "fail", headline: `Stuck on a ${slopeDeg.toFixed(0)}° slope`, reason: `Wheel slip stayed above 90% for several seconds: under ${gravity} m/s² gravity the wheels press on the ground with only ${(normalN / 1000).toFixed(1)} kN, so the ground cannot give the ${(demandN / 1000).toFixed(1)} kN of grip the climb needs. Back down and look for a gentler line; the dotted route avoids the worst of it.` }); }
+    else if (st.stuckFor > STUCK_SECONDS) { st.done = true; onDrive({ type: "fail", headline: `Dug in on a ${slopeDeg.toFixed(0)}° slope`, reason: `The wheels spun at over 90% slip for ${STUCK_SECONDS} seconds and buried themselves. Under ${gravity} m/s² gravity they press on the ground with only ${(normalN / 1000).toFixed(1)} kN, so the ground could give ${(gripN / 1000).toFixed(1)} kN of grip against the ${(demandN / 1000).toFixed(1)} kN the climb asked for. When the traction warning appears, stop, reverse a little and take the slope at an angle.` }); }
 
     // waypoints
     const w = layout.route[st.wp];
@@ -494,15 +492,15 @@ function SimScene(p: {
 
     // sample rocks and the claw mini-game: hold E near a flagged rock, release when the cursor is in the middle
     let near = -1, nearD = 99;
-    layout.rocks.forEach((rk, i) => { if (taken[i]) return; const d = Math.hypot(st.rx - rk.x, st.rz - rk.z); if (d < 2.6 && d < nearD) { near = i; nearD = d; } });
+    layout.rocks.forEach((rk, i) => { if (taken[i]) return; const d = Math.hypot(st.rx - rk.x, st.rz - rk.z); if (d < 3.2 && d < nearD) { near = i; nearD = d; } });
     if (near !== nearRock) setNearRock(near);
     const eNow = Boolean(k["KeyE"] || k["GrabHold"]);
-    if (!st.grabbing && eNow && !st.ePrev && near >= 0 && v < 1.2) { st.grabbing = true; st.grabT = 0; st.grabRock = near; }
+    if (!st.grabbing && eNow && !st.ePrev && near >= 0 && v < 2.0) { st.grabbing = true; st.grabT = 0; st.grabRock = near; }
     if (st.grabbing) {
       st.grabT += dt;
       if (!eNow) {
-        const cursor = Math.sin(st.grabT * 4.2);
-        const clean = Math.abs(cursor) < 0.3;
+        const cursor = Math.sin(st.grabT * 3.0);
+        const clean = Math.abs(cursor) < 0.5;
         st.grabbing = false; st.armT = 1.2;
         const idx = st.grabRock; st.grabRock = -1;
         setTaken((prev) => prev.map((t, i) => (i === idx ? true : t)));
@@ -511,7 +509,7 @@ function SimScene(p: {
     }
     st.ePrev = eNow;
     if (st.armT > 0) { st.armT -= dt; if (armRef.current) armRef.current.rotation.x = Math.sin((1 - Math.max(0, st.armT) / 1.2) * Math.PI) * 0.9; }
-    else if (armRef.current) armRef.current.rotation.x = st.grabbing ? 0.35 + Math.sin(st.grabT * 4.2) * 0.1 : 0;
+    else if (armRef.current) armRef.current.rotation.x = st.grabbing ? 0.35 + Math.sin(st.grabT * 3.0) * 0.1 : 0;
 
     // stations: press F inside the ring to dock and drill
     let nearStation = -1;
@@ -527,8 +525,10 @@ function SimScene(p: {
     const bodyY = Math.max(sample(grid, relief, st.rx, st.rz).h, hs.reduce((a, b) => a + b, 0) / 6) + 0.26;
     const pitch = Math.atan2((hs[0] + hs[3]) / 2 - (hs[2] + hs[5]) / 2, 1.24), roll = Math.atan2((hs[0] + hs[1] + hs[2]) / 3 - (hs[3] + hs[4] + hs[5]) / 3, 1.24);
     if (roverRef.current) {
-      roverRef.current.position.set(st.rx, bodyY, st.rz);
-      roverRef.current.rotation.set(0, st.yaw, 0); roverRef.current.rotateX(pitch); roverRef.current.rotateZ(roll);
+      const g = roverRef.current;
+      g.position.set(st.rx, THREE.MathUtils.lerp(g.position.y || bodyY, bodyY, 0.35), st.rz);
+      st.pitchS = THREE.MathUtils.lerp(st.pitchS, THREE.MathUtils.clamp(pitch, -0.6, 0.6), 0.2); st.rollS = THREE.MathUtils.lerp(st.rollS, THREE.MathUtils.clamp(roll, -0.6, 0.6), 0.2);
+      g.rotation.set(0, st.yaw, 0); g.rotateX(st.pitchS); g.rotateZ(st.rollS);
       offs.forEach(([lx, lz], i) => { const g = wheels.current[i]; if (g) { g.position.set(lx, THREE.MathUtils.clamp(hs[i] - bodyY + 0.24, -0.3, -0.02), lz); g.rotation.x -= (st.speed * dt) / 0.24; } });
     }
     if (thirdPerson && controls.current) {
@@ -545,7 +545,7 @@ function SimScene(p: {
     }
     const nx = layout.route[st.wp]; let bearing = 0, dist = 0;
     if (nx) { const dx = nx.x - st.rx, dz = nx.z - st.rz; dist = Math.hypot(dx, dz); bearing = THREE.MathUtils.radToDeg(Math.atan2(dx * Math.cos(st.yaw) - dz * Math.sin(st.yaw), -dx * Math.sin(st.yaw) - dz * Math.cos(st.yaw))); }
-    if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 4.2) : 0, nearStation: nearStation >= 0 }); }
+    if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 3.0) : 0, traction: st.stuckFor / STUCK_SECONDS, nearStation: nearStation >= 0 }); }
   });
 
   const padY = grid ? sample(grid, relief, 0, 0).h : 0;
@@ -556,9 +556,9 @@ function SimScene(p: {
       <color attach="background" args={[bg]} />
       {body !== "moon" && sensor !== "sar" && <fog attach="fog" args={[body === "mars" ? "#8a4a2e" : "#9cc6e0", 34, 125]} />}
       {body === "moon" && <Stars radius={85} depth={30} count={1800} factor={3} fade />}
-      <hemisphereLight args={[body === "earth" ? "#dbeafe" : "#f5e6d8", body === "earth" ? "#4a5a3a" : "#3b2a22", body === "moon" ? 0.25 : 0.6]} />
-      <directionalLight position={[18, 26, 12]} intensity={body === "moon" ? 2.4 : 1.7} castShadow shadow-mapSize={[1024, 1024]} />
-      <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} roughness={roughness} />
+      <hemisphereLight args={[body === "earth" ? "#dbeafe" : body === "moon" ? "#e5e7eb" : "#f5e6d8", body === "earth" ? "#4a5a3a" : body === "moon" ? "#3f444c" : "#3b2a22", body === "moon" ? 0.7 : 0.6]} />
+      <directionalLight position={[18, 26, 12]} intensity={body === "moon" ? 2.9 : 1.7} castShadow shadow-mapSize={[1024, 1024]} />
+      <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} />
       {(thirdPerson || phase !== "drive" || docked) && <OrbitControls ref={controls as never} makeDefault enablePan={false} minDistance={2.2} maxDistance={55} maxPolarAngle={Math.PI * 0.49} />}
 
       {/* the pad */}
@@ -582,7 +582,7 @@ function SimScene(p: {
           <Rover groupRef={roverRef} wheelRefs={wheels} armRef={armRef} spec={rover} />
           {layout.path.length > 1 && <Line points={layout.path} color="#38bdf8" lineWidth={2} dashed dashSize={0.6} gapSize={0.35} transparent opacity={0.75} />}
           {layout.route.map((w, i) => <Waypoint key={i} index={i} x={w.x} y={w.y} z={w.z} state={i < waypointIdx ? "done" : i === waypointIdx ? "next" : "later"} />)}
-          {layout.rocks.map((rk, i) => <SampleRock key={i} x={rk.x} y={rk.y} z={rk.z} taken={taken[i]} near={nearRock === i} />)}
+          {layout.rocks.map((rk, i) => <SampleRock key={i} x={rk.x} y={rk.y} z={rk.z} taken={taken[i]} near={nearRock === i} seed={hashString(siteId) + i * 7} />)}
           {layout.stations.map((stn, i) => <StationRig key={i} x={stn.x} y={stn.y} z={stn.z} state={docked && dockIdx === i ? "active" : stationState[i]} carriageRef={(el) => { carriages.current[i] = el; }} bitMat={(el) => { bits.current[i] = el; }} />)}
         </>
       )}
@@ -600,10 +600,10 @@ const BRIEF = {
     controls: ["Hold SPACE (or the on-screen button) — fire the engine", "W / A / S / D — drift sideways", "Drag with the mouse — orbit the camera"],
     scoring: [`${POINTS.landing} points for a safe landing`, "Up to 10 bonus for a gentle, central touchdown"] },
   drive: { name: "Part 2 · Drive and sample", icon: Car, goal: "Drive the surveyed route through five waypoints. Grab the flagged rocks with the claw on the way, and dock at the two stations to drill a core.",
-    pass: ["Reach all five waypoints", "Rocks and cores are optional: every one adds to your score"],
-    fail: ["Wheels wear to 0% on sharp rock", "Stuck: slip above 90% for more than 2.5 s", "A hot motor only slows you down"],
+    pass: ["Reach all five waypoints", "Rocks and cores are optional: each one adds to the score"],
+    fail: ["Wheels wear to 0% on sharp rock", `Dug in: the traction warning fills up (${STUCK_SECONDS} s of spinning wheels)`, "A hot motor only slows you down"],
     controls: ["W / A / S / D — drive", "Hold E next to a flagged rock, release when the cursor is in the green — claw grab", "F inside a station ring — dock; then hold E or SPACE to drill, release to cool; F again to leave", "Camera button — driver's seat or chase view"],
-    scoring: [`${POINTS.waypoint} per waypoint`, `${POINTS.rockClean} per clean grab, ${POINTS.rockFumbled} if fumbled`, `${POINTS.core} per core`, `Up to ${POINTS.timeMax} for a quick run`] },
+    scoring: [`${POINTS.waypoint} per waypoint`, `${POINTS.rockClean} per rock (${POINTS.rockFumbled} with a loose grip)`, `${POINTS.core} per core`, `Up to ${POINTS.timeMax} for a quick run`] },
 };
 
 export default function DualSimulator({ matchData, selectedMatch, onBack }: { matchData: MatchPayload; selectedMatch: EarthMatch; onBack: () => void }) {
@@ -619,6 +619,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const [landing, setLanding] = useState<{ ok: boolean; headline: string; reason: string; numbers: { label: string; value: string }[] } | null>(null);
   const [result, setResult] = useState<RunRecord | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
   const [grid, setGrid] = useState<number[] | null>(null);
   const [reliefM, setReliefM] = useState(120);
   const [tele, setTele] = useState<Telemetry>({});
@@ -647,8 +648,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
 
   const restart = useCallback(() => { setResult(null); setLanding(null); setPhase("brief-land"); setDocked(false); setScore({ landing: 0, waypoints: 0, rocks: 0, cores: 0, time: 0 }); setTally({ rocks: 0, clean: 0, cores: 0, lost: 0 }); setTele({}); setRunId((r) => r + 1); }, []);
   const changeSide = (v: WorldSide) => { setSide(v); restart(); };
-  const changeRover = (v: string) => { setRoverId(v); if (phase !== "brief-land") restart(); };
-
+  
   const body: Body = side === "earth" ? "earth" : t.body;
   const worldLabel = side === "earth" ? selectedMatch.name.split("(")[0].trim() : t.name;
   const gravity = side === "earth" ? 9.81 : t.gravity;
@@ -678,7 +678,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
 
   const onDrive = useCallback((e: DriveEvent) => {
     if (e.type === "waypoint") { setScore((s) => ({ ...s, waypoints: s.waypoints + POINTS.waypoint })); say(`Waypoint ${e.n} of ${WAYPOINTS} · +${POINTS.waypoint}`); }
-    if (e.type === "rock") { setScore((s) => ({ ...s, rocks: s.rocks + (e.clean ? POINTS.rockClean : POINTS.rockFumbled) })); setTally((x) => ({ ...x, rocks: x.rocks + 1, clean: x.clean + (e.clean ? 1 : 0) })); say(e.clean ? `Clean grab · +${POINTS.rockClean}` : `Fumbled it, but got the rock · +${POINTS.rockFumbled}`); }
+    if (e.type === "rock") { setScore((s) => ({ ...s, rocks: s.rocks + (e.clean ? POINTS.rockClean : POINTS.rockFumbled) })); setTally((x) => ({ ...x, rocks: x.rocks + 1, clean: x.clean + (e.clean ? 1 : 0) })); say(e.clean ? `Sample secured · +${POINTS.rockClean}` : `Sample secured, loose grip · +${POINTS.rockFumbled}`); }
     if (e.type === "core") { setScore((s) => ({ ...s, cores: s.cores + POINTS.core })); setTally((x) => ({ ...x, cores: x.cores + 1 })); say(`Core recovered · +${POINTS.core}`); }
     if (e.type === "station-lost") { setTally((x) => ({ ...x, lost: x.lost + 1 })); say(pressure > 0.5 ? "Bit seized: drill in shorter bursts next time" : "Bit seized: no air to cool it, drill in short bursts"); }
     if (e.type === "dock") setDocked(e.on);
@@ -704,11 +704,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
             <button type="button" aria-pressed={side === "space"} onClick={() => changeSide("space")}>{t.body === "moon" ? "Moon" : "Mars"} · {t.name}</button>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs" data-tour="sim-test">
-          <span className="chip"><Rocket className="w-3.5 h-3.5" /> Land</span><span className="faint">→</span>
-          <span className="chip"><Car className="w-3.5 h-3.5" /> Drive · {WAYPOINTS} waypoints · {ROCKS} rocks</span><span className="faint">→</span>
-          <span className="chip"><Drill className="w-3.5 h-3.5" /> {STATIONS} core stations</span>
-        </div>
+        <div className="text-xs muted" data-tour="sim-test">{phase === "land" ? "Part 1 of 2 · Landing" : phase === "drive" ? (docked ? "Part 2 of 2 · Drilling a core" : "Part 2 of 2 · Drive and sample") : "Mission: land, drive, sample"}</div>
         <div className="flex items-center gap-2">
           <div className="seg" title="How the ground is shown">
             {([["optical", "Camera"], ["sar", "Radar"], ["thermal", "Heat"]] as [Sensor, string][]).map(([m, l]) => <button key={m} type="button" aria-pressed={sensor === m} onClick={() => setSensor(m)}>{l}</button>)}
@@ -718,24 +714,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         </div>
       </div>
 
-      {(phase === "brief-land" || phase === "brief-drive") && (
-        <div className="card p-3">
-          <div className="text-xs font-semibold mb-2">Choose a rover for Part 2</div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {ROVERS.map((r) => (
-              <button key={r.id} type="button" onClick={() => changeRover(r.id)} className="row relative" aria-pressed={r.id === roverId} title={r.note}>
-                {r.bestFor === body && <span className="absolute -top-2 right-2 status status-good">Suits {body === "earth" ? "Earth" : body === "moon" ? "the Moon" : "Mars"}</span>}
-                <div className="flex items-center justify-between text-xs font-semibold"><span className="truncate pr-1">{r.name}</span><span className="font-mono muted">${r.costM}M</span></div>
-                <div className="text-[11px] muted mt-0.5 truncate">{r.wheels} · top speed {r.topSpeed.toFixed(0)} m/s</div>
-                <div className="text-[11px] muted mt-0.5">Wheel toughness: <b className="font-medium" style={{ color: "var(--text)" }}>{r.tough}</b> · Heat tolerance: <b className="font-medium" style={{ color: "var(--text)" }}>{r.heat}</b></div>
-              </button>
-            ))}
-          </div>
-          <p className="text-[11px] muted mt-2">{rover.note}</p>
-        </div>
-      )}
-
-      <div className="card overflow-hidden relative w-full h-[60vh] min-h-[460px]"
+      <div className="card overflow-hidden relative w-full h-[74vh] min-h-[520px]"
         onPointerDown={(e) => { if (!thirdPerson && phase === "drive" && !docked) { drag.current = true; last.current = { x: e.clientX, y: e.clientY }; } }}
         onPointerMove={(e) => { if (drag.current) { const dx = e.clientX - last.current.x, dy = e.clientY - last.current.y; last.current = { x: e.clientX, y: e.clientY }; lookRef.current.yaw -= dx * 0.005; lookRef.current.pitch = THREE.MathUtils.clamp(lookRef.current.pitch - dy * 0.004, -0.7, 0.7); } }}
         onPointerUp={() => { drag.current = false; }} onPointerLeave={() => { drag.current = false; }}>
@@ -753,8 +732,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
             <span>Waypoint <b>{Math.min(Number(tele.wp ?? 0) + 1, WAYPOINTS)} of {WAYPOINTS}</b>{tele.dist ? <span className="opacity-80"> · {tele.dist} m</span> : null}</span>
             <span>Speed <b>{tele.speed || "0.0"} m/s</b></span>
             <span>Wheels <b style={{ color: Number(tele.wheel ?? 100) < 35 ? "#fca5a5" : "#86efac" }}>{tele.wheel ?? 100}%</b></span>
-            <span>Slip <b style={{ color: Number(tele.slip ?? 0) > 60 ? "#fca5a5" : undefined }}>{tele.slip ?? 4}%</b></span>
-            <span>Motor <b style={{ color: tele.hot ? "#fca5a5" : undefined }}>{tele.motor ?? 30}°C</b><span className="opacity-80"> / {rover.maxTempC}°C</span></span>
+            {(tele.hot || Number(tele.motor ?? 0) > rover.maxTempC * 0.7) && <span>Motor <b style={{ color: tele.hot ? "#fca5a5" : "#fde68a" }}>{tele.motor}°C</b><span className="opacity-80"> / {rover.maxTempC}°C</span></span>}
           </>)}
           {phase === "drive" && docked && (<>
             <span>Core <b>{tele.depth ?? "0.00"} / {CORE_TARGET_M.toFixed(2)} m</b></span>
@@ -768,7 +746,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         {phase !== "brief-land" && (
           <div className="absolute top-3 right-3 z-10 on-canvas px-3 py-2 text-xs pointer-events-none" data-tour="sim-score">
             <div className="flex items-center gap-2"><Trophy className="w-3.5 h-3.5" /><b className="text-base">{total}</b><span className="opacity-80">/ {MAX_SCORE}</span></div>
-            <div className="opacity-80 mt-0.5">rocks {tally.rocks}/{ROCKS} · cores {tally.cores}/{STATIONS} · waypoints {Math.min(Number(tele.wp ?? 0), WAYPOINTS)}/{WAYPOINTS}</div>
+            <div className="opacity-80 mt-0.5">{tally.rocks}/{ROCKS} rocks · {tally.cores}/{STATIONS} cores</div>
             {phase === "drive" && !docked && <div className="mt-1 text-xl font-bold leading-none" style={{ transform: `rotate(${Number(tele.bearing ?? 0)}deg)`, width: 24 }}>↑</div>}
           </div>
         )}
@@ -796,9 +774,15 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
             <div className="mt-2 opacity-80">{tele.on ? "Drilling…" : "Released: cooling"} · F to leave</div>
           </div>
         )}
+        {phase === "drive" && !docked && !result && Number(tele.traction ?? 0) > 0.05 && (
+          <div className="absolute top-32 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-2 text-xs w-72" style={{ borderColor: "#f87171" }}>
+            <div className="flex justify-between"><b>Losing traction</b><span>stop and back off</span></div>
+            <div className="bar mt-1.5"><span style={{ width: `${Math.min(100, Number(tele.traction) * 100)}%`, background: "#f87171" }} /></div>
+          </div>
+        )}
         {toast && <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-1.5 text-sm font-semibold rise">{toast}</div>}
         {phase === "drive" && tele.hot && !result && <div className="absolute top-32 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-1.5 text-xs" style={{ borderColor: "#f87171" }}>Motor over {rover.maxTempC}°C: crawling until it cools. Ease off, or pick a rover with more heat tolerance.</div>}
-        {phase === "land" && tele.blind && <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center" style={{ background: "rgba(120, 70, 30, 0.35)", backdropFilter: "blur(2px)" }}><div className="on-canvas px-4 py-1.5 text-xs">Dust blind-out: the engine is lifting regolith with no air to stop it.</div></div>}
+        {phase === "land" && tele.blind && <div className="absolute inset-0 z-10 pointer-events-none flex items-start justify-center pt-20" style={{ background: "rgba(120, 70, 30, 0.35)", backdropFilter: "blur(3px)" }}><div className="on-canvas px-5 py-3 text-sm max-w-md text-center rise"><b>Dust blind-out.</b> With no air to slow it, the engine blast throws regolith hundreds of metres. Cameras and lidar lose the ground: this is why vacuum landings fly the last metres on inertial guidance.</div></div>}
 
         {/* on-screen controls */}
         {!paused && (
@@ -818,6 +802,21 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           <div className="absolute inset-0 z-20 flex items-center justify-center p-4" style={{ background: "rgba(3, 6, 11, 0.55)", backdropFilter: "blur(3px)" }}>
             <div className="card-solid p-6 max-w-2xl w-full rise" data-tour="sim-briefing">
               {phase === "brief-drive" && landing && <div className="mb-3"><Status level="good"><CheckCircle2 className="w-3.5 h-3.5" /> {landing.headline} · +{score.landing}</Status><p className="text-xs muted mt-1.5">{landing.reason}</p></div>}
+              {phase === "brief-drive" && (
+                <div className="mb-4">
+                  <div className="text-xs font-semibold mb-1.5">Choose a rover</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                    {ROVERS.map((r) => (
+                      <button key={r.id} type="button" onClick={() => setRoverId(r.id)} className="row relative" aria-pressed={r.id === roverId} title={r.note}>
+                        {r.bestFor === body && <span className="absolute -top-2 right-2 status status-good">Suits {body === "earth" ? "Earth" : body === "moon" ? "the Moon" : "Mars"}</span>}
+                        <div className="flex items-center justify-between text-xs font-semibold"><span className="truncate pr-1">{r.name}</span><span className="font-mono muted">${r.costM}M</span></div>
+                        <div className="text-[11px] muted mt-0.5">Wheels {r.tough.toLowerCase()} · heat {r.heat.toLowerCase()} · {r.topSpeed.toFixed(0)} m/s</div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] muted mt-1.5">{rover.note}</p>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-xs muted"><BriefIcon className="w-4 h-4" /> {brief.name} · on {worldLabel} · {gravity} m/s² · {pressure} bar{phase === "brief-drive" ? ` · ${rover.name}` : ""}</div>
               <h3 className="text-lg font-semibold mt-1">{brief.goal}</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 text-xs">
@@ -867,7 +866,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-tour="sim-results">
+      {(runs.earth || runs.space) && <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-tour="sim-results">
         {(["earth", "space"] as WorldSide[]).map((w) => { const r = runs[w]; const name = w === "earth" ? selectedMatch.name : t.name; return (
           <div key={w} className="card p-3.5 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -877,7 +876,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
             {r && <Status level={r.status === "PASS" ? "good" : "bad"}>{r.status === "PASS" ? "Passed" : "Failed"}</Status>}
           </div>
         ); })}
-      </div>
+      </div>}
       {runs.earth && runs.space && (
         <p className="text-xs muted px-1">{runs.earth.total > runs.space.total ? `Earth scored ${runs.earth.total - runs.space.total} more.` : runs.space.total > runs.earth.total ? `${otherName === "Earth" ? worldLabel : otherName} scored ${runs.space.total - runs.earth.total} more.` : "Same score on both worlds."} The gap between the two runs is the part an Earth test cannot show you: {t.body === "moon" ? "on the Moon" : "on Mars"} gravity is {t.gravity} m/s², air is {t.pressure_bar} bar and the ground is far colder.</p>
       )}

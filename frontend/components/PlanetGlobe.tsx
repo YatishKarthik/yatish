@@ -339,6 +339,8 @@ export default function PlanetGlobe({
         })}
       </div>
       <Canvas camera={{ position: camPos, fov: 42 }} dpr={[1, 2]} gl={{ antialias: true }}>
+        <color attach="background" args={["#02040a"]} />
+        <color attach="background" args={["#02040a"]} />
         <ambientLight intensity={0.55} />
         <directionalLight position={[10, 6, 8]} intensity={2.2} color="#fff7ed" />
         <pointLight position={[-8, -5, -6]} intensity={0.5} color={TINT[body]} />

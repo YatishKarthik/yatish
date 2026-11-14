@@ -42,8 +42,8 @@ function Sky() {
     const onSphere = (rad: number): [number, number, number] => { const a = r() * Math.PI * 2, p = Math.acos(2 * r() - 1); return [rad * Math.sin(p) * Math.cos(a), rad * Math.cos(p), rad * Math.sin(p) * Math.sin(a)]; };
     const bandPt = (): [number, number, number] => { const a = r() * Math.PI * 2, rad = 150 + r() * 30, spread = (r() + r() + r() - 1.5) * 22; const x = Math.cos(a) * rad, z = Math.sin(a) * rad; return [x, spread + Math.sin(a * 1.7) * 10, z]; };
     return {
-      band: make(9000, bandPt, () => c.setHSL(0.58 + r() * 0.1, 0.35 + r() * 0.3, 0.72 + r() * 0.28).clone()),
-      field: make(3500, () => onSphere(165 + r() * 25), () => c.setHSL(r() < 0.15 ? 0.08 : 0.6, 0.4, 0.8 + r() * 0.2).clone()),
+      band: make(6000, bandPt, () => c.setHSL(0.58 + r() * 0.1, 0.35 + r() * 0.3, 0.72 + r() * 0.28).clone()),
+      field: make(2500, () => onSphere(165 + r() * 25), () => c.setHSL(r() < 0.15 ? 0.08 : 0.6, 0.4, 0.8 + r() * 0.2).clone()),
       bright: make(140, () => onSphere(140), () => c.setHSL(r() < 0.3 ? 0.08 : 0.58, 0.5, 0.9).clone()),
     };
   }, []);

@@ -6,7 +6,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TERRA-TWIN",
+  title: "Celestra",
   description: "Find places on Earth that behave like a Moon or Mars base site, and test hardware on both.",
 };
 
