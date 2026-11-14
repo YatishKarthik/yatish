@@ -1,16 +1,33 @@
-import { useCallback, useEffect } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { loadSites } from './data/load';
 import { Director } from './director/Director';
 import { initClock, runIntro } from './state/clock';
 import { useStore } from './state/store';
 import { Chrome } from './ui/Chrome';
+import { OpsLog } from './ui/OpsLog';
+import { warpWhoosh } from './ui/sound';
+import { ChallengeView } from './views/ChallengeView';
+import { SurveyView } from './views/SurveyView';
 import { EvidenceView } from './views/EvidenceView';
 import { MethodView } from './views/MethodView';
 import { NotFound, SeamView } from './views/SeamView';
 import { SolView } from './views/SolView';
 import { SystemView } from './views/SystemView';
 import { TrialView } from './views/TrialView';
+
+/** A short tunnel whenever the visitor moves between the system view and the ground. */
+function WarpTunnel() {
+  const { pathname } = useLocation();
+  const prev = useRef(pathname);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const space = (p: string) => p === '/', ground = (p: string) => p.startsWith('/seam') || p.startsWith('/trial');
+    if ((space(prev.current) && ground(pathname)) || (ground(prev.current) && space(pathname))) { setN((k) => k + 1); warpWhoosh(); }
+    prev.current = pathname;
+  }, [pathname]);
+  return n ? <div key={n} className="warp-tunnel" aria-hidden /> : null;
+}
 
 export default function App() {
   const loadState = useStore((s) => s.loadState);
@@ -50,9 +67,13 @@ export default function App() {
           <Route path="/trial/:siteId" element={<TrialView />} />
           <Route path="/evidence" element={<EvidenceView />} />
           <Route path="/method" element={<MethodView />} />
+          <Route path="/challenge" element={<ChallengeView />} />
+          <Route path="/survey" element={<SurveyView />} />
           <Route path="*" element={<NotFound what="Page" />} />
         </Routes>
       </Chrome>
+      <WarpTunnel />
+      <OpsLog />
       <Director />
     </BrowserRouter>
   );

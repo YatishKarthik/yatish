@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { fmtHour } from '../state/clock';
+import { useProgress } from '../state/progress';
 import { useStore } from '../state/store';
 import { Seg } from './Seg';
 
@@ -36,7 +37,7 @@ export function ClockBar() {
         <label className="flex flex-col">
           <span className="sr-only">Local solar time</span>
           <input type="range" min={0} max={24} step={0.05} value={hour} className="scrub w-full"
-            onChange={(e) => set({ hour: Number(e.target.value) % 24, playing: false })}
+            onChange={(e) => { const h = Number(e.target.value) % 24; set({ hour: h, playing: false }); if (h < 4 || h > 21) useProgress.getState().award('flag', 'night'); }}
             aria-valuetext={`${fmtHour(hour)} local solar time`} />
           <span className="ticks" aria-hidden />
           <span className="mt-1 flex justify-between font-mono text-xs text-dim" aria-hidden><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></span>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { rankOf, useProgress } from '../state/progress';
 import { useStore } from '../state/store';
 import { setSound } from './sound';
 
@@ -8,6 +9,8 @@ export function Chrome({ children }: { children: ReactNode }) {
   const target = useStore((s) => s.target);
   const setTarget = useStore((s) => s.setTarget);
   const sound = useStore((s) => s.sound);
+  const xp = useProgress((s) => s.xp);
+  const rank = rankOf(xp);
   const { hash } = useLocation();
   const link = (to: string, label: string) => (
     <NavLink to={{ pathname: to, hash: hash || `#t=${target}` }} end
@@ -20,7 +23,7 @@ export function Chrome({ children }: { children: ReactNode }) {
       <header className="hide-in-director flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line bg-panel px-5 py-2">
         <NavLink to={{ pathname: '/', hash: `#t=${target}` }} className="head">Thermal&nbsp;Twin</NavLink>
         <nav className="flex gap-1" aria-label="Views">
-          {link('/', 'System')}{link('/sol', 'Sol')}{link('/evidence', 'Evidence')}{link('/method', 'Method')}
+          {link('/', 'System')}{link('/sol', 'Sol')}{link('/challenge', 'Blind match')}{link('/evidence', 'Evidence')}{link('/method', 'Method')}
         </nav>
         <div className="ml-auto flex flex-wrap items-center gap-3">
           {data && (
@@ -35,6 +38,11 @@ export function Chrome({ children }: { children: ReactNode }) {
               </select>
             </label>
           )}
+          <Link to={{ pathname: '/survey', hash: hash || `#t=${target}` }} className="rank-chip" title="Your survey record">
+            <span>{rank.name}</span>
+            <span className="bar" aria-hidden><i style={{ width: `${rank.next ? Math.min(100, ((xp - rank.at) / (rank.next.at - rank.at)) * 100) : 100}%` }} /></span>
+            <span className="tabular-nums text-dim">{xp}</span>
+          </Link>
           <button type="button" className="btn" aria-pressed={sound} onClick={() => { setSound(!sound); useStore.getState().set({ sound: !sound }); }}>
             Sound {sound ? 'on' : 'off'}
           </button>

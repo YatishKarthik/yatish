@@ -8,6 +8,7 @@ import { PermitCard } from '../panels/PermitCard';
 import { Pillars } from '../panels/Pillars';
 import { SiteStrip } from '../panels/SiteStrip';
 import { SeamCanvas } from '../scenes/SeamCanvas';
+import { useProgress } from '../state/progress';
 import { useStore, withTarget } from '../state/store';
 import { ClockBar } from '../ui/ClockBar';
 import { Seg } from '../ui/Seg';
@@ -70,6 +71,8 @@ export function SeamView() {
     if (sound && swing != null) startDrone(swing);
     return stopDrone;
   }, [sound, swing]);
+  const sid = site?.id, sname = site?.name;
+  useEffect(() => { if (sid) { useProgress.getState().say(`On site · ${sname}`); useProgress.getState().award('survey', sid); } }, [sid, sname]);
   if (!site) return <NotFound what="Site" />;
   const verdicts = site.verdicts[target.id];
   const showRail = !director || dirRail;

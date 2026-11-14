@@ -21,6 +21,8 @@ No lockfile is committed: lockfiles written on one operating system have made np
 | `/sol` | Mars target picker and Earth sites as 24-hour thermal ribbons |
 | `/seam/:site` | Earth and Mars terrain at one scale, split by a draggable seam; clock, permits, limits |
 | `/trial/:site` | The same rover drive on both terrains, with slope margin |
+| `/challenge` | Blind match: read a target's fingerprint and pick the closest of three Earth sites |
+| `/survey` | Your survey record: rank, XP, badges and coverage, kept in the browser |
 | `/evidence` | Curve overlay, controls, rover ground truth, local readings |
 | `/method` | Formula, weights, data table, classes, AI statement |
 

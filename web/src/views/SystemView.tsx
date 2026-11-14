@@ -7,7 +7,7 @@ import { asset } from '../data/load';
 import { rankedSites, siteIndex, targetIndex } from '../data/select';
 import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
-import { EarthMaterial, SUN_DIR, Sun } from '../scenes/Earth';
+import { Clouds, EarthMaterial, SUN_DIR, Sun } from '../scenes/Earth';
 import { Atmosphere, Galaxy } from '../scenes/Galaxy';
 import { useStore, withTarget } from '../state/store';
 import { Num } from '../ui/Num';
@@ -123,6 +123,7 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
           <sphereGeometry args={[r, 160, 112]} />
           {body === 'earth' ? <EarthMaterial /> : <meshStandardMaterial map={tex} bumpMap={bump} bumpScale={body === 'moon' ? 0.02 : 0.012} roughness={0.95} metalness={0} />}
         </mesh>
+        {body === 'earth' && <Clouds r={r} />}
         {focused && pins.map((p) => <PinMark key={p.id} pin={p} r={r} />)}
       </group>
       {!focus && (

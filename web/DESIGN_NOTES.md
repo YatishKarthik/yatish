@@ -81,6 +81,18 @@ The entry screen is deliberately more atmospheric than the working views.
 | Small fingerprint at the head of every site row | information: scan the list by shape |
 | Pillar tiles with score and bar; one pillar's table open at a time | information, keeps the rail short |
 
+## Game layer
+
+| Element | Purpose |
+|---|---|
+| Survey record: XP, four ranks, eleven badges, coverage meters | motivation to explore all targets and sites; points measure exploration only, never analog quality |
+| Ops log, bottom left | information: narrates each action; lines fade after 6 to 9 s |
+| Blind match: five rounds, pick the closest of three sites from fingerprints | teaches how the method reads a site; answers come from `sites.json` closeness |
+| Warp tunnel between the system view and the ground, 600 ms | decorative, finite, off with reduced motion |
+| Noise-generated cloud deck on Earth | decorative; not weather data |
+
+Progress is stored in the visitor's browser only (`localStorage`) and can be cleared from the Survey page.
+
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).

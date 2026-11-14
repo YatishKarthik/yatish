@@ -1,7 +1,7 @@
 import { useStore } from '../state/store';
 import { Num } from '../ui/Num';
 
-import { PARAMS, PILLARS } from '../data/pillars';
+import { PARAMS, PILLARS, RESOURCES } from '../data/pillars';
 
 
 function Box({ x, label, sub }: { x: number; label: string; sub: string }) {
@@ -69,6 +69,25 @@ export function MethodView() {
         </div>
         <p className="mt-2 text-sm text-dim">Every parameter is ranked within its own planet before comparison. Radar carries weight 0 because Earth C-band and lunar S-band are not like-for-like; absolute temperatures are shown but never compared across planets.</p>
         <p className="caps mt-2">Earth thermal source in this build: <span className="text-ink" title="sites.json → meta.earth_thermal_source">{m.earth_thermal_source}</span> · common grid <Num path="meta.common_resolution_m" unit=" m" /></p>
+      </section>
+
+      <section className="panel p-3" aria-label="Challenge resources">
+        <h2 className="mb-2 text-lg font-semibold">Challenge resources, and what we do with each</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead><tr className="caps text-left"><th className="py-1 font-normal">Agency</th><th className="font-normal">Resource</th><th className="font-normal">Use in this project</th><th className="font-normal">Status</th></tr></thead>
+            <tbody>
+              {RESOURCES.map((r) => (
+                <tr key={r.name} className="border-t border-line">
+                  <td className="py-1.5 pr-3 font-mono text-xs">{r.agency}</td>
+                  <td className="pr-3"><a href={r.url} target="_blank" rel="noreferrer" className="underline decoration-line underline-offset-4 hover:decoration-ink">{r.name}</a></td>
+                  <td className="pr-3 text-dim">{r.use}</td>
+                  <td className={`font-mono text-xs uppercase ${r.status === 'used' ? 'text-permit' : r.status === 'planned' ? 'text-amber' : 'text-dim'}`}>{r.status === 'used' ? 'used now' : r.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <div className="grid gap-5 md:grid-cols-2">

@@ -5,6 +5,7 @@ import { pathProfile } from '../data/tiles';
 import type { World } from '../data/types';
 import { SeamCanvas } from '../scenes/SeamCanvas';
 import { runTrial, sampleAt, STEP_M, type TrialResult } from '../sim/rover';
+import { useProgress } from '../state/progress';
 import { useStore, withTarget } from '../state/store';
 import { slipHiss } from '../ui/sound';
 import { Hud, MissingTiles, NotFound } from './SeamView';
@@ -88,6 +89,14 @@ export function TrialView() {
   if (!site) return <NotFound what="Site" />;
   const done = !!run && trial.t >= run.end;
   const B = bodyName(target);
+  const outcome = run && done ? `${run.earth.outcome}/${run.mars.outcome}` : '';
+  useEffect(() => {
+    if (!outcome) return;
+    const p = useProgress.getState();
+    p.say(`Trial complete · Earth ${outcome.split('/')[0]} · ${B} ${outcome.split('/')[1]}`);
+    p.award('trial', 'run');
+    if (outcome.includes('STUCK')) p.award('flag', 'stuck');
+  }, [outcome, B]);
   let sentence = '';
   if (run && done) {
     const e = run.earth, m = run.mars;

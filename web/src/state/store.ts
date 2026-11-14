@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SitesJson, World } from '../data/types';
+import { useProgress } from './progress';
 
 export type Layer = 'temperature' | 'satellite';
 export type Mode = 'wipe' | 'split';
@@ -56,6 +57,8 @@ export const useStore = create<Store>((set) => ({
     url.hash = `t=${id}`;
     window.history.replaceState(window.history.state, '', url);
     set({ target: id });
+    const t = useStore.getState().data?.targets.find((x) => x.id === id);
+    if (t) { useProgress.getState().say(`Target locked · ${t.name}`); useProgress.getState().award('scan', `${t.body}:${t.id}`); }
   },
   setTrial: (p) => set((s) => ({ trial: { ...s.trial, ...p } })),
 }));

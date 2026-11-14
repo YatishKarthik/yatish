@@ -123,3 +123,22 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
 /* warp cut on every jump: a quick radial flash from the edges, 300 ms */
 .warp { position: absolute; inset: 0; pointer-events: none; z-index: 4; background: radial-gradient(ellipse at center, transparent 45%, rgba(143, 227, 255, 0.22) 100%); animation: warp var(--motion-300) var(--ease-out) both; }
 @keyframes warp { from { opacity: 1; transform: scale(1.12); } to { opacity: 0; transform: scale(1); } }
+
+/* ---- survey career, ops log, warp tunnel ---- */
+.opsline { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #dfe5ec; background: rgba(7, 10, 15, 0.9); border-left: 2px solid #8fe3ff; padding: 3px 9px; width: max-content; max-width: min(80vw, 520px); }
+.opsline.is-badge { border-left-color: #f2a93b; color: #ffe2a8; }
+.badge-mark { width: 28px; height: 28px; flex: none; border: 1px solid #2c3440; transform: rotate(45deg); }
+.badge-mark.is-on { border-color: #f2a93b; background: #f2a93b; box-shadow: inset 0 0 0 4px #161b22; }
+.rank-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 10px; border: 1px solid #2c3440; font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+.rank-chip:hover { border-color: #aeb7c2; }
+.rank-chip .bar { width: 56px; height: 3px; background: #2c3440; }
+.rank-chip .bar > i { display: block; height: 3px; background: #8fe3ff; }
+
+/* warp tunnel between space and ground: streaks rush outward for 600 ms */
+.warp-tunnel { position: fixed; inset: 0; z-index: 60; pointer-events: none; background:
+    repeating-conic-gradient(from 0deg, rgba(143, 227, 255, 0) 0deg 2.2deg, rgba(190, 240, 255, 0.5) 2.2deg 2.5deg),
+    radial-gradient(circle at center, #0e1116 0%, #0e1116 6%, rgba(14, 17, 22, 0.2) 40%, rgba(14, 17, 22, 0) 70%);
+  -webkit-mask-image: radial-gradient(circle at center, transparent 5%, #000 45%); mask-image: radial-gradient(circle at center, transparent 5%, #000 45%);
+  animation: tunnel 600ms cubic-bezier(0.5, 0, 0.2, 1) both; }
+@keyframes tunnel { 0% { opacity: 0; transform: scale(0.6) rotate(0deg); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(3.2) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .warp-tunnel { display: none; } }

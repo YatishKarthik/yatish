@@ -51,6 +51,12 @@ function noise(duration: number, peak: number, freq: number) {
   src.start();
 }
 
+/** Target lock. */
+export const lockClick = () => noise(0.04, 0.2, 1800);
+
+/** Warp between space and ground. */
+export const warpWhoosh = () => noise(0.55, 0.12, 420);
+
 /** Permit stamp landing. */
 export const stampClick = () => noise(0.05, 0.25, 900);
 

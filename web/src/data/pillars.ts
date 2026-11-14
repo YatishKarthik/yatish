@@ -43,3 +43,18 @@ export const PARAMS: ParamDef[] = [
 
 export const byPillar = (p: PillarId) => PARAMS.filter((d) => d.pillar === p);
 export const PARAM_INDEX = Object.fromEntries(PARAMS.map((d) => [d.id, d])) as Record<ParamId, ParamDef>;
+
+// The challenge's official resources, and what this project does with each today.
+export const RESOURCES: { agency: string; name: string; url: string; use: string; status: 'used' | 'planned' | 'reference' }[] = [
+  { agency: 'NASA', name: 'Earthdata Search', url: 'https://search.earthdata.nasa.gov/', use: 'ECOSTRESS and MODIS land-surface temperature for the thermal pillar', status: 'planned' },
+  { agency: 'NASA', name: 'Worldview', url: 'https://worldview.earthdata.nasa.gov/', use: 'Visual check of each Earth site before it is accepted', status: 'reference' },
+  { agency: 'NASA', name: 'Planetary Data System (PDS)', url: 'https://pds.nasa.gov/', use: 'Mars terrain and imagery (CTX stereo models, processed by USGS); TES thermal inertia planned', status: 'used' },
+  { agency: 'NASA', name: 'Lunar Reconnaissance Orbiter (LRO)', url: 'https://pds-geosciences.wustl.edu/missions/lro/', use: 'LRO WAC global mosaic on the Moon globe; LOLA slopes and Mini-RF radar planned', status: 'used' },
+  { agency: 'NASA', name: 'LRO Diviner lunar data', url: 'https://pds-geosciences.wustl.edu/missions/lro/diviner.htm', use: 'Lunar surface temperatures for the thermal pillar, including the polar targets', status: 'planned' },
+  { agency: 'CSA', name: 'RADARSAT Constellation Mission', url: 'https://donnees-data.asc-csa.gc.ca/en/dataset/rcm', use: 'Current C-band backscatter for the radar pillar', status: 'planned' },
+  { agency: 'CSA', name: 'RADARSAT-1', url: 'https://donnees-data.asc-csa.gc.ca/en/dataset/radarsat1', use: 'Archive C-band backscatter and texture for the radar pillar', status: 'planned' },
+  { agency: 'CSA', name: 'SAR Python tutorial', url: 'https://github.com/asc-csa/Synthetic_Aperture_Radar_Tutorial', use: 'Method reference for reading and filtering SAR scenes', status: 'reference' },
+  { agency: 'ESA', name: 'Copernicus Data Space Ecosystem', url: 'https://dataspace.copernicus.eu/', use: 'Copernicus DEM GLO-30 terrain and Sentinel-2 imagery for all 60 Earth sites', status: 'used' },
+  { agency: 'ESA', name: 'Open Science Catalog', url: 'https://opensciencedata.esa.int/', use: 'Cross-check of published analog-site products', status: 'reference' },
+  { agency: 'JAXA', name: 'G-Portal', url: 'https://gportal.jaxa.jp/gpr/index/index', use: 'GCOM-C land-surface temperature as a second thermal source; Kaguya lunar terrain is already used', status: 'planned' },
+];
