@@ -144,13 +144,13 @@ export function Seam({ extentM, earthLabel, marsLabel, body }: { extentM: number
         <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       <Line points={[[0, H, -E / 2], [0, H, E / 2], [0, 0, E / 2]]} color="#e6e9ef" lineWidth={1.5} transparent opacity={0.7} />
-      <Html position={[0, H, E / 2]} center zIndexRange={[20, 0]}>
-        <div className="flex -translate-y-5 select-none items-center gap-2 whitespace-nowrap font-mono text-xs">
+      <Html position={[0, H, E / 2]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
+        <div className="pointer-events-none flex -translate-y-5 select-none items-center gap-2 whitespace-nowrap font-mono text-xs">
           <span className="rounded-sm bg-page/80 px-1.5 py-0.5 text-earth">EARTH · {earthLabel}</span>
           <button
             type="button" role="slider" aria-label="Seam position: drag to show more of either world"
             aria-valuemin={15} aria-valuemax={85} aria-valuenow={seamPct}
-            className="seam-handle hide-in-director"
+            className="seam-handle hide-in-director pointer-events-auto"
             onPointerDown={(e) => { dragging.current = true; setDrag(true); e.currentTarget.setPointerCapture(e.pointerId); }}
             onPointerMove={(e) => dragging.current && setFromClientX(e.clientX)}
             onPointerUp={() => { dragging.current = false; setDrag(false); }}

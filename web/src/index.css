@@ -152,7 +152,8 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
 @media (max-width: 799px) { .title-screen { padding: 20px; background: linear-gradient(0deg, rgba(8, 10, 14, 0.9) 0%, rgba(8, 10, 14, 0.5) 60%, rgba(8, 10, 14, 0.1) 100%); } .title-stats dd { font-size: 20px; } }
 
 /* ---- holographic table ---- */
-.table-room { position: relative; height: calc(100vh - 53px); min-height: 560px; overflow: hidden; background: #05070a; }
+/* The room fills the window from its top-left corner, behind the nav bar: panels placed in 3D are then drawn and clicked at the same spot. */
+.table-room { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #05070a; }
 .holo-panel { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #e9f6ff; background: rgba(6, 16, 24, 0.78); border: 1px solid rgba(143, 227, 255, 0.55); box-shadow: 0 0 28px rgba(143, 227, 255, 0.16), inset 0 0 44px rgba(143, 227, 255, 0.05); position: relative; }
 .holo-panel::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(143, 227, 255, 0.045) 0 1px, transparent 1px 4px); }
 .holo-panel.is-active { border-color: #dff6ff; box-shadow: 0 0 36px rgba(143, 227, 255, 0.3), inset 0 0 44px rgba(143, 227, 255, 0.07); }
@@ -169,7 +170,7 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
 .holo-tile { border: 1px solid rgba(143, 227, 255, 0.25); padding: 5px 6px; }
 .holo-row { display: flex; width: 100%; justify-content: space-between; gap: 12px; padding: 5px 8px; border: 1px solid transparent; font-size: 14px; text-align: left; }
 .holo-row:hover, .holo-row.is-on { border-color: rgba(143, 227, 255, 0.6); background: rgba(143, 227, 255, 0.08); }
-.holo-permit { padding: 8px 0; border-top: 1px solid rgba(143, 227, 255, 0.2); }
+.holo-permit { padding: 6px 0; border-top: 1px solid rgba(143, 227, 255, 0.2); }
 .holo-permit:first-child { border-top: 0; padding-top: 0; }
 .holo-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 10px; border: 1px solid rgba(143, 227, 255, 0.5); background: rgba(6, 16, 24, 0.85); color: #e9f6ff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; transition: background-color var(--motion-150) var(--ease-out), border-color var(--motion-150) var(--ease-out); }
 .holo-btn:hover:not(:disabled) { border-color: #fff; background: rgba(143, 227, 255, 0.14); }
@@ -179,3 +180,31 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
 .table-clock { font-family: 'IBM Plex Mono', monospace; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
 .table-console .btn { background: rgba(6, 16, 24, 0.85); border-color: rgba(143, 227, 255, 0.5); min-height: 34px; }
 .table-console .btn[aria-pressed='true'] { background: #8fe3ff; border-color: #8fe3ff; color: #05070a; }
+
+/* table: headline, survey card, panel helpers */
+.table-head { position: absolute; top: calc(var(--nav, 53px) + 10px); left: 50%; transform: translateX(-50%); z-index: 30; width: max-content; max-width: calc(100% - 24px); padding: 8px 18px 9px; text-align: center; background: rgba(6, 14, 21, 0.95); border: 1px solid rgba(143, 227, 255, 0.35); border-bottom: 2px solid #8fe3ff; }
+.table-head .caps { display: block; }
+.table-name { display: block; font-size: 20px; font-weight: 600; line-height: 1.15; color: #fff; }
+.table-where { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #aeb7c2; }
+.table-score { display: flex; flex-direction: column; align-items: center; padding: 0 16px; border-left: 1px solid rgba(143, 227, 255, 0.3); border-right: 1px solid rgba(143, 227, 255, 0.3); }
+.table-score > span:first-child { font-size: 44px; line-height: 1; color: #fff; }
+.table-score > span:last-child { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8fe3ff; white-space: nowrap; }
+.table-why { margin-top: 6px; font-size: 13px; color: #c9d3dd; }
+.table-why b { color: #fff; font-weight: 600; }
+.survey { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(143, 227, 255, 0.25); white-space: nowrap; }
+.survey .caps { display: inline; margin-right: 4px; }
+.survey-task { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 8px; font-size: 13px; color: #e6e9ef; border: 1px solid rgba(143, 227, 255, 0.3); }
+.survey-task:hover { border-color: #fff; background: rgba(143, 227, 255, 0.1); }
+.survey-task > span { color: #8fe3ff; font-family: 'IBM Plex Mono', monospace; }
+.survey-task.is-done { color: #9fb4c2; border-color: rgba(63, 185, 80, 0.5); }
+.survey-task.is-done > span { color: #3fb950; }
+.survey .holo-btn { min-height: 30px; margin-left: 4px; }
+.holo-sub { margin-bottom: 10px; font-size: 13px; line-height: 1.4; color: #c4d6e2; }
+.holo-bar { display: inline-block; width: 70px; height: 4px; background: rgba(143, 227, 255, 0.15); }
+.holo-bar > span { display: block; height: 100%; background: #8fe3ff; }
+.holo-go:not(:disabled) { background: #8fe3ff; border-color: #8fe3ff; color: #05070a; font-weight: 600; }
+.holo-go:hover:not(:disabled) { background: #c6f1ff; border-color: #c6f1ff; }
+.holo-call[aria-pressed='true'] { background: var(--call); border-color: var(--call); color: #05070a; }
+.holo-link { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #9fc3d6; text-decoration: underline; text-underline-offset: 3px; }
+.holo-link:hover { color: #fff; }
+@media (max-width: 767px) { .table-head { padding: 6px 10px; } .table-name { font-size: 15px; } .table-score > span:first-child { font-size: 30px; } .table-score { padding: 0 10px; } }

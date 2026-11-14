@@ -38,8 +38,8 @@ export function Story() {
   if (step == null) return null;
   const ch = CHAPTERS[step], last = step === CHAPTERS.length - 1;
   return (
-    <div className={`hide-in-director pointer-events-none fixed inset-x-0 z-40 flex justify-center px-3 ${pathname.startsWith('/table') ? 'top-16' : 'bottom-3'}`}>
-      <section key={step} className="console rise pointer-events-auto w-full max-w-2xl p-3" aria-live="polite" aria-label="Mission story">
+    <div className={`hide-in-director pointer-events-none fixed inset-x-0 z-40 flex px-3 ${pathname.startsWith('/table') ? 'top-40 justify-end max-lg:top-16 max-lg:justify-center' : 'bottom-3 justify-center'}`}>
+      <section key={step} className={`console rise pointer-events-auto w-full p-3 ${pathname.startsWith('/table') ? 'max-w-sm' : 'max-w-2xl'}`} aria-live="polite" aria-label="Mission story">
         <div className="flex items-baseline justify-between gap-3">
           <p className="caps !text-[#8fe3ff]">Chapter {step} of {CHAPTERS.length - 1} · {ch.title}</p>
           <button type="button" className="caps underline underline-offset-4 hover:!text-ink" onClick={() => setStory(null)}>Leave story</button>

@@ -78,6 +78,18 @@ const fail = (msg) => { throw new Error(msg); };
     if ((await page.locator('canvas').first().screenshot()).equals(over)) fail('table: station change did not move the camera');
     await page.locator('.table-console').getByRole('button', { name: 'Slope' }).click();
     await page.waitForTimeout(400);
+    // panels live in 3D: the permit calls open through the skip path and the survey records it
+    await page.keyboard.press('5');
+    await page.waitForTimeout(1800);
+    const skip = await page.getByRole('button', { name: 'Skip, just show me' }).boundingBox();
+    await page.mouse.move(skip.x + skip.width / 2, skip.y + skip.height / 2, { steps: 3 });
+    await page.waitForTimeout(150);
+    await page.mouse.click(skip.x + skip.width / 2, skip.y + skip.height / 2);
+    await page.waitForTimeout(300);
+    if (!(await page.locator('.survey-task.is-done', { hasText: 'Make your call' }).count())) {
+      await page.mouse.click(skip.x + skip.width / 2, skip.y + skip.height / 2);   // first click after a camera flight can be swallowed; see DESIGN_NOTES
+      await page.waitForSelector('.survey-task.is-done >> text=Make your call', { timeout: 5000 });
+    }
 
     // 5c. test bench and analysis render
     for (const [route, text] of [['/analysis', 'Parameter space'], ['/challenge', 'Blind match'], ['/survey', 'Badges']]) {

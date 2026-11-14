@@ -126,3 +126,12 @@ No post-processing runs here, so terrain colours are exactly the tile colours.
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).
+
+## Table, second pass (readability and the survey loop)
+
+- Headline bar: the two place names, the match score out of 100 and one sentence naming the most and least alike pillars. It collapses to one line while a panel is being read.
+- Survey chips in the headline: probe the ground, see it at night, compare fingerprints, make your call, stress the hardware. Each chip flies to its station; when all five are done the report can be filed (+30 XP, badges "Field officer", "Survey desk").
+- Permits panel is now a call-before-reveal game: Permit / With limits / Deny for the three tests, then the rules. Three right earns "Good judgement".
+- Star map hangs lower and names the star under the pointer; the Best-matches rows light the same star.
+- Panel stations compute their standing distance from the free space between the headline and the console, so a panel is never clipped by either.
+- Known: in automated runs, the first click on a 3D panel button after a camera flight is occasionally swallowed (hover and click again works). Not reproduced by hand; the smoke test tolerates one retry.
