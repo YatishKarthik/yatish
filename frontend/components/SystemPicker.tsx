@@ -41,7 +41,7 @@ function Galaxy() {
 /* Meteors: a streak appears every few seconds, crosses the sky and fades. */
 function ShootingStars() {
   const ref = useRef<THREE.Group>(null);
-  const streaks = useRef(Array.from({ length: 3 }, (_, k) => ({ t: -k * 2.5, a: 0, pos: new THREE.Vector3(), dir: new THREE.Vector3() })));
+  const streaks = useRef(Array.from({ length: 3 }, (_, k) => ({ t: 10 + k * 3, a: 0, pos: new THREE.Vector3(0, -999, 0), dir: new THREE.Vector3(0, -1, 0) })));
   useFrame((_, dt) => {
     const g = ref.current; if (!g) return;
     streaks.current.forEach((st, k) => {
@@ -198,7 +198,7 @@ function System({ hovered, setHovered, onPick, zoomingRef, nodes }: {
           </group>
         </group>
       </group>
-      <group ref={marsOrbit} rotation={[0, -0.95, 0]}>
+      <group ref={marsOrbit} rotation={[0, 0.5, 0]}>
         <group position={[7.4, 0, 0]}>
           <Planet id="mars" r={0.62} tex="/textures/mars.jpg" hovered={hovered === "mars"} pickable onHover={setHovered} onPick={() => { zoomingRef.current = "mars"; }} meshRef={marsRef} />
         </group>
