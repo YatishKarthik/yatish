@@ -11,8 +11,8 @@ type BodyId = "sun" | "earth" | "moon" | "mars";
 const FACTS: Record<BodyId, { title: string; line: string; detail: string; pick: boolean }> = {
   sun: { title: "Sun", line: "The light every site on this map is measured under", detail: "Day length and sunlight set how hot a place gets and how fast it cools at night.", pick: false },
   earth: { title: "Earth", line: "Where the testing happens", detail: "60 candidate test sites: deserts, craters, lava fields, dry valleys and a few deliberately unsuitable places as controls.", pick: false },
-  moon: { title: "The Moon", line: "10 base candidates · 1.62 m/s² · no air", detail: "South Pole crater rims, permanently shadowed floors, lava-tube skylights. Nights last two weeks.", pick: true },
-  mars: { title: "Mars", line: "10 base candidates · 3.72 m/s² · 0.006 bar", detail: "Ancient river deltas, buried ice plains, deep canyons and basaltic lava tubes. Thin air, fine dust.", pick: true },
+  moon: { title: "The Moon", line: "Artemis III regions and more · 1.62 m/s² · no air", detail: "NASA's Artemis III landing regions near the South Pole, crater rims, permanently shadowed floors and lava-tube skylights. Nights last two weeks.", pick: true },
+  mars: { title: "Mars", line: "Base candidates · 3.72 m/s² · 0.006 bar", detail: "Ancient river deltas, buried ice plains, deep canyons and basaltic lava tubes. Thin air, fine dust.", pick: true },
 };
 
 // sizes keep the real ordering (Sun ≫ Earth > Mars > Moon) without the real ratios, which would make the planets invisible

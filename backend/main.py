@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -71,6 +72,37 @@ def get_validation():
     if not path.exists():
         raise HTTPException(status_code=404, detail="Run data-pipeline/03_validate.py first.")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@app.get("/api/brief/{target_id}", response_class=HTMLResponse)
+def field_brief(target_id: str):
+    """Printable one-page field-campaign brief (browser Print > Save as PDF)."""
+    import json
+    from backend.brief import render
+    try:
+        res = ml_engine.match(target_id, top_k=10)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    path = ROOT / "data" / "processed" / "validation.json"
+    val = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+    return render(res, val)
+
+
+@app.get("/api/custom_target")
+def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
+    """Rank Earth sites for any Moon or Mars point: terrain fetched live (LOLA / Kaguya / CTX), 10-90 s."""
+    from backend import custom_target as ct
+    ok, why = ct.available()
+    if not ok:
+        raise HTTPException(status_code=501, detail=why)
+    try:
+        return ct.match_custom(ml_engine, body, lat, lon, top_k)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=f"No elevation data near this point: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)[:300])
 
 
 @app.post("/api/simulate")

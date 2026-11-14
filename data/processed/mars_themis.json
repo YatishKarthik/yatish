@@ -1,0 +1,69 @@
+{
+ "mars_jezero_crater": {
+  "night_ir_contrast": -0.32,
+  "night_ir_texture": 0.51,
+  "mosaic": "mc13_syrtis_major_nir",
+  "reading": "about as warm at night as its surroundings",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_arcadia_planitia": {
+  "night_ir_contrast": 0.73,
+  "night_ir_texture": 0.28,
+  "mosaic": "mc02_diacria_nir",
+  "reading": "warmer at night than its surroundings: rockier or more consolidated ground",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_gale_crater": {
+  "night_ir_contrast": 0.42,
+  "night_ir_texture": 0.68,
+  "mosaic": "mc23_aeolis_nir",
+  "reading": "about as warm at night as its surroundings",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_oxia_planum": {
+  "night_ir_contrast": 0.47,
+  "night_ir_texture": 0.93,
+  "mosaic": "mc11_oxia_palus_nir",
+  "reading": "about as warm at night as its surroundings",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_mawrth_vallis": {
+  "night_ir_contrast": -0.4,
+  "night_ir_texture": 0.66,
+  "mosaic": "mc11_oxia_palus_nir",
+  "reading": "about as warm at night as its surroundings",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_hellas_planitia": {
+  "night_ir_contrast": -0.96,
+  "night_ir_texture": 0.56,
+  "mosaic": "mc28_hellas_nir",
+  "reading": "cooler at night than its surroundings: finer, dustier ground",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_utopia_planitia": {
+  "night_ir_contrast": 0.31,
+  "night_ir_texture": 0.94,
+  "mosaic": "mc06_casius_nir",
+  "reading": "about as warm at night as its surroundings",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_melas_chasma": {
+  "night_ir_contrast": 0.64,
+  "night_ir_texture": 0.46,
+  "mosaic": "mc18_coprates_nir",
+  "reading": "warmer at night than its surroundings: rockier or more consolidated ground",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_olympus_lava_tubes": {
+  "night_ir_contrast": 0.02,
+  "night_ir_texture": 1.37,
+  "mosaic": "mc17_phoenicis_lacus_nir",
+  "reading": "about as warm at night as its surroundings",
+  "status": "measured (relative, qualitative)"
+ },
+ "mars_phoenix_polar": {
+  "status": "missing",
+  "reading": "no THEMIS night-IR mosaic covers this site"
+ }
+}

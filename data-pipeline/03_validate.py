@@ -10,6 +10,10 @@ Checks whether the match score means anything, and writes data/processed/validat
 3. Weight sensitivity. Each pillar weight is moved by +/-20% (others renormalised). If the top 5 barely changes,
    the ranking does not hinge on our particular choice of weights.
 4. Ensemble calibration. Share of Earth sites whose scenario labels fall inside the 90% conformal band.
+5. Baseline. The same checks for a plain, unweighted distance across the 14 standardised features, with and
+   without the bare-ground rule, so it is visible how much the weighting and the rule each add.
+6. Bare-ground thresholds. The NDVI limits of the rule are moved (0.15-0.25 full score, 0.25-0.35 zero) to show
+   the control result does not hinge on one cut-off.
 
 Run after 01_fetch_and_extract.py:  python data-pipeline/03_validate.py
 """
@@ -31,6 +35,24 @@ def ranked(matches, weights):
     return [m["id"] for m in sorted(matches, key=score, reverse=True)]
 
 
+def gate(ndvi, water, full=0.20, zero=0.30):
+    return float(np.clip((zero - ndvi) / (zero - full), 0, 1) * np.clip((0.50 - water) / 0.30, 0, 1))
+
+
+def summary(ctrl, bench, n):
+    return {"control_median_rank": float(np.median(ctrl)), "control_share_bottom_half": round(float(np.mean(np.array(ctrl) > n / 2)), 3),
+            "benchmark_median_rank": float(np.median(bench)), "benchmark_share_top_half": round(float(np.mean(np.array(bench) <= n / 2)), 3)}
+
+
+CANNOT_SHOW = [
+    "The controls and benchmarks were chosen by us. An independent test would use analog sites ranked by mission teams who did not see our scores.",
+    "The ensemble's training labels are formulas of the same features, so its band shows model disagreement (epistemic uncertainty), not real-world error.",
+    "Moon and Mars composition are typical values for the rock class, so the composition group cannot separate two Moon sites of the same class.",
+    "Whether a high-ranked site actually gave transferable results in a past campaign is not tested here; that needs campaign reports matched to flight outcomes.",
+    "Texture comes from 2 km elevation tiles, so boulder-scale roughness (what wheels feel) is not seen.",
+]
+
+
 def main():
     eng = PlanetaryAnalogEngine()
     types = {e["id"]: e["type"] for e in eng.config["earth_analogs"]}
@@ -39,6 +61,12 @@ def main():
     n_earth = len(types)
 
     per_target, ctrl_ranks, bench_ranks, overlaps, ungated_ctrl_ranks = [], [], [], [], []
+    base = {"plain": ([], []), "plain_with_rule": ([], [])}
+    thresholds = {(f, z): [] for f in (0.15, 0.20, 0.25) for z in (0.25, 0.30, 0.35) if z > f}
+    rhos = []
+    earth_idx = eng.df.index[eng.df["body"] == "earth"]
+    earth_ids = eng.df.loc[earth_idx, "site_id"].tolist()
+    Z = eng.norm_df.loc[earth_idx].values
     for t in eng.config["targets"]:
         res = eng.match(t["id"], top_k=n_earth)
         order = [m["id"] for m in res["matches"]]
@@ -49,6 +77,26 @@ def main():
         br = sorted(rank[b] for b in benchmarks)
         ctrl_ranks += cr
         bench_ranks += br
+
+        # baseline: plain distance in the standardised feature space
+        tz = eng.norm_df.loc[eng.df.index[eng.df["site_id"] == t["id"]][0]].values
+        dist = np.linalg.norm(Z - tz, axis=1)
+        mm = {m["id"]: m for m in res["matches"]}
+        for key, use_rule in (("plain", False), ("plain_with_rule", True)):
+            sc = {sid: -d * (1 if not use_rule else 1) for sid, d in zip(earth_ids, dist)}
+            if use_rule:
+                sc = {sid: (1 / (1 + d)) * gate(mm[sid]["ndvi"], mm[sid]["water_fraction"]) for sid, d in zip(earth_ids, dist)}
+            o = sorted(sc, key=sc.get, reverse=True)
+            rk = {sid: i + 1 for i, sid in enumerate(o)}
+            base[key][0].extend(rk[c] for c in controls)
+            base[key][1].extend(rk[b] for b in benchmarks)
+            if key == "plain":
+                a = np.array([rank[sid] for sid in earth_ids]); b = np.array([rk[sid] for sid in earth_ids])
+                rhos.append(float(np.corrcoef(a, b)[0, 1]))
+        for (f, z) in thresholds:
+            sc = {m["id"]: m["similarity_before_vegetation_rule"] * gate(m["ndvi"], m["water_fraction"], f, z) for m in res["matches"]}
+            o = sorted(sc, key=sc.get, reverse=True)
+            thresholds[(f, z)].extend(o.index(c) + 1 for c in controls)
 
         base_top = set(order[:5])
         worst = 5
@@ -96,6 +144,18 @@ def main():
         "weight_sensitivity": {"perturbation": "each pillar weight x0.8 and x1.2, renormalised",
                                "mean_top5_kept": round(float(np.mean(overlaps)), 2), "min_top5_kept": int(min(overlaps))},
         "ensemble_calibration": {"target": 0.9, "coverage_per_scenario": coverage, "calibration_sites": int(len(cal))},
+        "baseline": {
+            "description": "Unweighted distance across the 14 standardised features (no groups, no weights)",
+            "plain": summary(*base["plain"], n_earth),
+            "plain_with_bare_ground_rule": summary(*base["plain_with_rule"], n_earth),
+            "celestra": summary(ctrl_ranks, bench_ranks, n_earth),
+            "rank_correlation_with_celestra": round(float(np.mean(rhos)), 3),
+        },
+        "bare_ground_threshold_sensitivity": [
+            {"ndvi_full_score_at": f, "ndvi_zero_at": z, "control_median_rank": float(np.median(v)),
+             "control_share_bottom_half": round(float(np.mean(np.array(v) > n_earth / 2)), 3)}
+            for (f, z), v in thresholds.items()],
+        "cannot_show": CANNOT_SHOW,
         "per_target": per_target,
     }
     path = ROOT / "data" / "processed" / "validation.json"

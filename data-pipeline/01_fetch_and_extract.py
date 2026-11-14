@@ -265,7 +265,7 @@ def describe_dem(body: str, dem: dict) -> dict:
     if body == "earth":
         return {"agency": "ESA", "instrument": f"Copernicus DEM GLO-30 ({dem.get('product', '')})", "status": "measured"}
     if body == "moon":
-        return {"agency": "NASA", "instrument": f"LRO LOLA altimeter returns, {dem.get('points', 0)} points gridded ({int(100 * dem.get('cells_with_returns', 0))}% of cells hit)", "status": "measured"}
+        return {"agency": "NASA", "instrument": f"LRO LOLA altimeter returns, {dem.get('points', 0)} points gridded at ~60 m ({int(100 * dem.get('cells_with_returns', 0))}% of 62.5 m cells hit)", "status": "measured"}
     off = dem.get("offset_km", 0)
     where = "" if off < 1 else f", nearest DTM {off:.0f} km from the nominal site"
     return {"agency": "NASA / USGS", "instrument": f"MRO CTX stereo DTM {dem.get('product', '')}{where}", "status": "measured"}
@@ -280,6 +280,8 @@ def main():
         config = json.load(f)
 
     all_sites = config["targets"] + config["earth_analogs"]
+    ill_path = OUT_PROCESSED / "illumination.json"
+    illumination = json.loads(ill_path.read_text(encoding="utf-8")) if ill_path.exists() else {}
     features_list = []
     pixel_m = 2000.0 / GRID_RES     # every tile is 2 km across
     counts = {"dem": 0, "spectra": 0, "climate": 0}
@@ -320,6 +322,10 @@ def main():
             tmin, tmax, delta = climate["temp_min_c"], climate["temp_max_c"], climate["temp_delta_c"]
             therm = {"agency": "NASA", "instrument": "NASA POWER climatology (MERRA-2 2 m air temperature)", "status": "measured"}
             counts["climate"] += 1
+        elif body == "moon" and site_id in illumination:
+            # peak from our radiative-balance model on LOLA terrain (04_polar_illumination.py); cold end typical
+            tmin, tmax = float(site["temp_min_c"]), float(illumination[site_id]["modelled_max_temp_c"])
+            therm = {"agency": "NASA", "instrument": "Peak: Celestra radiative-balance model on LRO LOLA terrain and sun geometry; cold end: published typical value", "status": "modelled"}
         else:
             tmin, tmax = float(site["temp_min_c"]), float(site["temp_max_c"])
             therm = {"agency": "none", "instrument": "Published typical surface-temperature range for this kind of site (not measured here)" if body != "earth" else "Typical range entered by hand (not measured here)", "status": "typical"}

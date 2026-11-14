@@ -1,0 +1,189 @@
+{
+  "_about": "NASA's Artemis III candidate landing regions near the lunar south pole. Each region is about 15 x 15 km; NASA has not published the region polygons in a form we could use, so data-pipeline/04_polar_illumination.py searches the area described below with LRO LOLA terrain and picks the best-lit, gentlest 2 km window inside it. The chosen point is Celestra's estimate, not NASA's site. Feature coordinates come from the IAU names (USGS Gazetteer, via Wikipedia) unless noted.",
+  "sources": {
+    "list_2024": "NASA, 'NASA Provides Update on Artemis III Moon Landing Regions' (Oct 2024): nine regions",
+    "list_2022": "NASA, 'NASA Identifies Candidate Regions for Landing Next Americans on Moon' (Aug 2022): thirteen regions",
+    "mons_mouton_site": "LPSC 2025 abstract 2742, landing site at 84.528 S, 30.719 E",
+    "slater_plain": "Wueller et al. 2026, JGR Planets, 10.1029/2025JE009434: Slater Plain about 20 km northeast of Slater crater"
+  },
+  "regions": [
+    {
+      "id": "moon_a3_peak_near_cabeus_b",
+      "name": "Peak near Cabeus B",
+      "status": "artemis_iii_2024",
+      "feature": "Cabeus B crater",
+      "feature_lat": -82.4,
+      "feature_lon": -53.0,
+      "search": {
+        "kind": "box",
+        "half_km": 30
+      },
+      "morphology": "ridge_massif"
+    },
+    {
+      "id": "moon_a3_haworth",
+      "name": "Haworth",
+      "status": "artemis_iii_2024",
+      "feature": "Haworth crater (51 km)",
+      "feature_lat": -86.9,
+      "feature_lon": -4.0,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 20,
+        "r_max_km": 38
+      },
+      "morphology": "crater_rim"
+    },
+    {
+      "id": "moon_a3_malapert_massif",
+      "name": "Malapert Massif",
+      "status": "artemis_iii_2024",
+      "feature": "Malapert Massif",
+      "feature_lat": -85.9,
+      "feature_lon": 2.7,
+      "search": {
+        "kind": "box",
+        "half_km": 15
+      },
+      "morphology": "ridge_massif"
+    },
+    {
+      "id": "moon_a3_mons_mouton",
+      "name": "Mons Mouton",
+      "status": "artemis_iii_2024",
+      "feature": "Mons Mouton (published landing-site point)",
+      "feature_lat": -84.528,
+      "feature_lon": 30.719,
+      "search": {
+        "kind": "fixed"
+      },
+      "morphology": "ridge_massif"
+    },
+    {
+      "id": "moon_a3_mons_mouton_plateau",
+      "name": "Mons Mouton Plateau",
+      "status": "artemis_iii_2024",
+      "feature": "Mons Mouton summit plateau",
+      "feature_lat": -84.6,
+      "feature_lon": 31.0,
+      "search": {
+        "kind": "box",
+        "half_km": 25,
+        "avoid_km_from": "moon_a3_mons_mouton",
+        "avoid_km": 10,
+        "flat_weight": 2.0
+      },
+      "morphology": "flat_plain"
+    },
+    {
+      "id": "moon_a3_nobile_rim_1",
+      "name": "Nobile Rim 1",
+      "status": "artemis_iii_2024",
+      "feature": "Nobile crater (79 km)",
+      "feature_lat": -85.28,
+      "feature_lon": 53.27,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 34,
+        "r_max_km": 50
+      },
+      "morphology": "crater_rim"
+    },
+    {
+      "id": "moon_a3_nobile_rim_2",
+      "name": "Nobile Rim 2",
+      "status": "artemis_iii_2024",
+      "feature": "Nobile crater (79 km)",
+      "feature_lat": -85.28,
+      "feature_lon": 53.27,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 34,
+        "r_max_km": 50,
+        "avoid_km_from": "moon_a3_nobile_rim_1",
+        "avoid_km": 30
+      },
+      "morphology": "crater_rim"
+    },
+    {
+      "id": "moon_a3_de_gerlache_rim_2",
+      "name": "de Gerlache Rim 2",
+      "status": "artemis_iii_2024",
+      "feature": "de Gerlache crater (32 km)",
+      "feature_lat": -88.5,
+      "feature_lon": -87.1,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 13,
+        "r_max_km": 24
+      },
+      "morphology": "crater_rim"
+    },
+    {
+      "id": "moon_a3_slater_plain",
+      "name": "Slater Plain",
+      "status": "artemis_iii_2024",
+      "feature": "plain about 20 km from Slater crater",
+      "feature_lat": -88.08,
+      "feature_lon": 111.29,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 12,
+        "r_max_km": 32,
+        "flat_weight": 2.0
+      },
+      "morphology": "flat_plain"
+    }
+  ],
+  "earlier_candidates": {
+    "_about": "Existing Celestra targets that were Artemis III candidates in 2022 but are not on the October 2024 list of nine.",
+    "moon_shackleton_rim": "Peak Near Shackleton (2022 list; not in the 2024 list)",
+    "moon_connecting_ridge": "Connecting Ridge (2022 list; not in the 2024 list)",
+    "moon_faustini_rim": "Faustini Rim A (2022 list; not in the 2024 list)"
+  },
+  "superseded": {
+    "moon_malapert_massif": "replaced by moon_a3_malapert_massif (Malapert Massif is on the 2024 list; the old point sat on the massif's flank)"
+  },
+  "relocate": {
+    "_about": "Registry correction. These targets are named for a crater rim or ridge, but the registry used the crater-centre coordinates, which sit on the (often permanently shadowed) floor. They are moved to the best-lit, gentlest 2 km window on the named rim with the same search as the Artemis regions. Crater centres from the IAU names (via Wikipedia).",
+    "moon_shackleton_rim": {
+      "feature": "Shackleton crater rim (21 km crater)",
+      "feature_lat": -89.67,
+      "feature_lon": 129.78,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 9,
+        "r_max_km": 15
+      }
+    },
+    "moon_connecting_ridge": {
+      "feature": "ridge between Shackleton and de Gerlache",
+      "feature_lat": -89.4,
+      "feature_lon": -138.0,
+      "search": {
+        "kind": "box",
+        "half_km": 8
+      }
+    },
+    "moon_faustini_rim": {
+      "feature": "Faustini crater rim (39 km crater)",
+      "feature_lat": -87.3,
+      "feature_lon": 77.0,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 17,
+        "r_max_km": 26
+      }
+    },
+    "moon_peary_rim": {
+      "feature": "Peary crater rim (73 km crater)",
+      "feature_lat": 88.6,
+      "feature_lon": 33.0,
+      "search": {
+        "kind": "ring",
+        "r_min_km": 33,
+        "r_max_km": 45
+      }
+    }
+  }
+}

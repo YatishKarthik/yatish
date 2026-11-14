@@ -8,3 +8,7 @@ frontend/.next/
 
 # build artifacts
 frontend/tsconfig.tsbuildinfo
+
+# live custom-target fetches
+data/real/custom_*
+backend/static/assets/custom_*

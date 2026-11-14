@@ -108,8 +108,11 @@ def sentinel2(lat: float, lon: float) -> dict:
         months = ["2023/8", "2023/7", "2023/9", "2023/6", "2023/10", "2022/8", "2022/9", "2023/1", "2023/2", "2023/12"]
     # Sentinel-2 tiles overlap at square and zone edges, so look in the squares around the site too
     squares = []
+    # ... and across a UTM zone boundary (every 6 degrees of longitude) when the site is near one
+    edge = (lon + 180) % 6
+    extra = (-(edge + 0.05),) if edge < 0.6 else ((6 - edge + 0.05),) if edge > 5.4 else ()
     for dlat in (0.0, -0.12, 0.12):
-        for dlon in (0.0, -0.18, 0.18):
+        for dlon in (0.0, -0.18, 0.18) + extra:
             try:
                 sq = mgrs_square(lat + dlat, lon + dlon)
             except Exception:
@@ -118,14 +121,17 @@ def sentinel2(lat: float, lon: float) -> dict:
                 squares.append(sq)
     scenes = []
     for zone, band, square in squares:
+        # a cap per square, so a neighbouring square whose swaths miss the site cannot crowd out the one that covers it
+        mine = []
         for month in months:
-            r = requests.get(f"{S3_S2}?list-type=2&delimiter=/&prefix=sentinel-s2-l2a-cogs/{zone}/{band}/{square}/{month}/", timeout=30)
-            found = re.findall(r"<Prefix>([^<]+_L2A/)</Prefix>", r.text)
-            scenes += found[:8]
-            if len(scenes) >= 40:
+            try:
+                r = requests.get(f"{S3_S2}?list-type=2&delimiter=/&prefix=sentinel-s2-l2a-cogs/{zone}/{band}/{square}/{month}/", timeout=30)
+            except requests.RequestException:
+                continue
+            mine += re.findall(r"<Prefix>([^<]+_L2A/)</Prefix>", r.text)[:8]
+            if len(mine) >= 16:
                 break
-        if len(scenes) >= 40:
-            break
+        scenes += mine[:16]
     if not scenes:
         raise RuntimeError(f"no Sentinel-2 scenes near the site ({', '.join(''.join(q) for q in squares)})")
 
@@ -143,7 +149,7 @@ def sentinel2(lat: float, lon: float) -> dict:
     # per-pixel scene classification (SCL): 2 dark surfaces (basalt, lava), 4 vegetation, 5 bare, 6 water, 7 unclassified
     # and 11 snow are usable; 0-1 no data / defective, 3 cloud shadow and 8-10 cloud and cirrus are not
     best = None
-    for cloud, sc, sid, props in ranked[:30]:
+    for cloud, sc, sid, props in ranked[:80]:
         try:
             with rasterio.open(f"{S3_S2}{sc}B04.tif") as ds:
                 xs, ys = warp_transform("EPSG:4326", ds.crs, [lon], [lat])
@@ -307,16 +313,29 @@ def fetch_moon(site: dict) -> None:
     med = np.median(hgt); mad = np.median(np.abs(hgt - med)) + 1e-6
     ok = np.abs(hgt - med) < max(1500.0, 15 * mad)
     e, n, hgt = e[ok], n[ok], hgt[ok]
-    # bin to the grid (row 0 = north edge, like the image-based tiles), then interpolate between ground tracks
-    col = np.clip(((e + half) / EXTENT_M * GRID).astype(int), 0, GRID - 1)
-    row = np.clip(((half - n) / EXTENT_M * GRID).astype(int), 0, GRID - 1)
-    s = np.zeros((GRID, GRID)); c = np.zeros((GRID, GRID))
-    np.add.at(s, (row, col), hgt); np.add.at(c, (row, col), 1)
-    grid = np.where(c > 0, s / np.maximum(c, 1), np.nan)
-    filled = fill_holes(grid)
+    # LOLA spots lie along ground tracks a few hundred metres apart, and neighbouring tracks can disagree by metres
+    # to tens of metres. Gridding them straight at 15.6 m left chains of false pits along the tracks, which inflated
+    # slope and texture. So: median per 62.5 m cell (32 x 32), which damps single-track offsets,
+    # interpolate between tracks, then resample smoothly to the common 128 x 128 grid. True resolution is ~60 m.
+    from scipy.ndimage import zoom
+    LG = 32
+    col = np.clip(((e + half) / EXTENT_M * LG).astype(int), 0, LG - 1)
+    row = np.clip(((half - n) / EXTENT_M * LG).astype(int), 0, LG - 1)
+    cell = row * LG + col
+    order = np.argsort(cell, kind="stable")
+    cs, hs = cell[order], hgt[order]
+    starts = np.r_[0, np.nonzero(np.diff(cs))[0] + 1]
+    coarse = np.full(LG * LG, np.nan)
+    for a, b in zip(starts, np.r_[starts[1:], len(cs)]):
+        coarse[cs[a]] = np.median(hs[a:b])
+    coarse = coarse.reshape(LG, LG)
+    hit = float(np.isfinite(coarse).mean())
+    fill_holes(coarse)
+    grid = zoom(coarse, GRID / LG, order=3)
+    filled = 1 - hit
     rec["heights_m"] = np.round(grid, 1).ravel().tolist()
     rec["dem"] = {"dataset": "LRO LOLA altimeter returns (RDR), gridded", "products": used, "points": int(len(hgt)),
-                  "cells_with_returns": round(1 - filled, 3), "native_res_m": "~25 m spots along tracks", "offset_km": 0.0}
+                  "cells_with_returns": round(1 - filled, 3), "native_res_m": "~60 m (median of ~25 m spots per 62.5 m cell, between-track gaps interpolated)", "offset_km": 0.0}
     save(sid, rec)
     print(f"moon {sid}: {len(hgt)} LOLA returns, {100 * (1 - filled):.0f}% of cells measured", flush=True)
 

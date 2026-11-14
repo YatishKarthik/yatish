@@ -329,6 +329,26 @@ def build_registry():
             "geology": geo
         })
 
+    # NASA Artemis III candidate regions, placed by 04_polar_illumination.py (data/config/artemis_targets.json)
+    a3_path = OUT_PATH.parent / "artemis_targets.json"
+    regions_path = OUT_PATH.parent / "artemis_regions.json"
+    if a3_path.exists():
+        moon_targets = json.loads(a3_path.read_text(encoding="utf-8")) + moon_targets
+    if regions_path.exists():
+        regions = json.loads(regions_path.read_text(encoding="utf-8"))
+        earlier = regions["earlier_candidates"]
+        moon_targets = [t for t in moon_targets if t["id"] not in regions.get("superseded", {})]
+        rel_path = OUT_PATH.parent / "relocated_targets.json"
+        relocated = json.loads(rel_path.read_text(encoding="utf-8")) if rel_path.exists() else {}
+        for t in moon_targets:
+            if t["id"] in relocated:
+                t["registry_lat_lon"] = [t["lat"], t["lon"]]
+                t["lat"], t["lon"] = relocated[t["id"]]["lat"], relocated[t["id"]]["lon"]
+                t["relocation_note"] = relocated[t["id"]]["note"]
+        for t in moon_targets:
+            if t["id"] in earlier:
+                t["artemis"] = {"status": "artemis_iii_2024" if "both lists" in earlier[t["id"]] else "artemis_iii_2022_only", "region": earlier[t["id"]]}
+
     registry = {
         "targets": moon_targets + mars_targets,
         "earth_analogs": earth_analogs

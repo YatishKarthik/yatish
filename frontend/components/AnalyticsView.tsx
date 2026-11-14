@@ -2,9 +2,16 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft, Play, Search } from "lucide-react";
+import { ArrowLeft, Play, Search, FileText } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
 import { Tabs, Status, Bar, Kpi, similarityWord, PCT } from "@/components/ui";
+import {
+  ArtemisBadge, ByUseView, WhyThisMatch, FieldReadinessCard, SunlightPanel, TEST_HELP,
+  type ArtemisInfo, type Illumination, type NightIR, type CustomInfo, type FunctionalRanking, type Contribution, type WhyInfo, type FieldReadiness,
+} from "@/components/Insights";
+import TerrainTwins from "@/components/TerrainTwins";
+
+const API = "http://127.0.0.1:8000";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 
@@ -34,10 +41,17 @@ export interface EarthMatch {
   scenarios: Record<string, { status: string; score: number; uncertainty: number; conformal_interval: [number, number]; note: string }>;
   diurnal_sol_curve?: number[]; heightmap_url: string; radar_url: string;
   similarity_before_vegetation_rule?: number; vegetation_gate?: number; ndvi?: number; water_fraction?: number;
+  contributions?: Contribution[]; why?: WhyInfo; field_readiness?: FieldReadiness;
+}
+export interface TargetInfo {
+  id: string; name: string; body: "moon" | "mars"; lat: number; lon: number; elevation_m: number; gravity: number; pressure_bar: number; temp_min_c: number; temp_max_c: number;
+  primary_challenge: string; diurnal_sol_curve?: number[]; heightmap_url: string; radar_url: string;
+  artemis?: ArtemisInfo | null; illumination?: Illumination | null; night_ir?: NightIR | null; max_sun_elevation_deg?: number; custom?: CustomInfo;
 }
 export interface MatchPayload {
   search_time_ms: number; earth_sites_scanned: number; overall_best_id?: string; best_per_test?: BestPerTestRow[];
-  target: { id: string; name: string; body: "moon" | "mars"; lat: number; lon: number; elevation_m: number; gravity: number; pressure_bar: number; temp_min_c: number; temp_max_c: number; primary_challenge: string; diurnal_sol_curve?: number[]; heightmap_url: string; radar_url: string };
+  target: TargetInfo;
+  functional_rankings?: FunctionalRanking[];
   matches: EarthMatch[];
 }
 
@@ -66,28 +80,28 @@ const PARAM_HELP: Record<string, { name: string; what: string }> = {
   temp_delta_c: { name: "Daily swing", what: "Warmest minus coldest. Large swings stress materials and joints." },
 };
 
-const TEST_HELP: Record<string, { ask: string; why: string }> = {
-  "Slope Climbing & Wheel Traction": { ask: "Can a rover climb and grip here?", why: "Depends on slopes and ruggedness. Gravity still differs, so grip on Earth is always higher." },
-  "Radar / Darkness Boulder Navigation": { ask: "Can a rover find its way across broken ground?", why: "Depends on surface texture matching. Plant cover hides the rocks, so green sites fail this." },
-  "Lander Touchdown Tilt & Stability": { ask: "Will a lander stay upright when it touches down?", why: "Depends on slope spread and surface roughness around the pad." },
-  "Thruster Plume & Dust Ejecta": { ask: "What does the engine blast do to the ground?", why: "Earth's air damps the plume. In near-vacuum, dust flies far and fast. Earth can rarely stand in for this." },
-  "Rock / Ice Drill Bit Hardness": { ask: "Does the drill bit meet the same kind of rock?", why: "Depends on the mineral match. Wet soil never behaves like dry regolith." },
-  "Thermal & Vacuum Motor Cooling": { ask: "Will motors overheat like they would in vacuum?", why: "No: Earth's air cools motors by convection. This test never transfers from Earth." },
-};
 const STATUS_WORD: Record<MatrixRow["status"], { word: string; level: "good" | "warn" | "bad" }> = {
   REPRESENTATIVE: { word: "Good Test Site", level: "good" },
   PARTIAL: { word: "Partly Useful", level: "warn" },
   NOT_REPRESENTATIVE: { word: "Not Useful For This", level: "bad" },
 };
 
-function DataNote({ m, world }: { m: EarthMatch; world: string }) {
+const nameOf = (feature: string, label: string) => PARAM_HELP[feature]?.name ?? label;
+
+function DataNote({ m, world, t }: { m: EarthMatch; world: string; t: TargetInfo }) {
   const p = m.parameter_similarities;
   const terrainE = p.slope_mean?.earth_status, terrainT = p.slope_mean?.space_status, comp = p.bareness_index?.earth_status, temp = p.temp_max_c?.earth_status;
   const bits: string[] = [];
   bits.push(terrainE === "measured" && terrainT === "measured" ? "Terrain for both sites is measured" : terrainT !== "measured" ? `Terrain for ${world} is a placeholder shape model` : "Terrain for the Earth site is a placeholder");
   bits.push(comp === "measured" ? "Earth surface composition is measured by Sentinel-2" : "Earth surface composition is a typical value");
   bits.push(temp === "measured" ? "Earth temperatures are NASA POWER climatology" : "Earth temperatures are typical values");
-  bits.push(`${world === "the Moon" ? "Moon" : "Mars"} composition and temperatures are typical published values`);
+  const body = world === "the Moon" ? "Moon" : "Mars";
+  bits.push(p.temp_max_c?.space_status === "modelled"
+    ? `${body} composition is a typical published value; its peak temperature is modelled from LOLA terrain and sun geometry, the cold end is typical`
+    : `${body} composition and temperatures are typical published values`);
+  if (t.custom) bits.push(`Terrain for your point was fetched live; its composition and temperatures are borrowed from ${t.custom.nearest_target}`);
+  if (t.illumination) bits.push("Sunlight and Earth view are modelled by Celestra from LRO LOLA terrain");
+  if (t.night_ir) bits.push("Night-time infrared is a relative reading from Mars Odyssey THEMIS");
   return <p className="text-xs muted leading-relaxed border-l-2 pl-3" style={{ borderColor: "var(--accent)" }}><b style={{ color: "var(--text)" }}>Where the data comes from.</b> {bits.join(". ")}. Each value&apos;s source is tagged in the Measurements tab.</p>;
 }
 
@@ -98,33 +112,88 @@ interface Validation {
   benchmarks: { count: number; median_rank: number; share_in_top_half: number };
   weight_sensitivity: { mean_top5_kept: number; min_top5_kept: number };
   ensemble_calibration: { coverage_per_scenario: number[]; calibration_sites: number };
+  baseline?: {
+    description: string;
+    plain: BaselineRow; plain_with_bare_ground_rule: BaselineRow; celestra: BaselineRow;
+    rank_correlation_with_celestra: number;
+  };
+  bare_ground_threshold_sensitivity?: { ndvi_full_score_at: number; ndvi_zero_at: number; control_median_rank: number; control_share_bottom_half: number }[];
+  cannot_show?: string[];
+}
+interface BaselineRow { control_median_rank: number; control_share_bottom_half: number; benchmark_median_rank: number; benchmark_share_top_half: number }
+
+function BaselineTable({ b, sites }: { b: NonNullable<Validation["baseline"]>; sites: number }) {
+  const rows: [string, string, BaselineRow][] = [
+    ["Celestra", "four weighted groups + bare-ground rule", b.celestra],
+    ["Plain distance", "all 14 values, equal weight", b.plain],
+    ["Plain + bare-ground rule", "equal weight, same rule", b.plain_with_bare_ground_rule],
+  ];
+  const c = b.celestra, p = b.plain_with_bare_ground_rule;
+  const beats = c.control_median_rank > p.control_median_rank && c.benchmark_median_rank < p.benchmark_median_rank;
+  return (
+    <div className="card-solid p-3">
+      <div className="font-semibold mb-1">Does our weighting beat a plain distance?</div>
+      <p className="muted mb-2">The same checks run with simpler scoring. Controls should rank low (high number, out of {sites}); benchmarks should rank high (low number).</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead><tr className="muted text-left"><th className="font-normal pb-1">Scoring</th><th className="font-normal text-right">Controls, median rank</th><th className="font-normal text-right">Benchmarks, median rank</th></tr></thead>
+          <tbody>{rows.map(([n, d, r]) => (
+            <tr key={n} className="border-t line">
+              <td className="py-1.5 pr-2"><div className="font-medium">{n}</div><div className="text-[11px] faint">{d}</div></td>
+              <td className="text-right font-mono">{r.control_median_rank}<span className="faint"> · {Math.round(r.control_share_bottom_half * 100)}% low</span></td>
+              <td className="text-right font-mono">{r.benchmark_median_rank}<span className="faint"> · {Math.round(r.benchmark_share_top_half * 100)}% high</span></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <p className="mt-2 leading-relaxed">{beats
+        ? "Our weighting separates controls from benchmarks a little better than a plain distance with the same rule."
+        : "Our weighting does not beat a plain distance. Most of the separating power comes from the bare-ground rule and the features themselves, not our weights."}{" "}
+        <span className="muted">Rank agreement between Celestra and plain distance: {b.rank_correlation_with_celestra.toFixed(2)} (1 = identical order).</span></p>
+    </div>
+  );
 }
 
 function Evidence() {
   const [v, setV] = useState<Validation | null>(null);
-  useEffect(() => { fetch("http://127.0.0.1:8000/api/validation").then((r) => (r.ok ? r.json() : null)).then(setV).catch(() => setV(null)); }, []);
+  useEffect(() => { fetch(`${API}/api/validation`).then((r) => (r.ok ? r.json() : null)).then(setV).catch(() => setV(null)); }, []);
   if (!v) return null;
-  const nc = v.negative_controls, raw = v.negative_controls_without_vegetation_rule;
+  const nc = v.negative_controls, raw = v.negative_controls_without_vegetation_rule, thr = v.bare_ground_threshold_sensitivity;
   return (
+    <>
     <div className="card-solid p-3">
-      <div className="font-semibold mb-1">Does the score mean anything? Checks across all 20 targets</div>
+      <div className="font-semibold mb-1">Does the score mean anything? Checks across every target</div>
       <ul className="flex flex-col gap-1.5 mt-2">
         <li><b>Unsuitable control sites</b> (rainforest, wetland, farmland, polders): median rank {nc.median_rank} of {v.earth_sites}, {Math.round(nc.share_in_bottom_half * 100)}% in the bottom half{raw ? `. Without the bare-ground rule: median ${raw.median_rank}, ${Math.round(raw.share_in_bottom_half * 100)}% in the bottom half` : ""}. Best rank any control reached: {nc.best_rank_seen}.</li>
         <li><b>Established analog sites</b> used by space agencies: median rank {v.benchmarks.median_rank}, {Math.round(v.benchmarks.share_in_top_half * 100)}% in the top half. Each benchmark is an analog for particular targets, not all of them, so a middling average is expected.</li>
         <li><b>Weight sensitivity</b>: moving any one group weight by ±20% keeps on average {v.weight_sensitivity.mean_top5_kept} of the top 5 (never fewer than {v.weight_sensitivity.min_top5_kept}).</li>
         <li><b>Uncertainty calibration</b>: on {v.ensemble_calibration.calibration_sites} held-out Earth sites the 90% band contained the true value {v.ensemble_calibration.coverage_per_scenario.map((c) => `${Math.round(c * 100)}%`).join(", ")} of the time for the rover, landing and mining scenarios.</li>
       </ul>
+      {thr && thr.length > 0 && (() => {
+        const meds = thr.map((x) => x.control_median_rank), lo = Math.min(...meds), hi = Math.max(...meds);
+        const sh = thr.map((x) => x.control_share_bottom_half), shLo = Math.min(...sh), shHi = Math.max(...sh);
+        const full = thr.map((x) => x.ndvi_full_score_at), zero = thr.map((x) => x.ndvi_zero_at);
+        return <p className="mt-2"><b>Bare-ground rule thresholds</b>: across {thr.length} settings (full score at NDVI {Math.min(...full)}–{Math.max(...full)}, zero at {Math.min(...zero)}–{Math.max(...zero)}) the control median {lo === hi ? `stays ${lo} for every threshold tried` : `ranges from ${lo} to ${hi}`}; {Math.round(shLo * 100)}–{Math.round(shHi * 100)}% of controls stay in the bottom half.</p>;
+      })()}
       <p className="muted mt-2">Reproduce with <code className="font-mono">python data-pipeline/03_validate.py</code>.</p>
     </div>
+    {v.baseline && <BaselineTable b={v.baseline} sites={v.earth_sites} />}
+    {v.cannot_show && v.cannot_show.length > 0 && (
+      <div className="card-solid p-3">
+        <div className="font-semibold mb-1">What This Validation Cannot Show</div>
+        <ul className="flex flex-col gap-1.5 mt-1 list-disc pl-4 muted">{v.cannot_show.map((c) => <li key={c}>{c}</li>)}</ul>
+      </div>
+    )}
+    </>
   );
 }
 
-type View = "summary" | "tests" | "best" | "day" | "measure" | "expert";
+type View = "use" | "summary" | "twins" | "tests" | "day" | "measure" | "expert";
 
 export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }: { data: MatchPayload; onBackToGlobe: () => void; onLaunchSimulator: (selectedMatch: EarthMatch) => void }) {
   const [selectedId, setSelectedId] = useState<string>(data.matches[0]?.id || "");
   const [filterText, setFilterText] = useState("");
-  const [view, setView] = useState<View>("summary");
+  const [view, setView] = useState<View>("use");
 
   const m = useMemo(() => data.matches.find((x) => x.id === selectedId) || data.matches[0], [data.matches, selectedId]);
   const t = data.target;
@@ -147,6 +216,12 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
   const bad = m.representativeness_matrix.filter((r) => r.status === "NOT_REPRESENTATIVE");
   const ask = (test: string) => TEST_HELP[test]?.ask ?? test;
 
+  const isCustom = t.id.startsWith("custom_") || !!t.custom;
+  const customInstrument = data.matches[0]?.parameter_similarities.slope_mean?.space_instrument ?? "orbital elevation data";
+  const sunlightPanel = <SunlightPanel body={t.body} illumination={t.illumination} nightIr={t.night_ir} maxSun={t.max_sun_elevation_deg} />;
+  const sunlight = t.illumination || t.night_ir || (t.body === "moon" && (t.max_sun_elevation_deg ?? 99) < 15) ? sunlightPanel : null;
+  const rankings = data.functional_rankings ?? [];
+
   const targetCurve = t.diurnal_sol_curve || [], earthCurve = m.diurnal_sol_curve || [];
   const lo = Math.min(...targetCurve, ...earthCurve, -240), hi = Math.max(...targetCurve, ...earthCurve, 120);
   const yPct = (v: number) => Math.round(((v - lo) / (hi - lo || 1)) * 100);
@@ -156,15 +231,45 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
   return (
     <div className="relative z-10 flex-1 flex flex-col gap-4 p-4 max-w-[1750px] w-full mx-auto">
-      <div className="card px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={onBackToGlobe} className="btn btn-sm"><ArrowLeft className="w-3.5 h-3.5" /> Back to {world}</button>
-          <div>
-            <div className="text-sm font-semibold">Earth sites that behave like {t.name}</div>
-            <div className="text-xs muted">{data.earth_sites_scanned} sites compared · {t.gravity} m/s² · {t.pressure_bar} bar · {t.temp_min_c}°C to {t.temp_max_c}°C</div>
+      <div className="card px-4 py-3 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button type="button" onClick={onBackToGlobe} className="btn btn-sm shrink-0"><ArrowLeft className="w-3.5 h-3.5" /> Back to {world}</button>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>Earth sites that behave like {t.name}</span>
+                <ArtemisBadge a={t.artemis} />
+                {isCustom && <span className="badge">Your point</span>}
+              </div>
+              <div className="text-xs muted">{data.earth_sites_scanned} sites compared · {t.gravity} m/s² · {t.pressure_bar} bar · {t.temp_min_c}°C to {t.temp_max_c}°C</div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {!isCustom && (
+              <a className="btn" href={`${API}/api/brief/${encodeURIComponent(t.id)}#print`} target="_blank" rel="noopener noreferrer" data-tour="brief" title="A printable one-page plan for a test campaign at the top sites">
+                <FileText className="w-4 h-4" /> Field Brief (PDF)
+              </a>
+            )}
+            <button type="button" onClick={() => onLaunchSimulator(m)} className="btn btn-primary" data-tour="launch"><Play className="w-4 h-4" /> Test hardware at #{m.rank || 1} in the simulator</button>
           </div>
         </div>
-        <button type="button" onClick={() => onLaunchSimulator(m)} className="btn btn-primary" data-tour="launch"><Play className="w-4 h-4" /> Test hardware at #{m.rank || 1} in the simulator</button>
+        {(t.artemis || t.custom || sunlight) && (
+          <div className={`grid grid-cols-1 gap-x-6 gap-y-3 pt-3 border-t line ${(t.artemis || t.custom) && sunlight ? "lg:grid-cols-2" : ""}`}>
+            {t.artemis && (
+              <div className="text-xs leading-relaxed min-w-0">
+                <div><span className="font-semibold">{t.artemis.status === "artemis_iii_2024" ? "NASA Artemis III candidate region" : "Former Artemis III candidate region"}:</span> {t.artemis.region.replace(/\s*\(.*\)\s*$/, "")}{t.artemis.feature && t.artemis.feature !== t.artemis.region ? `, near ${t.artemis.feature}` : ""}.{t.artemis.status === "artemis_iii_2022_only" ? " On NASA's 2022 list, not on the October 2024 list." : ""}</div>
+                {t.artemis.placement && <p className="muted mt-1">{t.artemis.placement}</p>}
+              </div>
+            )}
+            {t.custom && (
+              <div className="text-xs leading-relaxed min-w-0">
+                <div><span className="font-semibold">A point you picked</span> at {Math.abs(t.lat).toFixed(2)}°{t.lat >= 0 ? "N" : "S"}, {Math.abs(t.lon).toFixed(2)}°{t.lon >= 0 ? "E" : "W"}.</div>
+                <p className="muted mt-1">Terrain measured live from {customInstrument}; composition and temperatures borrowed from {t.custom.nearest_target} ({Math.round(t.custom.nearest_km)} km away).{t.custom.terrain_offset_km > 0.5 ? ` The nearest elevation data was ${t.custom.terrain_offset_km.toFixed(1)} km from your point.` : ""}</p>
+              </div>
+            )}
+            {sunlight}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
@@ -234,9 +339,10 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
           <div className="card p-5 flex-1 flex flex-col">
             <Tabs<View> value={view} onChange={setView} tour="view-tabs" items={[
-              { id: "summary", label: "Summary", hint: "the short version" },
+              { id: "use", label: "By Use", hint: "best site for each test" },
+              { id: "summary", label: "Summary", hint: "why this site matches" },
+              { id: "twins", label: "Terrain Twins", hint: "both grounds side by side" },
               { id: "tests", label: "Tests", hint: "what you can test here" },
-              { id: "best", label: "Best site per test", hint: "who wins each test" },
               { id: "day", label: "Day & night", hint: "temperatures hour by hour" },
               { id: "measure", label: "Measurements", hint: "all 14 values explained" },
               { id: "expert", label: "Expert view", hint: "uncertainty and sources" },
@@ -245,7 +351,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
             <div className="pt-4 flex-1 overflow-y-auto" key={view}>
               {view === "summary" && (
                 <div className="flex flex-col gap-4 rise" data-tour="summary">
-                  <DataNote m={m} world={world} />
+                  <DataNote m={m} world={world} t={t} />
                   {m.vegetation_gate !== undefined && m.vegetation_gate < 1 && (
                     <p className="text-xs leading-relaxed" style={{ color: "var(--warn)" }}>The bare-ground rule cut this site&apos;s score{m.vegetation_gate === 0 ? " to zero" : ` to ${Math.round(m.vegetation_gate * 100)}%`}: Sentinel-2 sees {m.ndvi !== undefined && m.ndvi > 0.2 ? `plant cover (NDVI ${m.ndvi.toFixed(2)})` : ""}{m.ndvi !== undefined && m.ndvi > 0.2 && (m.water_fraction ?? 0) > 0.2 ? " and " : ""}{(m.water_fraction ?? 0) > 0.2 ? `${Math.round((m.water_fraction ?? 0) * 100)}% open water` : ""}. The Moon and Mars have neither. Before the rule it scored {Math.round((m.similarity_before_vegetation_rule ?? 0) * 100)}.</p>
                   )}
@@ -267,6 +373,8 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                       {bad.length ? <ul className="text-xs flex flex-col gap-1">{bad.map((r) => <li key={r.test}>• {ask(r.test)}</li>)}</ul> : <p className="text-xs muted">—</p>}
                     </div>
                   </div>
+                  <WhyThisMatch contributions={m.contributions} why={m.why} score={m.similarity_score} nameOf={nameOf} />
+                  <FieldReadinessCard fr={m.field_readiness} name={m.name} />
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Kpi label="Gravity" value={`${t.gravity} m/s²`} sub={`Earth is 9.81, so ${(9.81 / t.gravity).toFixed(1)}× stronger`} />
                     <Kpi label="Air pressure" value={`${t.pressure_bar} bar`} sub={t.pressure_bar < 0.05 ? "effectively vacuum: no air cooling, no plume damping" : "thin atmosphere"} />
@@ -282,7 +390,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
               {view === "tests" && (
                 <div className="flex flex-col gap-2.5 rise">
-                  <p className="text-xs muted">Six common hardware tests. For each: can this Earth site stand in for {t.name}?</p>
+                  <p className="text-xs muted">{m.representativeness_matrix.length} common hardware tests. For each: can this Earth site stand in for {t.name}?</p>
                   {m.representativeness_matrix.map((r) => { const s = STATUS_WORD[r.status], h = TEST_HELP[r.test]; return (
                     <div key={r.test} className="card-solid p-3 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -296,7 +404,16 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                 </div>
               )}
 
-              {view === "best" && (
+              {view === "use" && rankings.length > 0 && (
+                <ByUseView rankings={rankings} selectedId={m.id} onSelect={setSelectedId}
+                  best={data.matches[0] ? { id: data.matches[0].id, name: data.matches[0].name, score: Math.round(data.matches[0].similarity_score * 100), total: data.matches.length } : undefined} />
+              )}
+
+              {view === "twins" && (
+                <TerrainTwins left={{ url: t.heightmap_url, name: t.name, kind: t.body }} right={{ url: m.heightmap_url, name: m.name, kind: "earth" }} />
+              )}
+
+              {view === "use" && rankings.length === 0 && (
                 <div className="flex flex-col gap-3 rise">
                   <div className="card-solid p-4 flex flex-wrap items-center justify-between gap-3" style={{ borderColor: "var(--good)" }}>
                     <div>
@@ -375,7 +492,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
               {view === "expert" && (
                 <div className="flex flex-col gap-4 rise text-xs">
-                  <p className="muted leading-relaxed">How the numbers are made. Each of the 14 measurements is standardised across all 80 sites (z-scores), the two sites are compared per measurement with exp(−0.55·|Δz|), those are averaged within each of the four groups, and the groups are blended with the weights below. That blend is the match score. Separately, a small neural-network ensemble predicts how well each hardware scenario would transfer, and its disagreement gives the uncertainty.</p>
+                  <p className="muted leading-relaxed">How the numbers are made. Each of the 14 measurements is standardised across all Earth sites and targets (z-scores), the two sites are compared per measurement with exp(−0.55·|Δz|), those are averaged within each of the four groups, and the groups are blended with the weights below. That blend is the match score. Separately, a small neural-network ensemble predicts how well each hardware scenario would transfer, and its disagreement gives the uncertainty.</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Kpi label="Similarity" value={m.similarity_score.toFixed(3)} sub="The match score before rounding: weighted mean of the four group means." />
                     <Kpi label="Epistemic σ" value={m.epistemic_uncertainty.toFixed(3)} sub="How much the 7 ensemble models disagree. Big σ means this site is unlike the training sites." />

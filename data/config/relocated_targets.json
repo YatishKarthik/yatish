@@ -1,0 +1,22 @@
+{
+ "moon_shackleton_rim": {
+  "lat": -89.788,
+  "lon": 53.335,
+  "note": "Moved onto the Shackleton crater rim (21 km crater): the registry had used the crater-centre coordinates. Point chosen as the best-lit, gentlest 2 km window on the rim (LOLA)."
+ },
+ "moon_connecting_ridge": {
+  "lat": -89.449,
+  "lon": -137.142,
+  "note": "Moved onto the ridge between Shackleton and de Gerlache: the registry had used the crater-centre coordinates. Point chosen as the best-lit, gentlest 2 km window on the rim (LOLA)."
+ },
+ "moon_faustini_rim": {
+  "lat": -86.433,
+  "lon": 81.112,
+  "note": "Moved onto the Faustini crater rim (39 km crater): the registry had used the crater-centre coordinates. Point chosen as the best-lit, gentlest 2 km window on the rim (LOLA)."
+ },
+ "moon_peary_rim": {
+  "lat": 87.372,
+  "lon": 43.12,
+  "note": "Moved onto the Peary crater rim (73 km crater): the registry had used the crater-centre coordinates. Point chosen as the best-lit, gentlest 2 km window on the rim (LOLA)."
+ }
+}

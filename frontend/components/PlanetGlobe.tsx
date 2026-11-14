@@ -18,7 +18,12 @@ export interface GlobePin {
   rank?: number;
   subtitle?: string;
   miniMatrix?: MiniMatrixItem[];
+  /** "artemis": on NASA's 2024 Artemis III list; "artemis-old": a 2022 candidate dropped in 2024; "custom": a point the user picked */
+  tone?: "artemis" | "artemis-old" | "custom";
+  badge?: string;
 }
+
+export const CUSTOM_PIN_ID = "__custom_point";
 
 type Body = "moon" | "mars" | "earth";
 
@@ -32,6 +37,18 @@ function latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector
   const z = radius * Math.sin(phi) * Math.sin(theta);
   const y = radius * Math.cos(phi);
   return new THREE.Vector3(x, y, z);
+}
+
+/* The exact inverse of latLonToVector3, so a click lands on the same texture pixel a pin at that lat/lon would. */
+export function vector3ToLatLon(v: THREE.Vector3): { lat: number; lon: number } {
+  const r = v.length() || 1;
+  const phi = Math.acos(Math.max(-1, Math.min(1, v.y / r)));
+  const theta = Math.atan2(v.z, -v.x);
+  const lat = 90 - (phi * 180) / Math.PI;
+  let lon = (theta * 180) / Math.PI - 180;
+  while (lon < -180) lon += 360;
+  while (lon > 180) lon -= 360;
+  return { lat, lon };
 }
 
 /* Thin rim of light where the sphere meets space: a fresnel term, additive, drawn on the back faces. */
@@ -102,7 +119,8 @@ function PinMarker({
   });
 
   const isTop = body !== "earth" || (pin.rank !== undefined && pin.rank <= 5);
-  const colour = isSelected ? "#67e8f9" : isHovered ? "#fde68a" : body === "earth" ? (isTop ? "#6ee7b7" : "#94a3b8") : body === "mars" ? "#fda4af" : "#bae6fd";
+  const base = pin.tone === "custom" ? "#f8fafc" : pin.tone === "artemis" ? "#fbbf24" : body === "earth" ? (isTop ? "#6ee7b7" : "#94a3b8") : body === "mars" ? "#fda4af" : "#bae6fd";
+  const colour = isSelected ? (pin.tone === "custom" ? "#fef08a" : "#67e8f9") : isHovered ? "#fde68a" : base;
   const dot = isSelected ? 0.05 : isTop ? 0.036 : 0.026;
   const foot = body === "earth" ? 0.14 : 0.2;
   const lift = isSelected ? 0.55 : 0.34;
@@ -191,6 +209,7 @@ function RotatingGlobe({
   hoveredPinId,
   onSelectPin,
   onHoverPin,
+  onPickPoint,
   groupRef,
 }: {
   body: Body;
@@ -199,6 +218,7 @@ function RotatingGlobe({
   hoveredPinId: string | null;
   onSelectPin: (id: string) => void;
   onHoverPin: (pin: GlobePin | null) => void;
+  onPickPoint?: (lat: number, lon: number) => void;
   groupRef: React.RefObject<THREE.Group | null>;
 }) {
   const turnTo = useRef<THREE.Quaternion | null>(null);
@@ -228,7 +248,17 @@ function RotatingGlobe({
 
   return (
     <group ref={groupRef}>
-      <mesh>
+      <mesh
+        onClick={onPickPoint ? (e) => {
+          // a drag that rotated the globe is not a pick; neither is a click that a pin in front already took
+          if (e.delta > 4 || e.intersections[0]?.object !== e.object || !groupRef.current) return;
+          e.stopPropagation();
+          const { lat, lon } = vector3ToLatLon(groupRef.current.worldToLocal(e.point.clone()));
+          onPickPoint(lat, lon);
+        } : undefined}
+        onPointerMove={onPickPoint ? (e) => { if (e.intersections[0]?.object === e.object) document.body.style.cursor = "crosshair"; } : undefined}
+        onPointerOut={onPickPoint ? () => { document.body.style.cursor = "default"; } : undefined}
+      >
         <sphereGeometry args={[R, 96, 96]} />
         <meshStandardMaterial
           map={texture}
@@ -273,16 +303,26 @@ function RotatingGlobe({
 
 export default function PlanetGlobe({
   body,
-  pins,
-  selectedPinId,
+  pins: sitePins,
+  selectedPinId: selectedSiteId,
   onSelectPin,
+  onPickPoint,
+  customPoint,
 }: {
   body: Body;
   pins: GlobePin[];
   selectedPinId: string | null;
   onSelectPin: (id: string) => void;
+  /** when given, clicking bare ground (not a pin, not a drag) picks that point */
+  onPickPoint?: (lat: number, lon: number) => void;
+  customPoint?: { lat: number; lon: number } | null;
 }) {
   const [hoveredPin, setHoveredPin] = useState<GlobePin | null>(null);
+  const pins = useMemo<GlobePin[]>(() => (customPoint
+    ? [...sitePins, { id: CUSTOM_PIN_ID, name: "Your point", lat: customPoint.lat, lon: customPoint.lon, tone: "custom", subtitle: `${customPoint.lat.toFixed(2)}°, ${customPoint.lon.toFixed(2)}°` }]
+    : sitePins), [sitePins, customPoint]);
+  const selectedPinId = customPoint ? CUSTOM_PIN_ID : selectedSiteId;
+  const selectPin = (id: string) => { if (id !== CUSTOM_PIN_ID) onSelectPin(id); };
   const groupRef = useRef<THREE.Group>(null);
   const nodes = useRef(new Map<string, HTMLDivElement>());
   const camPos: [number, number, number] = body === "moon" ? [0, -5.4, 4.6] : body === "mars" ? [0, 1.0, 7.0] : [0, 0.8, 4.9];
@@ -300,6 +340,7 @@ export default function PlanetGlobe({
             {activePin.lat.toFixed(2)}°, {activePin.lon.toFixed(2)}°
           </div>
           {activePin.subtitle && <div className="text-[10px] text-emerald-300 mt-0.5">{activePin.subtitle}</div>}
+          {activePin.badge && <div className={`text-[10px] mt-0.5 ${activePin.tone === "artemis" ? "text-amber-300" : "opacity-70"}`}>{activePin.badge}</div>}
           {activePin.miniMatrix && (
             <div className="grid grid-cols-3 gap-1 mt-2 pt-2 border-t border-white/10">
               {activePin.miniMatrix.map((item, idx) => (
@@ -340,7 +381,6 @@ export default function PlanetGlobe({
       </div>
       <Canvas camera={{ position: camPos, fov: 42 }} dpr={[1, 2]} gl={{ antialias: true }}>
         <color attach="background" args={["#02040a"]} />
-        <color attach="background" args={["#02040a"]} />
         <ambientLight intensity={0.55} />
         <directionalLight position={[10, 6, 8]} intensity={2.2} color="#fff7ed" />
         <pointLight position={[-8, -5, -6]} intensity={0.5} color={TINT[body]} />
@@ -351,8 +391,9 @@ export default function PlanetGlobe({
             pins={pins}
             selectedPinId={selectedPinId}
             hoveredPinId={hoveredPin?.id || null}
-            onSelectPin={onSelectPin}
+            onSelectPin={selectPin}
             onHoverPin={setHoveredPin}
+            onPickPoint={onPickPoint}
             groupRef={groupRef}
           />
         </React.Suspense>

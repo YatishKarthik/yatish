@@ -1,0 +1,268 @@
+{
+ "moon_a3_peak_near_cabeus_b": {
+  "lat": -81.515,
+  "lon": -49.086,
+  "elevation_m": 97.0,
+  "sunlit_fraction": 0.522,
+  "tile_sunlit_fraction": 0.443,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.984,
+  "max_sun_elevation_deg": 10.02,
+  "modelled_max_temp_c": -27.0,
+  "slope_deg_2km": 0.3,
+  "candidates_scanned": 3721,
+  "lola": {
+   "points": 2496981,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_haworth": {
+  "lat": -85.967,
+  "lon": -2.242,
+  "elevation_m": 4928.0,
+  "sunlit_fraction": 0.765,
+  "tile_sunlit_fraction": 0.548,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.968,
+  "max_sun_elevation_deg": 5.57,
+  "modelled_max_temp_c": -61.0,
+  "slope_deg_2km": 0.3,
+  "candidates_scanned": 3268,
+  "lola": {
+   "points": 2886169,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_malapert_massif": {
+  "lat": -85.942,
+  "lon": -3.487,
+  "elevation_m": 4875.0,
+  "sunlit_fraction": 0.765,
+  "tile_sunlit_fraction": 0.571,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 1.0,
+  "max_sun_elevation_deg": 5.6,
+  "modelled_max_temp_c": -40.0,
+  "slope_deg_2km": 3.2,
+  "candidates_scanned": 961,
+  "lola": {
+   "points": 1960261,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_mons_mouton": {
+  "lat": -84.528,
+  "lon": 30.719,
+  "elevation_m": 5122.0,
+  "sunlit_fraction": 0.247,
+  "tile_sunlit_fraction": 0.184,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.571,
+  "max_sun_elevation_deg": 7.01,
+  "modelled_max_temp_c": -63.0,
+  "slope_deg_2km": 1.8,
+  "candidates_scanned": 1,
+  "lola": {
+   "points": 1445416,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_mons_mouton_plateau": {
+  "lat": -85.416,
+  "lon": 31.825,
+  "elevation_m": 6421.0,
+  "sunlit_fraction": 0.759,
+  "tile_sunlit_fraction": 0.536,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.714,
+  "max_sun_elevation_deg": 6.12,
+  "modelled_max_temp_c": -56.0,
+  "slope_deg_2km": 0.4,
+  "candidates_scanned": 2287,
+  "lola": {
+   "points": 2511728,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_nobile_rim_1": {
+  "lat": -84.779,
+  "lon": 38.898,
+  "elevation_m": 6845.0,
+  "sunlit_fraction": 0.752,
+  "tile_sunlit_fraction": 0.482,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 1.0,
+  "max_sun_elevation_deg": 6.76,
+  "modelled_max_temp_c": -63.0,
+  "slope_deg_2km": 1.5,
+  "candidates_scanned": 4232,
+  "lola": {
+   "points": 3565331,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_nobile_rim_2": {
+  "lat": -83.654,
+  "lon": 54.761,
+  "elevation_m": 1116.0,
+  "sunlit_fraction": 0.479,
+  "tile_sunlit_fraction": 0.455,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.794,
+  "max_sun_elevation_deg": 7.89,
+  "modelled_max_temp_c": -39.0,
+  "slope_deg_2km": 0.2,
+  "candidates_scanned": 3245,
+  "lola": {
+   "points": 3565331,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_de_gerlache_rim_2": {
+  "lat": -88.684,
+  "lon": -68.09,
+  "elevation_m": 1776.0,
+  "sunlit_fraction": 0.882,
+  "tile_sunlit_fraction": 0.585,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.587,
+  "max_sun_elevation_deg": 2.86,
+  "modelled_max_temp_c": -100.0,
+  "slope_deg_2km": 1.1,
+  "candidates_scanned": 1276,
+  "lola": {
+   "points": 2303249,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_a3_slater_plain": {
+  "lat": -88.809,
+  "lon": 124.086,
+  "elevation_m": 1617.0,
+  "sunlit_fraction": 0.884,
+  "tile_sunlit_fraction": 0.587,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.571,
+  "max_sun_elevation_deg": 2.73,
+  "modelled_max_temp_c": -75.0,
+  "slope_deg_2km": 1.6,
+  "candidates_scanned": 2772,
+  "lola": {
+   "points": 2742326,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_cabeus_psr": {
+  "lat": -84.9,
+  "lon": -35.5,
+  "elevation_m": -2832.0,
+  "sunlit_fraction": 0.0,
+  "tile_sunlit_fraction": 0.008,
+  "psr_fraction_tile": 0.56,
+  "earth_visible_fraction": 0.143,
+  "max_sun_elevation_deg": 6.64,
+  "modelled_max_temp_c": -233.0,
+  "slope_deg_2km": 6.5,
+  "candidates_scanned": 1,
+  "lola": {
+   "points": 1285133,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_shackleton_rim": {
+  "lat": -89.788,
+  "lon": 53.335,
+  "elevation_m": 1378.0,
+  "sunlit_fraction": 0.772,
+  "tile_sunlit_fraction": 0.494,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.714,
+  "max_sun_elevation_deg": 1.75,
+  "modelled_max_temp_c": -101.0,
+  "slope_deg_2km": 0.8,
+  "candidates_scanned": 460,
+  "lola": {
+   "points": 2045359,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_connecting_ridge": {
+  "lat": -89.449,
+  "lon": -137.142,
+  "elevation_m": 1932.0,
+  "sunlit_fraction": 0.947,
+  "tile_sunlit_fraction": 0.601,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.714,
+  "max_sun_elevation_deg": 2.09,
+  "modelled_max_temp_c": -68.0,
+  "slope_deg_2km": 3.2,
+  "candidates_scanned": 289,
+  "lola": {
+   "points": 1817436,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_faustini_rim": {
+  "lat": -86.433,
+  "lon": 81.112,
+  "elevation_m": 1132.0,
+  "sunlit_fraction": 0.55,
+  "tile_sunlit_fraction": 0.498,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.571,
+  "max_sun_elevation_deg": 5.11,
+  "modelled_max_temp_c": -57.0,
+  "slope_deg_2km": 1.2,
+  "candidates_scanned": 1232,
+  "lola": {
+   "points": 2409183,
+   "cells_hit": 1.0,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ },
+ "moon_peary_rim": {
+  "lat": 87.372,
+  "lon": 43.12,
+  "elevation_m": 290.0,
+  "sunlit_fraction": 0.694,
+  "tile_sunlit_fraction": 0.427,
+  "psr_fraction_tile": 0.0,
+  "earth_visible_fraction": 0.698,
+  "max_sun_elevation_deg": 4.17,
+  "modelled_max_temp_c": -60.0,
+  "slope_deg_2km": 1.3,
+  "candidates_scanned": 2956,
+  "lola": {
+   "points": 5413371,
+   "cells_hit": 0.998,
+   "cell_m": 400.0
+  },
+  "method": "Horizon traced from a 400 m LOLA terrain model out to 90 km in 72 directions; Sun over a lunar day at 12 seasonal points, Earth over its libration range; peak temperature from radiative balance (albedo 0.15, emissivity 0.95) on the 2 km slope."
+ }
+}
