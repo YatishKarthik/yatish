@@ -366,7 +366,7 @@ function SimScene(p: {
     if (phase !== "drive" || !grid) return;
     const st = s.current, camera = getState().camera, h = sample(grid, relief, st.rx, st.rz).h;
     prevFocus.current.set(st.rx, h + 0.4, st.rz);
-    if (thirdPerson) { camera.position.set(st.rx, h + 3.4, st.rz + 6.5); if (controls.current) { controls.current.target.set(st.rx, h + 0.4, st.rz); controls.current.update(); } }
+    if (thirdPerson) { camera.position.set(st.rx - 4.2, h + 3.2, st.rz + 3.2); if (controls.current) { controls.current.target.set(st.rx, h + 0.4, st.rz); controls.current.update(); } }
   }, [phase, thirdPerson, grid, relief, getState]);
 
   useFrame(({ clock, camera }, raw) => {

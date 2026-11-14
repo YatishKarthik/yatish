@@ -42,10 +42,11 @@ const TOUR: TourStep[] = [
   { target: "view-tabs", title: "Dig deeper when you want to", body: "Tests says which hardware tests the site is good for. Day & night compares temperatures hour by hour. Measurements lists every value with a one-line explanation. Expert view holds the uncertainty maths and data sources.", side: "top" },
   { target: "launch", title: "Try it yourself", body: "Opens the simulator: drive a rover, land a lander and drill a core on the Earth site, then do the same on the destination with its real gravity and air pressure.", side: "left" },
   { target: "sim-world", title: "Two worlds, same test", body: "Run the test on Earth first, then switch to the destination. The terrain is built from each site's real elevation data; gravity, air pressure and temperature change with the world.", side: "bottom" },
-  { target: "sim-test", title: "Three tests", body: "Rover: drive through five waypoints without wrecking the wheels. Lander: touch down softly on the pad. Drill: bring up a two-metre core without overheating the bit.", side: "bottom" },
+  { target: "sim-test", title: "One mission, three parts", body: "First you land on the pad. Then the rover rolls off and drives five waypoints along a surveyed route; on the way you grab flagged rocks with the claw and dock at two stations to drill a core. Everything you collect adds to the score.", side: "bottom" },
   { target: "sim-briefing", title: "Read the rules first", body: "Every run starts with a short briefing: what counts as a pass, what fails you, and the controls. Nothing moves until you press Start.", side: "top" },
   { target: "sim-hud", title: "Live readings", body: "While you play, the key numbers are shown here in plain words. Red means you are close to failing.", side: "bottom" },
-  { target: "sim-results", title: "Compare the two runs", body: "Your Earth result and destination result sit side by side. The interesting part is when one passes and the other fails: that is exactly what an Earth test can and cannot tell you.", side: "top" },
+  { target: "sim-score", title: "Your score", body: "Points so far out of 235, with rocks, cores and waypoints counted. The arrow points at the next waypoint. Fly the same mission on the other world and compare the two scores.", side: "left" },
+  { target: "sim-results", title: "Compare the two runs", body: "Your Earth result and destination result sit side by side with their scores. The gap between them is exactly what an Earth test can and cannot tell you about the destination.", side: "top" },
   { target: "help", title: "Come back any time", body: "This button restarts the walkthrough for whichever screen you are on.", side: "left" },
 ];
 
