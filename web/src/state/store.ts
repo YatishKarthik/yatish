@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { SitesJson, World } from '../data/types';
 import { useProgress } from './progress';
 
-export type Layer = 'temperature' | 'satellite';
+export type Layer = 'temperature' | 'satellite' | 'slope';
 export type Mode = 'wipe' | 'split';
 export type Cam = 'survey' | 'walk' | 'overhead';
 export interface Hover { world: World; slopeDeg: number; heightM: number }

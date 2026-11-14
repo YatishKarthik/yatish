@@ -11,6 +11,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.resolve(HERE, '..', 'public');
 const LOC = JSON.parse(fs.readFileSync(path.join(HERE, 'locations.json'), 'utf8'));
 const SIZE = 256, THERM = 64;
+const readJson = (f) => (fs.existsSync(path.join(HERE, f)) ? JSON.parse(fs.readFileSync(path.join(HERE, f), 'utf8')) : {});
+const ENV = readJson('env-earth.json');   // NASA POWER climatology per Earth site
+const S2 = readJson('s2-earth.json');      // Sentinel-2 spectral indices per Earth site
 
 // ---------- deterministic helpers ----------
 function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -70,14 +73,14 @@ function loadReal(dir) {
   return { h, src, meanSlope: +(slopeSum / cnt).toFixed(2), rough: +Math.sqrt(res2 / cnt).toFixed(2), topo, optical };
 }
 
-/** The 14 parameters for one place. Real where the tile allows; the rest deterministic mock, each value tagged. */
-function params(key, T, body, cls, kind) {
+/**
+ * The 19 parameters for one place, each tagged with where its value comes from:
+ * measured (from the tile or Sentinel-2), reanalysis (NASA POWER), model (simple physics by latitude or elevation), mock.
+ */
+function params(key, T, body, cls, kind, lat) {
   const m = (name, lo, hi) => +(lo + rnd(key + name) * (hi - lo)).toFixed(3);
-  const neg = kind === 'negative_control';
-  const sw = body === 'earth' ? (neg ? m('sw', 4, 9) : { fines: 32, crust: 26, gravel: 22, bedrock: 15 }[cls] + m('sw2', -5, 5)) : body === 'mars' ? 60 + m('sw', -15, 20) : 250 + m('sw', -30, 30);
-  const tmax = body === 'earth' ? (neg ? m('tx', 24, 32) : m('tx', 38, 62)) : body === 'mars' ? m('tx', -20, 15) : m('tx', 90, 125);
-  const bare = body === 'earth' ? (neg ? m('ba', 0.15, 0.4) : m('ba', 0.86, 0.99)) : 1;
-  return {
+  const neg = kind === 'negative_control', cosl = Math.max(0.02, Math.cos((lat * Math.PI) / 180));
+  const P = {
     slope_mean: { value: T.topo.slope_mean, source: 'measured' },
     slope_p90: { value: T.topo.slope_p90, source: 'measured' },
     tri_ruggedness: { value: T.topo.tri_ruggedness, source: 'measured' },
@@ -85,14 +88,45 @@ function params(key, T, body, cls, kind) {
     sar_backscatter: { value: m('sb', -18, -6), source: 'mock' },
     sar_entropy: { value: m('se', 0.3, 0.9), source: 'mock' },
     sar_contrast: { value: m('sc', 0.1, 0.8), source: 'mock' },
-    bareness_index: { value: bare, source: body === 'earth' ? 'mock' : 'measured' },
-    iron_oxide_ratio: body === 'earth' ? { value: +T.optical.red_blue.toFixed(3), source: 'derived' } : { value: m('fe', body === 'mars' ? 1.6 : 0.9, body === 'mars' ? 2.4 : 1.2), source: 'mock' },
-    clay_hydroxyl_ratio: { value: m('cl', 0.9, 1.3), source: 'mock' },
-    albedo: body === 'earth' ? { value: +(0.08 + 0.35 * T.optical.brightness).toFixed(3), source: 'derived' } : { value: m('al', body === 'mars' ? 0.12 : 0.07, body === 'mars' ? 0.3 : 0.2), source: 'mock' },
-    temp_min_c: { value: +(tmax - sw).toFixed(1), source: 'mock' },
-    temp_max_c: { value: +tmax.toFixed(1), source: 'mock' },
-    temp_delta_c: { value: +sw.toFixed(1), source: 'mock' },
   };
+  if (body === 'earth') {
+    const e = ENV[key], s2 = S2[key];
+    const sw = neg ? m('sw', 4, 9) : { fines: 32, crust: 26, gravel: 22, bedrock: 15 }[cls] + m('sw2', -5, 5), tmax = neg ? m('tx', 24, 32) : m('tx', 38, 62);
+    Object.assign(P, {
+      bareness_index: s2 ? { value: s2.bareness_index, source: 'measured' } : { value: neg ? m('ba', 0.15, 0.4) : m('ba', 0.86, 0.99), source: 'mock' },
+      iron_oxide_ratio: s2 ? { value: s2.iron_oxide_ratio, source: 'measured' } : { value: +T.optical.red_blue.toFixed(3), source: 'derived' },
+      clay_hydroxyl_ratio: s2 ? { value: s2.clay_hydroxyl_ratio, source: 'measured' } : { value: m('cl', 0.9, 1.3), source: 'mock' },
+      albedo: e?.albedo != null ? { value: e.albedo, source: 'reanalysis' } : { value: +(0.08 + 0.35 * T.optical.brightness).toFixed(3), source: 'derived' },
+      temp_min_c: e ? { value: e.temp_min_c, source: 'reanalysis' } : { value: +(tmax - sw).toFixed(1), source: 'mock' },
+      temp_max_c: e ? { value: e.temp_max_c, source: 'reanalysis' } : { value: +tmax.toFixed(1), source: 'mock' },
+      temp_delta_c: e ? { value: e.temp_delta_c, source: 'reanalysis' } : { value: +sw.toFixed(1), source: 'mock' },
+      pressure_kpa: e ? { value: e.pressure_kpa, source: 'reanalysis' } : { value: 101.3, source: 'mock' },
+      wind_ms: e ? { value: e.wind_ms, source: 'reanalysis' } : { value: m('w', 2, 6), source: 'mock' },
+      insolation_kwh: e ? { value: e.insolation_kwh, source: 'reanalysis' } : { value: m('i', 4, 7), source: 'mock' },
+      humidity_pct: e ? { value: e.humidity_pct, source: 'reanalysis' } : { value: m('h', 15, 50), source: 'mock' },
+      precip_mm_day: e ? { value: e.precip_mm_day, source: 'reanalysis' } : { value: m('pr', 0, 0.5), source: 'mock' },
+    });
+  } else {
+    const mars = body === 'mars';
+    // radiative-equilibrium temperatures by latitude; pressure from elevation on Mars; sunlight from the solar constant
+    const tmaxK = (mars ? 290 : 390) * Math.pow(cosl, 0.25), tminK = mars ? 150 + 45 * cosl : 95;
+    const zMean = (T.src.z_min + T.src.z_max) / 2, S = mars ? 586.2 * 0.75 : 1361;
+    Object.assign(P, {
+      bareness_index: { value: 1, source: 'measured' },
+      iron_oxide_ratio: { value: m('fe', mars ? 1.6 : 0.9, mars ? 2.4 : 1.2), source: 'mock' },
+      clay_hydroxyl_ratio: { value: m('cl', 0.9, 1.3), source: 'mock' },
+      albedo: { value: m('al', mars ? 0.12 : 0.07, mars ? 0.3 : 0.2), source: 'mock' },
+      temp_min_c: { value: +(tminK - 273.15).toFixed(1), source: 'model' },
+      temp_max_c: { value: +(tmaxK - 273.15).toFixed(1), source: 'model' },
+      temp_delta_c: { value: +(tmaxK - tminK).toFixed(1), source: 'model' },
+      pressure_kpa: mars ? { value: +(0.61 * Math.exp(-zMean / 10800)).toFixed(3), source: 'model' } : { value: 0, source: 'measured' },
+      wind_ms: mars ? { value: m('w', 2, 9), source: 'mock' } : { value: 0, source: 'measured' },
+      insolation_kwh: { value: +(((S / Math.PI) * cosl * 24) / 1000).toFixed(2), source: 'model' },
+      humidity_pct: { value: 0, source: mars ? 'model' : 'measured' },
+      precip_mm_day: { value: 0, source: 'measured' },
+    });
+  }
+  return P;
 }
 
 /** Percentile of each parameter within its own planet. */
@@ -102,20 +136,21 @@ function rankWithin(all) {
     const vals = all.map((p) => p[id].value).sort((a, b) => a - b);
     for (const p of all) {
       // mid-rank percentile: ties share a rank, result always within 0..100
+      if (id === 'bareness_index') { p[id].pct = Math.round(p[id].value * 100); continue; }   // same 0..1 scale on every world: compared directly
       const v = p[id].value, below = vals.filter((x) => x < v).length, equal = vals.filter((x) => x === v).length;
       p[id].pct = vals.length > 1 ? Math.round(((below + (equal - 1) / 2) / (vals.length - 1)) * 100) : 50;
     }
   }
 }
 
-const PILLAR_OF = { slope_mean: 'topography', slope_p90: 'topography', tri_ruggedness: 'topography', concavity: 'topography', sar_backscatter: 'radar', sar_entropy: 'radar', sar_contrast: 'radar', bareness_index: 'minerals', iron_oxide_ratio: 'minerals', clay_hydroxyl_ratio: 'minerals', albedo: 'minerals', temp_min_c: 'thermal', temp_max_c: 'thermal', temp_delta_c: 'thermal' };
-const COMPARABLE = new Set(['slope_mean', 'slope_p90', 'tri_ruggedness', 'concavity', 'bareness_index', 'iron_oxide_ratio', 'clay_hydroxyl_ratio', 'albedo', 'temp_delta_c']);
-const PW = { topography: 0.35, radar: 0, minerals: 0.3, thermal: 0.35 };   // radar is a hint until a like-for-like band exists
+const PILLAR_OF = { slope_mean: 'topography', slope_p90: 'topography', tri_ruggedness: 'topography', concavity: 'topography', sar_backscatter: 'radar', sar_entropy: 'radar', sar_contrast: 'radar', bareness_index: 'minerals', iron_oxide_ratio: 'minerals', clay_hydroxyl_ratio: 'minerals', albedo: 'minerals', temp_min_c: 'thermal', temp_max_c: 'thermal', temp_delta_c: 'thermal', pressure_kpa: 'environment', wind_ms: 'environment', insolation_kwh: 'environment', humidity_pct: 'environment', precip_mm_day: 'environment' };
+const COMPARABLE = new Set(['slope_mean', 'slope_p90', 'tri_ruggedness', 'concavity', 'bareness_index', 'iron_oxide_ratio', 'clay_hydroxyl_ratio', 'albedo', 'temp_delta_c', 'wind_ms', 'insolation_kwh']);
+const PW = { topography: 0.3, radar: 0, minerals: 0.3, thermal: 0.25, environment: 0.15 };   // radar is a hint until a like-for-like band exists
 
 /** Pillar scores: 100 minus the mean percentile gap over the comparable parameters of that pillar. */
 function pillarScores(a, b) {
   const out = {};
-  for (const pil of ['topography', 'radar', 'minerals', 'thermal']) {
+  for (const pil of ['topography', 'radar', 'minerals', 'thermal', 'environment']) {
     const ids = Object.keys(PILLAR_OF).filter((k) => PILLAR_OF[k] === pil && COMPARABLE.has(k));
     out[pil] = ids.length ? Math.round(100 - ids.reduce((s, k) => s + Math.abs(a[k].pct - b[k].pct), 0) / ids.length) : null;
   }
@@ -203,7 +238,7 @@ const targets = ['mars', 'moon'].flatMap((body) => {
   return LOC[body].filter((t) => ok.has(t.id)).map((t) => {
     const dir = path.join(PUB, 'tiles', body, t.id), T = loadReal(dir), curve = makeCurve(t.cls, t.id);
     writeColour(dir, T.h, curve, hashStr(t.id) % 1000);
-    const P = params(t.id, T, body, t.cls, 'target');
+    const P = params(t.id, T, body, t.cls, 'target', T.src.centre.lat);
     const swing = clampPct(SWING[t.cls] + (rnd(t.id + 'sw') - 0.5) * 24);
     return {
       id: t.id, body, name: t.name, lat: t.lat, lon: t.lon, why: t.why,
@@ -227,7 +262,7 @@ const sites = LOC.earth.filter((s) => okEarth.has(s.id)).map((s) => {
   const curve = makeCurve(neg ? 'bedrock' : s.cls, s.id);
   writeColour(dir, T.h, curve, hashStr(s.id) % 1000);
   const two = !neg && !pos && rnd(s.id + 'modis') < 0.12;
-  const P = params(s.id, T, 'earth', s.cls, s.kind);
+  const P = params(s.id, T, 'earth', s.cls, s.kind, T.src.centre.lat);
   const swing = neg ? clampPct(3 + rnd(s.id) * 6) : clampPct(SWING[s.cls] + (rnd(s.id + 'sw') - 0.5) * 24);
   const features = { amplitude_ratio: +(0.05 + swing / 500).toFixed(3), amplitude_pct: swing, peak_hour: two ? null : peakHour(curve), night_slope: two ? null : nightSlope(curve),
     ati_star_pct: neg ? clampPct(86 + rnd(s.id + 'ti') * 10) : clampPct(INERTIA[s.cls] + (rnd(s.id + 'ti') - 0.5) * 20), mean_slope_deg: T.meanSlope, roughness_rms_m: T.rough,
@@ -269,11 +304,13 @@ for (const s of sites) for (const t of targets) {
   const c = s.closeness[t.id];
   c.pillars = ps;
   c.topography = ps.topography; c.minerals = ps.minerals;
-  c.thermal = Math.round((c.thermal + ps.thermal) / 2);   // curve shape and swing rank together
-  c.terrain = ps.topography;
-  c.total = Math.round(PW.topography * ps.topography + PW.minerals * ps.minerals + PW.thermal * c.thermal);
-  if (s.kind === 'negative_control') c.total = Math.min(c.total, 25);          // bareness alone should sink a forest; mock keeps the control honest
-  if (s.kind === 'positive_control' && t.id === 'jezero') c.total = Math.max(c.total, 62);
+  c.thermal = ps.thermal; c.terrain = ps.topography;
+  // the total is the printed pillar formula and nothing else: no clamps, so the controls are judged honestly
+  c.total = Math.round(PW.topography * ps.topography + PW.minerals * ps.minerals + PW.thermal * ps.thermal + PW.environment * ps.environment);
+  // vegetation mask from BUILD_SPEC (NDVI above 0.20 is not bare ground): full score at 0.20, none at 0.30
+  const ndvi = 1 - s.params.bareness_index.value;
+  c.gate = +Math.min(1, Math.max(0, (0.30 - ndvi) / 0.10)).toFixed(2);
+  c.total = Math.round(c.total * c.gate);
 }
 
 const cand = (tid) => sites.filter((s) => s.kind === 'candidate').sort((a, b) => b.closeness[tid].total - a.closeness[tid].total);
@@ -291,7 +328,7 @@ const out = {
     ],
     friction: FRICTION, class_map: CLASSES,
     pillar_weights: PW,
-    pillar_formula: ['pillar = 100 − mean |pct_earth − pct_target| over its comparable parameters', 'C = 0.35·topography + 0.30·minerals + 0.35·thermal · radar shown, weight 0'],
+    pillar_formula: ['pillar = 100 − mean |pct_earth − pct_target| over its comparable parameters', 'C = 0.30·topography + 0.30·minerals + 0.25·thermal + 0.15·environment · radar shown, weight 0', 'bareness is compared directly (same 0–1 scale on every world); all other parameters as percentile within their own planet', 'vegetation mask: C × clamp((0.30 − NDVI) / 0.10, 0, 1), so ground with NDVI above 0.30 scores 0'],
     demo: { target: demoTarget.id, match: ranked[0].id, lookalike: (dunes[dunes.length - 1] ?? ranked[ranked.length - 1]).id },
   },
   planets: PLANETS, targets, sites,

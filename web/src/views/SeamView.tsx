@@ -100,7 +100,7 @@ export function SeamView() {
         </div>
         <div className="hide-in-director flex flex-wrap items-center gap-x-5 gap-y-2">
           <Seg label="Terrain layer" value={layer} onChange={(v) => set({ layer: v })}
-            options={[{ value: 'temperature', label: 'Temperature' }, { value: 'satellite', label: 'Satellite' }]} />
+            options={[{ value: 'temperature', label: 'Temperature' }, { value: 'satellite', label: 'Satellite' }, { value: 'slope', label: 'Slope' }]} />
           <Seg label="Layout" value={mode} onChange={(v) => set({ mode: v })}
             options={[{ value: 'wipe', label: 'Seam' }, { value: 'split', label: 'Side by side' }]} />
           <Seg label="Camera" value={cam} onChange={(v) => set({ cam: v })}
@@ -126,6 +126,7 @@ export function SeamView() {
                 <PermitCard key={`${site.id}-${target.id}-${sc}`} scenario={sc} verdict={verdicts[sc]} siteId={site.id} defaultOpen={director && sc === 'driving'} />
               ))
             : <div className="panel p-3 text-dim">No verdicts for this target in sites.json.</div>}
+          {!director && <Link to={withTarget(`/bench/${site.id}`)} className="btn btn-primary">Open the test bench</Link>}
           {!director && <DossierDrawer site={site} />}
         </aside>
       )}

@@ -17,18 +17,26 @@ export interface TileSource { elevation: string; imagery: string; centre?: { lat
 export interface TerrainMeta { z_min: number; z_max: number; pixel_m: number; source_res_m: number; thermal_res_m?: number }
 export interface Verdict { level: Level; rule: string; detail: string; rule_id?: string }
 export type VerdictSet = Record<Scenario, Verdict>;
-export interface Closeness { total: number; thermal: number; terrain: number; minerals?: number | null; topography?: number; pillars?: Partial<Record<PillarId, number | null>> }
+export interface MlPoint { pca: [number, number, number]; cluster: number; map: [number, number]; recon_error: number }
+export interface MlMeta {
+  features: string[]; samples: number; note: string; mean_agreement: number;
+  pca: { pc: number; explained: number; top: { id: string; weight: number }[] }[];
+  kmeans: { k: number; silhouette: number; families: { id: number; size: number; trait: string; direction: string }[] };
+  autoencoder: { layers: number[]; activation: string; r2: number };
+  agreement: Record<string, number>; neighbours: Record<string, string[]>;
+}
+export interface Closeness { gate?: number; total: number; thermal: number; terrain: number; minerals?: number | null; topography?: number; pillars?: Partial<Record<PillarId, number | null>> }
 
 export interface Target {
   id: string; body: 'mars' | 'moon'; name: string; lat: number; lon: number; why?: string;
-  curve: number[]; curve_source: string; features: Features; params?: ParamSet; class?: SurfaceClass;
+  curve: number[]; curve_source: string; features: Features; params?: ParamSet; ml?: MlPoint; class?: SurfaceClass;
   tes_ti_pct?: number; ground_truth?: string;
   terrain_tile: string; texture_tile: string; satellite_tile?: string; terrain_meta?: TerrainMeta; tile_source?: TileSource;
 }
 export interface Site {
   id: string; name: string; kind: 'candidate' | 'positive_control' | 'negative_control';
   centroid: { lat: number; lon: number }; area_km2: number; region: string;
-  curve: number[]; curve_scenes: number; curve_source: string; features: Features; params?: ParamSet; class: SurfaceClass;
+  curve: number[]; curve_scenes: number; curve_source: string; features: Features; params?: ParamSet; ml?: MlPoint; class: SurfaceClass;
   closeness: Record<string, Closeness>; verdicts: Record<string, VerdictSet>;
   catalogue: { in_esa_cafe: boolean; literature_hits: number; status: string; checked_by?: string; notes?: string };
   dossier: { text: string; generated_by: string; model: string; inputs_hash?: string };
@@ -40,7 +48,7 @@ export interface SitesJson {
     generated_utc: string; pipeline_version: string; weights: { thermal: number; terrain: number; minerals: number };
     common_resolution_m: number; earth_thermal_source: string; mock: boolean;
     formula?: string[]; friction?: Record<string, number>; class_map?: SurfaceClass[];
-    pillar_weights?: Partial<Record<PillarId, number>>; pillar_formula?: string[];
+    pillar_weights?: Partial<Record<PillarId, number>>; pillar_formula?: string[]; ml?: MlMeta;
     demo?: { target?: string; lookalike?: string; match?: string };
   };
   planets: Record<string, Planet>;

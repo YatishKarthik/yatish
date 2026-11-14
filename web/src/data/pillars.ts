@@ -1,11 +1,19 @@
 // The parameter registry. Everything that shows a parameter reads from here, so adding one is a one-line change.
-export type PillarId = 'topography' | 'radar' | 'minerals' | 'thermal';
+export type PillarId = 'topography' | 'radar' | 'minerals' | 'thermal' | 'environment';
 export type ParamId =
   | 'slope_mean' | 'slope_p90' | 'tri_ruggedness' | 'concavity'
   | 'sar_backscatter' | 'sar_entropy' | 'sar_contrast'
   | 'bareness_index' | 'iron_oxide_ratio' | 'clay_hydroxyl_ratio' | 'albedo'
-  | 'temp_min_c' | 'temp_max_c' | 'temp_delta_c';
-export type ParamSource = 'measured' | 'derived' | 'mock';
+  | 'temp_min_c' | 'temp_max_c' | 'temp_delta_c'
+  | 'pressure_kpa' | 'wind_ms' | 'insolation_kwh' | 'humidity_pct' | 'precip_mm_day';
+export type ParamSource = 'measured' | 'reanalysis' | 'derived' | 'model' | 'mock';
+export const SOURCE_NOTE: Record<ParamSource, string> = {
+  measured: 'measured from the tile or its satellite scene',
+  reanalysis: 'NASA POWER climatology (MERRA-2 / CERES), about 50 km cells',
+  derived: 'approximated from imagery',
+  model: 'simple physical model by latitude or elevation',
+  mock: 'placeholder until the pipeline supplies it',
+};
 
 export interface ParamValue { value: number; pct: number; source: ParamSource }
 export type ParamSet = Partial<Record<ParamId, ParamValue>>;
@@ -22,6 +30,7 @@ export const PILLARS: { id: PillarId; label: string; short: string; colour: stri
   { id: 'radar', label: 'Radar roughness', short: 'RADAR', colour: '#9aa4b2' },
   { id: 'minerals', label: 'Minerals and bareness', short: 'MINERAL', colour: '#e0a06a' },
   { id: 'thermal', label: 'Thermal regime', short: 'THERMAL', colour: '#4f8df7' },
+  { id: 'environment', label: 'Environment', short: 'ENVIRON', colour: '#3fb950' },
 ];
 
 export const PARAMS: ParamDef[] = [
@@ -32,13 +41,18 @@ export const PARAMS: ParamDef[] = [
   { id: 'sar_backscatter', short: 'SAR σ⁰', pillar: 'radar', label: 'Radar backscatter', unit: ' dB', digits: 1, earth: 'RADARSAT-1 (C-band)', mars: '—', moon: 'LRO Mini-RF (S-band)', comparable: false, note: 'C-band vs S-band: a hint, not scored' },
   { id: 'sar_entropy', short: 'SAR entropy', pillar: 'radar', label: 'Radar texture entropy', unit: '', digits: 2, earth: 'RADARSAT-1', mars: '—', moon: 'LRO Mini-RF', comparable: false },
   { id: 'sar_contrast', short: 'SAR contrast', pillar: 'radar', label: 'Radar texture contrast', unit: '', digits: 2, earth: 'RADARSAT-1', mars: '—', moon: 'LRO Mini-RF', comparable: false },
-  { id: 'bareness_index', short: 'Bareness', pillar: 'minerals', label: 'Bareness (1 − NDVI)', unit: '', digits: 2, earth: 'Sentinel-2', mars: '1 by definition', moon: '1 by definition', comparable: true },
-  { id: 'iron_oxide_ratio', short: 'Fe oxide', pillar: 'minerals', label: 'Iron oxide ratio', unit: '', digits: 2, earth: 'Sentinel-2 red/blue', mars: 'CRISM / orthoimage', moon: 'Kaguya MI', comparable: true },
-  { id: 'clay_hydroxyl_ratio', short: 'Clay / OH', pillar: 'minerals', label: 'Clay / hydroxyl ratio', unit: '', digits: 2, earth: 'Sentinel-2 SWIR', mars: 'CRISM', moon: 'M3', comparable: true },
-  { id: 'albedo', short: 'Albedo', pillar: 'minerals', label: 'Albedo', unit: '', digits: 2, earth: 'MODIS MCD43A3', mars: 'TES albedo', moon: 'LRO WAC', comparable: true },
-  { id: 'temp_min_c', short: 'T min', pillar: 'thermal', label: 'Minimum temperature', unit: ' °C', digits: 0, earth: 'MODIS / ECOSTRESS', mars: 'EMIRS / TES', moon: 'Diviner', comparable: false, note: 'absolute temperatures are never compared across planets' },
-  { id: 'temp_max_c', short: 'T max', pillar: 'thermal', label: 'Maximum temperature', unit: ' °C', digits: 0, earth: 'MODIS / ECOSTRESS', mars: 'EMIRS / TES', moon: 'Diviner', comparable: false, note: 'absolute temperatures are never compared across planets' },
-  { id: 'temp_delta_c', short: 'ΔT', pillar: 'thermal', label: 'Day–night swing', unit: ' °C', digits: 0, earth: 'MODIS / ECOSTRESS', mars: 'EMIRS / TES', moon: 'Diviner', comparable: true, note: 'compared as a rank within each planet' },
+  { id: 'bareness_index', short: 'Bareness', pillar: 'minerals', label: 'Bareness (1 − NDVI)', unit: '', digits: 2, earth: 'Sentinel-2 B08/B04', mars: '1 by definition', moon: '1 by definition', comparable: true, note: 'compared directly, same scale on every world' },
+  { id: 'iron_oxide_ratio', short: 'Fe oxide', pillar: 'minerals', label: 'Iron oxide ratio', unit: '', digits: 2, earth: 'Sentinel-2 B04/B02', mars: 'CRISM', moon: 'Kaguya MI', comparable: true },
+  { id: 'clay_hydroxyl_ratio', short: 'Clay / OH', pillar: 'minerals', label: 'Clay / hydroxyl ratio', unit: '', digits: 2, earth: 'Sentinel-2 B11/B12', mars: 'CRISM', moon: 'M3', comparable: true },
+  { id: 'albedo', short: 'Albedo', pillar: 'minerals', label: 'Albedo', unit: '', digits: 2, earth: 'NASA POWER (CERES)', mars: 'TES albedo', moon: 'LRO WAC', comparable: true },
+  { id: 'temp_min_c', short: 'T min', pillar: 'thermal', label: 'Minimum temperature', unit: ' °C', digits: 0, earth: 'NASA POWER skin temp.', mars: 'model → EMIRS / TES', moon: 'model → Diviner', comparable: false, note: 'absolute temperatures are never compared across planets' },
+  { id: 'temp_max_c', short: 'T max', pillar: 'thermal', label: 'Maximum temperature', unit: ' °C', digits: 0, earth: 'NASA POWER skin temp.', mars: 'model → EMIRS / TES', moon: 'model → Diviner', comparable: false, note: 'absolute temperatures are never compared across planets' },
+  { id: 'temp_delta_c', short: 'ΔT', pillar: 'thermal', label: 'Day–night swing', unit: ' °C', digits: 0, earth: 'NASA POWER skin temp.', mars: 'model → EMIRS / TES', moon: 'model → Diviner', comparable: true, note: 'compared as a rank within each planet' },
+  { id: 'pressure_kpa', short: 'Pressure', pillar: 'environment', label: 'Surface pressure', unit: ' kPa', digits: 2, earth: 'NASA POWER', mars: 'model from elevation', moon: 'vacuum', comparable: false, note: 'shown: decides plume, dust and convection behaviour' },
+  { id: 'wind_ms', short: 'Wind', pillar: 'environment', label: 'Wind speed', unit: ' m/s', digits: 1, earth: 'NASA POWER, 10 m', mars: 'lander records', moon: 'none', comparable: true },
+  { id: 'insolation_kwh', short: 'Sunlight', pillar: 'environment', label: 'Daily sunlight', unit: ' kWh/m²', digits: 1, earth: 'NASA POWER (CERES)', mars: 'model by latitude', moon: 'model by latitude', comparable: true },
+  { id: 'humidity_pct', short: 'Humidity', pillar: 'environment', label: 'Relative humidity', unit: ' %', digits: 0, earth: 'NASA POWER, 2 m', mars: '≈ 0', moon: '0', comparable: false, note: 'shown: moisture is where Earth differs most' },
+  { id: 'precip_mm_day', short: 'Rain', pillar: 'environment', label: 'Precipitation', unit: ' mm/day', digits: 2, earth: 'NASA POWER', mars: '0', moon: '0', comparable: false },
 ];
 
 export const byPillar = (p: PillarId) => PARAMS.filter((d) => d.pillar === p);

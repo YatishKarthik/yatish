@@ -21,6 +21,8 @@ No lockfile is committed: lockfiles written on one operating system have made np
 | `/sol` | Mars target picker and Earth sites as 24-hour thermal ribbons |
 | `/seam/:site` | Earth and Mars terrain at one scale, split by a draggable seam; clock, permits, limits |
 | `/trial/:site` | The same rover drive on both terrains, with slope margin |
+| `/bench/:site` | Test bench: solar power and thermal cycling on both worlds, plus a link to the rover trial |
+| `/analysis` | Parameter space: 3D PCA, k-means families, neural map, parameter scatter and correlation matrix |
 | `/challenge` | Blind match: read a target's fingerprint and pick the closest of three Earth sites |
 | `/survey` | Your survey record: rank, XP, badges and coverage, kept in the browser |
 | `/evidence` | Curve overlay, controls, rover ground truth, local readings |
@@ -44,6 +46,19 @@ Locations are listed in `scripts/locations.json`: 60 Earth sites, 10 Mars target
 The system view's global maps in `public/textures/` are NASA Blue Marble (Earth), the Viking MDIM2.1 colour mosaic (Mars, NASA/JPL/USGS) and the LRO WAC global mosaic (Moon, NASA/GSFC/ASU); Mars and Moon were downloaded from NASA Trek. Earth's night lights, ocean mask and relief come from NASA Blue Marble / Black Marble derived maps as redistributed by the three-globe package.
 
 Terrain, imagery and the slope and roughness numbers are real. Thermal curves, closeness, classes and validation numbers are still mock until the pipeline replaces them.
+
+## Rebuilding the data
+
+Run these from `web/` in order. Each step skips work already done.
+
+```bash
+node scripts/fetch-real.mjs          # terrain and imagery tiles
+node scripts/fetch-env.mjs           # NASA POWER climate records per Earth site (set NODE_USE_ENV_PROXY=1 behind a proxy)
+node scripts/fetch-s2-indices.mjs    # Sentinel-2 NDVI, iron oxide and clay ratios per Earth site
+npm run data                         # build sites.json, then run the Python analysis (needs numpy and scikit-learn)
+```
+
+`pipeline/ml/analyse.py` adds PCA coordinates, k-means families, a neural autoencoder map and an agreement check to `sites.json`. It is exploration only and never feeds the closeness score.
 
 ## Connecting the pipeline
 

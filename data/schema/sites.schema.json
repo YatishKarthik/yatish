@@ -266,7 +266,12 @@
         "albedo",
         "temp_min_c",
         "temp_max_c",
-        "temp_delta_c"
+        "temp_delta_c",
+        "pressure_kpa",
+        "wind_ms",
+        "insolation_kwh",
+        "humidity_pct",
+        "precip_mm_day"
       ],
       "properties": {
         "slope_mean": {
@@ -288,7 +293,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -313,7 +320,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -338,7 +347,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -363,7 +374,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -388,7 +401,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -413,7 +428,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -438,7 +455,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -463,7 +482,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -488,7 +509,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -513,7 +536,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -538,7 +563,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -563,7 +590,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -588,7 +617,9 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
                 "mock"
               ]
             }
@@ -613,7 +644,144 @@
             "source": {
               "enum": [
                 "measured",
+                "reanalysis",
                 "derived",
+                "model",
+                "mock"
+              ]
+            }
+          }
+        },
+        "pressure_kpa": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "reanalysis",
+                "derived",
+                "model",
+                "mock"
+              ]
+            }
+          }
+        },
+        "wind_ms": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "reanalysis",
+                "derived",
+                "model",
+                "mock"
+              ]
+            }
+          }
+        },
+        "insolation_kwh": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "reanalysis",
+                "derived",
+                "model",
+                "mock"
+              ]
+            }
+          }
+        },
+        "humidity_pct": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "reanalysis",
+                "derived",
+                "model",
+                "mock"
+              ]
+            }
+          }
+        },
+        "precip_mm_day": {
+          "type": "object",
+          "required": [
+            "value",
+            "pct",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source": {
+              "enum": [
+                "measured",
+                "reanalysis",
+                "derived",
+                "model",
                 "mock"
               ]
             }

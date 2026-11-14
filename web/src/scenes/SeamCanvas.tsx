@@ -36,6 +36,7 @@ function Half({ world, tiles, extentM, offsetX, mode, segments, trialMode, rough
     u.uSeamX.value = (s.seam - 0.5) * E;
     u.uSide.value = mode === 'wipe' ? (world === 'earth' ? -1 : 1) : 0;
     u.uGrid.value = s.grid ? 1 : 0;
+    u.uSlope.value = s.layer === 'slope' ? 1 : 0;
     const want = s.layer === 'satellite' ? 1 : 0;
     if (Math.abs(want - u.uSatMix.value) > 0.004) {
       u.uSatMix.value = Math.min(1, Math.max(0, u.uSatMix.value + Math.sign(want - u.uSatMix.value) * (delta / 0.3)));   // 300 ms wipe

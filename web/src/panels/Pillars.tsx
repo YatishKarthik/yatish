@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Fingerprint, FingerprintLegend } from '../charts/Fingerprint';
 import { bodyName } from '../data/select';
-import { byPillar, PARAMS, PILLARS, type PillarId } from '../data/pillars';
+import { byPillar, PARAMS, PILLARS, SOURCE_NOTE, type ParamSource, type PillarId } from '../data/pillars';
 import type { Site, Target } from '../data/types';
 import { Num } from '../ui/Num';
 
@@ -17,14 +17,14 @@ export function Pillars({ site, target, si, ti }: { site: Site; target: Target; 
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="head">Fingerprint</h2>
-          <p className="text-sm text-dim">14 parameters in 4 pillars. Two outlines that agree are a match.</p>
+          <p className="text-sm text-dim">{PARAMS.length} parameters in {PILLARS.length} pillars. Two outlines that agree are a match.</p>
         </div>
         <Num path={`sites.${si}.closeness.${target.id}.total`} className="text-xl" />
       </div>
       <div className="flex justify-center"><Fingerprint a={a} b={b} size={300} labels title={`${site.name} over ${target.name}`} /></div>
       <FingerprintLegend />
 
-      <div className="grid grid-cols-4 gap-1">
+      <div className="grid grid-cols-5 gap-1">
         {PILLARS.map((p) => {
           const v = c?.pillars?.[p.id];
           return (
@@ -68,12 +68,13 @@ export function Pillars({ site, target, si, ti }: { site: Site; target: Target; 
         </table>
       )}
       <p className="caps">Sources · {byPillar(open ?? 'topography').map((d) => `${d.label}: ${d.earth} / ${d[target.body]}`).join(' · ')}</p>
-      <p className="caps">{PARAMS.filter((d) => a[d.id]?.source === 'measured').length} of {PARAMS.length} Earth values measured here · <span className="text-amber">●</span> mock until the pipeline runs</p>
+      <p className="caps">Earth: {PARAMS.filter((d) => a[d.id]?.source === 'measured' || a[d.id]?.source === 'reanalysis').length} of {PARAMS.length} values from real data · ○ reanalysis or derived · ◇ model · <span className="text-amber">●</span> mock</p>
+      {c?.gate != null && c.gate < 1 && <p className="caps !text-denied">Vegetation mask applied: score × {c.gate}</p>}
     </section>
   );
 }
 
-function Src({ s }: { s?: string }) {
+function Src({ s }: { s?: ParamSource }) {
   if (!s || s === 'measured') return null;
-  return <span className={`ml-1 ${s === 'mock' ? 'text-amber' : 'text-dim'}`} title={s === 'mock' ? 'mock value' : 'derived from imagery, approximate'}>{s === 'mock' ? '●' : '○'}</span>;
+  return <span className={`ml-1 ${s === 'mock' ? 'text-amber' : 'text-dim'}`} title={SOURCE_NOTE[s]}>{s === 'mock' ? '●' : s === 'model' ? '◇' : '○'}</span>;
 }

@@ -60,7 +60,7 @@ precision highp float;
 precision highp sampler2DArray;
 uniform sampler2DArray uColour;
 uniform sampler2D uSat;
-uniform float uHour, uSatMix, uSeamX, uSide, uGrid, uGridN;
+uniform float uHour, uSatMix, uSeamX, uSide, uGrid, uGridN, uSlope;
 uniform vec3 uSun, uSunCol;
 uniform float uDay, uRough;
 float hsh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -86,6 +86,11 @@ void main() {
   // the layer change wipes left to right across the tile
   float wipe = clamp((uSatMix * 1.1 - vUv.x) / 0.1, 0.0, 1.0);
   vec3 col = mix(temp * shadeT, sat * shadeS, wipe);
+  // slope layer: measured from the surface normal; grey below 5 degrees, amber at 15, red from 30
+  float sd = degrees(acos(clamp(normalize(vN).y, 0.0, 1.0)));
+  vec3 sc = mix(vec3(0.20, 0.23, 0.27), vec3(0.95, 0.66, 0.23), smoothstep(5.0, 15.0, sd));
+  sc = mix(sc, vec3(0.97, 0.32, 0.29), smoothstep(15.0, 30.0, sd));
+  col = mix(col, sc * (0.8 + 0.25 * lam), uSlope);
   vec2 g = abs(fract(vUv * uGridN - 0.5) - 0.5) / fwidth(vUv * uGridN);
   float line = 1.0 - min(min(g.x, g.y), 1.0);
   col = mix(col, vec3(0.93), line * 0.4 * uGrid);
@@ -106,6 +111,7 @@ export function makeTerrainMaterial(tiles: TileSet, extentM: number, side: numbe
       uSeamX: { value: 0 },
       uSide: { value: side },
       uGrid: { value: 0 },
+      uSlope: { value: 0 },
       uGridN: { value: extentM / tiles.hf.sourceResM },
       uSun: { value: new THREE.Vector3(0, 1, 0) },
       uSunCol: { value: new THREE.Vector3(1, 1, 1) },

@@ -25,6 +25,8 @@ export const BADGES: { id: string; name: string; how: string; test: (s: Saved) =
   { id: 'gravity', name: 'Trial by gravity', how: 'Run 3 rover trials', test: (s) => s.trials >= 3 },
   { id: 'limit', name: 'Found the limit', how: 'Make a rover stick on either world', test: (s) => s.flags.includes('stuck') },
   { id: 'night', name: 'Night shift', how: 'Scrub the clock into the night', test: (s) => s.flags.includes('night') },
+  { id: 'bench', name: 'Test engineer', how: 'Open the test bench', test: (s) => s.flags.includes('bench') },
+  { id: 'analyst', name: 'Analyst', how: 'Open the parameter space', test: (s) => s.flags.includes('analysis') },
   { id: 'eye', name: 'Sharp eye', how: 'Score 4 of 5 in Blind match', test: (s) => s.best >= 4 },
   { id: 'perfect', name: 'Perfect read', how: 'Score 5 of 5 in Blind match', test: (s) => s.best >= 5 },
 ];

@@ -7,6 +7,8 @@ import { useStore } from './state/store';
 import { Chrome } from './ui/Chrome';
 import { OpsLog } from './ui/OpsLog';
 import { warpWhoosh } from './ui/sound';
+import { AnalysisView } from './views/AnalysisView';
+import { BenchView } from './views/BenchView';
 import { ChallengeView } from './views/ChallengeView';
 import { SurveyView } from './views/SurveyView';
 import { EvidenceView } from './views/EvidenceView';
@@ -67,6 +69,8 @@ export default function App() {
           <Route path="/trial/:siteId" element={<TrialView />} />
           <Route path="/evidence" element={<EvidenceView />} />
           <Route path="/method" element={<MethodView />} />
+          <Route path="/bench/:siteId" element={<BenchView />} />
+          <Route path="/analysis" element={<AnalysisView />} />
           <Route path="/challenge" element={<ChallengeView />} />
           <Route path="/survey" element={<SurveyView />} />
           <Route path="*" element={<NotFound what="Page" />} />

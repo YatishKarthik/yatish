@@ -93,6 +93,16 @@ The entry screen is deliberately more atmospheric than the working views.
 
 Progress is stored in the visitor's browser only (`localStorage`) and can be cleared from the Survey page.
 
+## Analysis and test bench
+
+| Element | Purpose |
+|---|---|
+| Slope layer on the 3D terrain (grey under 5°, amber at 15°, red from 30°) | information: measured from the terrain surface |
+| 3D parameter space with lines from the target to its nearest sites | information: PCA of the comparable parameters |
+| Neural map, parameter scatter, correlation matrix | information: how places and parameters relate |
+| Solar power and thermal cycling charts | information: simulation output per world; temperatures drawn on separate scales |
+| Slow auto-rotation of the parameter space | decorative; pauses on hover, off with reduced motion |
+
 ## Left out on purpose
 
 Kept simple, so these parts of the brief are not built: WebGL post-processing (SMAA, bloom), cast shadows and horizon haze, rolling-digit numbers, drag-to-scrub on the canvas, pixel probe, three-way compare (gated on the 38-hour gate), and the closeness terrain layer (the contract has no such tile).
