@@ -36,8 +36,12 @@ frontend/       Next.js 16 + React 19 + react-three-fiber UI
 
 ## UI notes
 
-- `frontend/components/WorldPicker.tsx` — the landing screen: two lit, turning worlds. Click one.
-- `frontend/components/PlanetGlobe.tsx` — the Moon / Mars / Earth globe. Pins carry hologram tags; selecting a site turns the globe to face it; a light column and footprint mark the selection. Labels are plain DOM projected over the canvas each frame (no portals), so they stay sharp and unmount cleanly.
-- `frontend/app/globals.css` — the glass: translucent panes with a bright top edge over a slowly drifting colour field.
+- `frontend/components/SystemPicker.tsx` — landing screen: a small solar system with a lit sun, Earth and Moon, and Mars; hover for a short dossier, click the Moon or Mars (or the buttons) and the camera flies in.
+- `frontend/components/PlanetGlobe.tsx` — the Moon / Mars / Earth globe with hologram tags; selecting a site turns the globe to face it.
+- `frontend/components/AnalyticsView.tsx` — results. Summary first, in plain words; Tests, Best site per test, Day & night, Measurements (all 14 values explained) and an Expert view for the uncertainty maths and data sources.
+- `frontend/components/DualSimulator.tsx` — rover (five waypoints with a surveyed route), lander (third person, guide curve and predicted touchdown marker), drill (heat budget: drill in bursts, let the rock cool the bit). Every run starts with a briefing of pass/fail rules and controls. Terrain heights are the sites' real elevation data; the surface detail textures are procedural.
+- `frontend/components/Tutorial.tsx` — the "?" walkthrough: user-paced cards that point at each control on the current screen.
+- `frontend/components/ui.tsx` — light/dark theme toggle, tabs, status words, plain-language helpers.
+- `frontend/app/globals.css` — theme tokens for both modes and the glass panels.
 
-The architecture, API, ML engine and simulator are unchanged from the previous release.
+The architecture, API, ML engine, physics backend and data are unchanged from the previous release.

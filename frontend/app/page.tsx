@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Rocket, Sparkles, MapPin, Search, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Search } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
 import AnalyticsView, { MatchPayload, EarthMatch } from "@/components/AnalyticsView";
+import { ThemeToggle } from "@/components/ui";
+import { Tour, HelpButton, type TourStep } from "@/components/Tutorial";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 const DualSimulator = dynamic(() => import("@/components/DualSimulator"), { ssr: false });
-const WorldPicker = dynamic(() => import("@/components/WorldPicker"), { ssr: false });
+const SystemPicker = dynamic(() => import("@/components/SystemPicker"), { ssr: false });
 
 interface TargetSite {
   id: string;
@@ -25,6 +27,28 @@ interface TargetSite {
   recommended_hardware_test: string;
 }
 
+// The walkthrough. Steps whose element is not on screen are skipped, so this one list covers every screen.
+const TOUR: TourStep[] = [
+  { target: "brand", title: "What this app does", body: "You pick a place on the Moon or Mars where a base might be built. The app then finds places on Earth that behave like it, so hardware can be tested there first. Finally you can run the same test on both worlds and see what changes.", side: "bottom" },
+  { target: "worlds", title: "Start by choosing a world", body: "This is a small model of the inner solar system. Hover a body to read about it. Click the Moon or Mars to open its globe. Earth is where the testing happens, so it cannot be chosen as a destination.", side: "top" },
+  { target: "theme", title: "Light or dark", body: "Switch between light and dark mode any time. Your choice is remembered on this device.", side: "bottom" },
+  { target: "globe", title: "The destination globe", body: "Each pin is a candidate base site. Drag to turn the globe, scroll to zoom, and click a pin or its label to select it. The globe turns to face whatever you select.", side: "right" },
+  { target: "candidates", title: "The same sites as a list", body: "Prefer a list? Pick from here. Coordinates and elevation are shown for each site.", side: "left" },
+  { target: "selected", title: "What makes this site hard", body: "Each site has one main engineering problem, written in plain words. The button below starts the search for Earth test sites that share that problem.", side: "left" },
+  { target: "summary", title: "The answer in one paragraph", body: "After a search, this tab explains the best Earth match in plain language: how alike it is, what it is good for testing, and what it cannot tell you.", side: "bottom" },
+  { target: "earth-globe", title: "Where the matches are", body: "Every ranked Earth site is a pin. The best three are labelled. Select one and the globe turns to it.", side: "right" },
+  { target: "ranked", title: "All sixty, ranked", body: "Sites are ordered by how closely their ground, rock and temperatures resemble the destination. The ± value is how unsure the model is about that score.", side: "right" },
+  { target: "score", title: "The match score", body: "0 to 100. It blends four things: terrain shape, radar roughness, rock and soil type, and day-night temperature behaviour. A high score does not mean every kind of test will work there, which is what the Tests tab is for.", side: "left" },
+  { target: "view-tabs", title: "Dig deeper when you want to", body: "Tests says which hardware tests the site is good for. Day & night compares temperatures hour by hour. Measurements lists every value with a one-line explanation. Expert view holds the uncertainty maths and data sources.", side: "top" },
+  { target: "launch", title: "Try it yourself", body: "Opens the simulator: drive a rover, land a lander and drill a core on the Earth site, then do the same on the destination with its real gravity and air pressure.", side: "left" },
+  { target: "sim-world", title: "Two worlds, same test", body: "Run the test on Earth first, then switch to the destination. The terrain is built from each site's real elevation data; gravity, air pressure and temperature change with the world.", side: "bottom" },
+  { target: "sim-test", title: "Three tests", body: "Rover: drive through five waypoints without wrecking the wheels. Lander: touch down softly on the pad. Drill: bring up a two-metre core without overheating the bit.", side: "bottom" },
+  { target: "sim-briefing", title: "Read the rules first", body: "Every run starts with a short briefing: what counts as a pass, what fails you, and the controls. Nothing moves until you press Start.", side: "top" },
+  { target: "sim-hud", title: "Live readings", body: "While you play, the key numbers are shown here in plain words. Red means you are close to failing.", side: "bottom" },
+  { target: "sim-results", title: "Compare the two runs", body: "Your Earth result and destination result sit side by side. The interesting part is when one passes and the other fails: that is exactly what an Earth test can and cannot tell you.", side: "top" },
+  { target: "help", title: "Come back any time", body: "This button restarts the walkthrough for whichever screen you are on.", side: "left" },
+];
+
 export default function Home() {
   const [selectedBody, setSelectedBody] = useState<"moon" | "mars" | null>(null);
   const [allTargets, setAllTargets] = useState<TargetSite[]>([]);
@@ -33,31 +57,21 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchPayload | null>(null);
   const [simMatch, setSimMatch] = useState<EarthMatch | null>(null);
+  const [tour, setTour] = useState(false);
 
   const loadTargets = () => {
     setBackendError(false);
     fetch("http://127.0.0.1:8000/api/targets")
-      .then((res) => {
-        if (!res.ok) throw new Error("Backend error");
-        return res.json();
-      })
+      .then((res) => { if (!res.ok) throw new Error("Backend error"); return res.json(); })
       .then((data) => setAllTargets(data.targets || []))
       .catch(() => setBackendError(true));
   };
 
-  useEffect(() => {
-    loadTargets();
-  }, []);
+  useEffect(() => { const id = window.setTimeout(loadTargets, 0); return () => window.clearTimeout(id); }, []);
 
   const bodyTargets = allTargets.filter((t) => t.body === selectedBody);
-
-  const globePins: GlobePin[] = bodyTargets.map((t) => ({
-    id: t.id,
-    name: t.name,
-    lat: t.lat,
-    lon: t.lon,
-    subtitle: `${t.temp_min_c}°C to ${t.temp_max_c}°C`,
-  }));
+  const globePins: GlobePin[] = bodyTargets.map((t) => ({ id: t.id, name: t.name, lat: t.lat, lon: t.lon, subtitle: `${t.temp_min_c}°C to ${t.temp_max_c}°C` }));
+  const worldName = selectedBody === "moon" ? "the Moon" : "Mars";
 
   const handleSelectPin = (id: string) => {
     const found = bodyTargets.find((t) => t.id === id);
@@ -68,10 +82,7 @@ export default function Home() {
     if (!selectedTarget) return;
     setIsSearching(true);
     try {
-      const [res] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/match/${selectedTarget.id}?top_k=60`),
-        new Promise((r) => setTimeout(r, 650)),
-      ]);
+      const [res] = await Promise.all([fetch(`http://127.0.0.1:8000/api/match/${selectedTarget.id}?top_k=60`), new Promise((r) => setTimeout(r, 500))]);
       const data: MatchPayload = await res.json();
       setMatchResult(data);
     } catch {
@@ -82,160 +93,83 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen space-bg text-slate-100 relative overflow-hidden flex flex-col">
-      <div className="starfield fixed inset-0 pointer-events-none opacity-60" />
-
-      <header className="relative z-10 border-b border-white/10 bg-white/[0.04] backdrop-blur-xl px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl glass-chip flex items-center justify-center text-cyan-300">
-            <Rocket className="w-5 h-5" />
-          </div>
+    <main className="min-h-screen app-bg relative flex flex-col">
+      <header className="relative z-10 flex items-center justify-between gap-4 px-5 py-3 border-b line">
+        <div className="flex items-center gap-3" data-tour="brand">
+          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              TERRA-TWIN
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full glass-chip text-cyan-200">
-                4-AGENCY ANALOG LAB
-              </span>
-            </h1>
-            <p className="text-xs text-slate-400">
-              NASA LRO/PDS • CSA RADARSAT • ESA Copernicus • JAXA G-Portal
-            </p>
+            <h1 className="text-[15px] font-semibold tracking-tight">TERRA-TWIN</h1>
+            <p className="text-xs muted">Find Earth test sites that behave like a Moon or Mars base site</p>
           </div>
         </div>
-
-        {selectedBody && (
-          <button
-            onClick={() => {
-              setSelectedBody(null);
-              setSelectedTarget(null);
-              setMatchResult(null);
-              setSimMatch(null);
-            }}
-            className="glass-chip flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-slate-100 hover:bg-white/10 transition cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Switch Planet
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedBody && (
+            <button type="button" className="btn btn-sm" onClick={() => { setSelectedBody(null); setSelectedTarget(null); setMatchResult(null); setSimMatch(null); }}>
+              <ArrowLeft className="w-3.5 h-3.5" /> Choose another world
+            </button>
+          )}
+          <ThemeToggle />
+        </div>
       </header>
 
       {backendError && (
-        <div className="relative z-20 mx-auto mt-4 px-5 py-3 rounded-2xl bg-rose-950/90 border border-rose-500/50 text-rose-200 text-xs font-mono flex items-center gap-3">
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>Backend offline! Run <b className="text-white">python backend/main.py</b> in Terminal 1, then click Retry.</span>
-          <button
-            onClick={loadTargets}
-            className="px-3 py-1 rounded-lg bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold cursor-pointer"
-          >
-            Retry
-          </button>
+        <div className="relative z-20 mx-auto mt-4 card px-4 py-3 text-xs flex items-center gap-3" style={{ borderColor: "var(--bad)" }}>
+          <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "var(--bad)" }} />
+          <span>The backend is not running. In a terminal, run <code className="font-mono">python backend/main.py</code>, wait for &quot;ready&quot;, then retry.</span>
+          <button type="button" className="btn btn-sm btn-primary" onClick={loadTargets}>Retry</button>
         </div>
       )}
 
       {!selectedBody && (
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-center max-w-2xl mb-6">
-            <div className="glass-chip inline-flex items-center gap-2 px-3 py-1 text-indigo-200 text-xs font-medium mb-4">
-              <Sparkles className="w-3.5 h-3.5" />
-              80 Planetary &amp; Terrestrial Sites • Deep Ensemble + Conformal AI
-            </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
-              Select Your Target World
-            </h2>
-            <p className="text-sm md:text-base text-slate-400">
-              Click a world to explore 10 permanent base candidates on its globe, discover matching testbeds on Earth, and run dual-world physics simulations.
-            </p>
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-5">
+          <div className="text-center max-w-2xl mb-5">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">Where do you want to go?</h2>
+            <p className="text-sm muted mt-2">Pick a destination. You will see ten candidate base sites on its globe, find the Earth places that behave most like each one, and test hardware on both.</p>
           </div>
-
-          <div className="w-full max-w-4xl glass-card rounded-[28px] overflow-hidden">
-            <WorldPicker onPick={(w) => setSelectedBody(w)} />
+          <div className="w-full max-w-5xl card overflow-hidden" style={{ borderRadius: 24 }}>
+            <SystemPicker onPick={(w) => setSelectedBody(w)} />
           </div>
         </div>
       )}
 
       {selectedBody && !matchResult && (
-        <div className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 p-5 max-w-[1600px] w-full mx-auto">
-          <div className="lg:col-span-7 glass-card rounded-[28px] overflow-hidden flex flex-col relative min-h-[520px]">
-            <div className="absolute top-4 left-4 z-10 glass-chip px-3.5 py-2">
-              <div className="text-xs font-mono font-bold text-cyan-300 uppercase">
-                {selectedBody} 3D ORBITAL EXPLORER
-              </div>
-              <div className="text-[11px] text-slate-300/80">
-                Drag to rotate • Scroll to zoom • Click a pin or its label
-              </div>
+        <div className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1600px] w-full mx-auto">
+          <div className="lg:col-span-7 card overflow-hidden flex flex-col relative min-h-[520px]" data-tour="globe">
+            <div className="absolute top-3 left-3 z-10 on-canvas px-3 py-2">
+              <div className="text-xs font-semibold">{selectedBody === "moon" ? "The Moon" : "Mars"} · 10 candidate base sites</div>
+              <div className="text-[11px] opacity-80">Drag to turn · scroll to zoom · click a pin or its label</div>
             </div>
-
-            <PlanetGlobe
-              body={selectedBody}
-              pins={globePins}
-              selectedPinId={selectedTarget?.id || null}
-              onSelectPin={handleSelectPin}
-            />
+            <PlanetGlobe body={selectedBody} pins={globePins} selectedPinId={selectedTarget?.id || null} onSelectPin={handleSelectPin} />
           </div>
 
           <div className="lg:col-span-5 flex flex-col gap-4">
-            <div className="glass-card rounded-[28px] p-5 flex-1 flex flex-col">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-cyan-400" />
-                10 {selectedBody.toUpperCase()} Base Candidates
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[260px] overflow-y-auto pr-1 mb-4">
-                {bodyTargets.map((site) => {
-                  const active = selectedTarget?.id === site.id;
-                  return (
-                    <button
-                      key={site.id}
-                      onClick={() => setSelectedTarget(site)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                        active
-                          ? "bg-cyan-300/15 border-cyan-200/60 text-white shadow-[0_0_24px_-6px_rgba(103,232,249,0.6)]"
-                          : "bg-white/[0.03] border-white/10 text-slate-300 hover:border-white/30 hover:bg-white/[0.06]"
-                      }`}
-                    >
-                      <div className="text-xs font-semibold truncate">{site.name}</div>
-                      <div className="text-[10px] font-mono text-slate-400">
-                        {site.lat.toFixed(1)}°, {site.lon.toFixed(1)}° • {site.elevation_m}m
-                      </div>
-                    </button>
-                  );
-                })}
+            <div className="card p-4 flex-1 flex flex-col">
+              <h2 className="text-sm font-semibold mb-1">Candidate sites on {worldName}</h2>
+              <p className="text-xs muted mb-3">Click one to see its main engineering problem.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[260px] overflow-y-auto pr-1 mb-4" data-tour="candidates">
+                {bodyTargets.map((site) => (
+                  <button key={site.id} type="button" onClick={() => setSelectedTarget(site)} className="row" aria-pressed={selectedTarget?.id === site.id}>
+                    <div className="text-xs font-semibold truncate">{site.name}</div>
+                    <div className="text-[11px] font-mono muted">{site.lat.toFixed(1)}°, {site.lon.toFixed(1)}° · {site.elevation_m} m</div>
+                  </button>
+                ))}
+                {!bodyTargets.length && !backendError && <p className="text-xs muted col-span-2">Loading sites…</p>}
               </div>
 
               {selectedTarget ? (
-                <div className="mt-auto glass-chip rounded-2xl p-4">
+                <div className="mt-auto card-solid p-4" data-tour="selected">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono text-cyan-400">SELECTED BASE SITE</span>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {selectedTarget.gravity_m_s2} m/s² | {selectedTarget.pressure_bar} bar
-                    </span>
+                    <span className="text-[11px] muted">Selected site</span>
+                    <span className="text-[11px] font-mono muted">{selectedTarget.gravity_m_s2} m/s² · {selectedTarget.pressure_bar} bar</span>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-1">{selectedTarget.name}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                    {selectedTarget.primary_challenge}
-                  </p>
-
-                  <button
-                    onClick={handleRunAiSearch}
-                    disabled={isSearching}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-300 to-sky-400 hover:from-cyan-200 hover:to-sky-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-[0_10px_30px_-10px_rgba(103,232,249,0.7)] cursor-pointer transition disabled:opacity-70"
-                  >
-                    {isSearching ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Scanning 60 Earth Sites Across 4 Agencies...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="w-4 h-4" />
-                        Search 60 Earth Sites with Conformal AI
-                      </>
-                    )}
+                  <h3 className="text-base font-semibold mb-1">{selectedTarget.name}</h3>
+                  <p className="text-xs muted leading-relaxed mb-4">{selectedTarget.primary_challenge}</p>
+                  <button type="button" onClick={handleRunAiSearch} disabled={isSearching} className="btn btn-primary w-full justify-center">
+                    {isSearching ? (<><Loader2 className="w-4 h-4 animate-spin" /> Comparing 60 Earth sites…</>) : (<><Search className="w-4 h-4" /> Find Earth sites like this one</>)}
                   </button>
                 </div>
               ) : (
-                <div className="mt-auto border border-dashed border-white/15 rounded-2xl p-6 text-center text-xs text-slate-400">
-                  Click a pin on the {selectedBody} globe, or pick from the list above, to inspect it.
-                </div>
+                <div className="mt-auto border border-dashed line rounded-2xl p-6 text-center text-xs muted">Select a site on the globe or in the list to continue.</div>
               )}
             </div>
           </div>
@@ -243,20 +177,15 @@ export default function Home() {
       )}
 
       {selectedBody && matchResult && !simMatch && (
-        <AnalyticsView
-          data={matchResult}
-          onBackToGlobe={() => setMatchResult(null)}
-          onLaunchSimulator={(m) => setSimMatch(m)}
-        />
+        <AnalyticsView data={matchResult} onBackToGlobe={() => setMatchResult(null)} onLaunchSimulator={(m) => setSimMatch(m)} />
       )}
 
       {selectedBody && matchResult && simMatch && (
-        <DualSimulator
-          matchData={matchResult}
-          selectedMatch={simMatch}
-          onBack={() => setSimMatch(null)}
-        />
+        <DualSimulator matchData={matchResult} selectedMatch={simMatch} onBack={() => setSimMatch(null)} />
       )}
+
+      <HelpButton onClick={() => setTour(true)} />
+      <Tour steps={TOUR} open={tour} onClose={() => setTour(false)} />
     </main>
   );
 }

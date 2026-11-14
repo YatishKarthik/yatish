@@ -297,12 +297,12 @@ export default function PlanetGlobe({
   return (
     <div className="w-full h-full min-h-[380px] relative">
       {activePin && (
-        <div className="absolute bottom-3 right-3 z-10 glass-chip p-3 text-xs font-mono pointer-events-none max-w-[280px]">
+        <div className="absolute bottom-3 right-3 z-10 on-canvas p-3 text-xs font-mono pointer-events-none max-w-[280px]">
           <div className="font-semibold text-white truncate">
             {activePin.rank ? <span className="text-cyan-300 mr-1.5">#{activePin.rank}</span> : null}
             {activePin.name}
           </div>
-          <div className="text-[10px] text-slate-300/80 mt-0.5">
+          <div className="text-[10px] opacity-80 mt-0.5">
             {activePin.lat.toFixed(2)}°, {activePin.lon.toFixed(2)}°
           </div>
           {activePin.subtitle && <div className="text-[10px] text-emerald-300 mt-0.5">{activePin.subtitle}</div>}
