@@ -1,0 +1,495 @@
+{
+ "earth_sites": 60,
+ "negative_controls_without_vegetation_rule": {
+  "median_rank": 34.0,
+  "share_in_bottom_half": 0.581,
+  "best_rank_seen": 5
+ },
+ "negative_controls": {
+  "count": 8,
+  "median_rank": 56.5,
+  "share_in_bottom_half": 0.906,
+  "best_rank_seen": 6
+ },
+ "benchmarks": {
+  "count": 12,
+  "median_rank": 23.0,
+  "share_in_top_half": 0.662
+ },
+ "weight_sensitivity": {
+  "perturbation": "each pillar weight x0.8 and x1.2, renormalised",
+  "mean_top5_kept": 4.15,
+  "min_top5_kept": 3
+ },
+ "ensemble_calibration": {
+  "target": 0.9,
+  "coverage_per_scenario": [
+   0.79,
+   0.86,
+   0.86
+  ],
+  "calibration_sites": 14
+ },
+ "per_target": [
+  {
+   "target": "moon_shackleton_rim",
+   "name": "Shackleton Crater Rim",
+   "body": "moon",
+   "top3": [
+    "McMurdo Dry Valleys (Antarctica)",
+    "Mount Etna Upper Ash Slopes (Italy)",
+    "Tabernas Arid Badlands (Spain)"
+   ],
+   "control_ranks": [
+    30,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 30,
+   "benchmark_median_rank": 16.5,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "moon_malapert_massif",
+   "name": "Malapert Massif Peak",
+   "body": "moon",
+   "top3": [
+    "McMurdo Dry Valleys (Antarctica)",
+    "Badwater Basin Evaporite Pan (Death Valley, USA)",
+    "Craters of the Moon Lava Tubes (Idaho, USA)"
+   ],
+   "control_ranks": [
+    36,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 36,
+   "benchmark_median_rank": 15.0,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "moon_connecting_ridge",
+   "name": "Connecting Ridge (Shackleton - de Gerlache)",
+   "body": "moon",
+   "top3": [
+    "Atacama Yungay Hyper-Arid Core (Chile)",
+    "Craters of the Moon Lava Tubes (Idaho, USA)",
+    "Nyamulagira Fresh Basalt Flows (DRC)"
+   ],
+   "control_ranks": [
+    36,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 36,
+   "benchmark_median_rank": 15.0,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "moon_faustini_rim",
+   "name": "Faustini Crater Rim A",
+   "body": "moon",
+   "top3": [
+    "McMurdo Dry Valleys (Antarctica)",
+    "Mount Etna Upper Ash Slopes (Italy)",
+    "Al Wahbah Maar Crater (Saudi Arabia)"
+   ],
+   "control_ranks": [
+    29,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 29,
+   "benchmark_median_rank": 17.5,
+   "top5_kept_under_weight_changes": 3
+  },
+  {
+   "target": "moon_cabeus_psr",
+   "name": "Cabeus Crater PSR Floor",
+   "body": "moon",
+   "top3": [
+    "Craters of the Moon Lava Tubes (Idaho, USA)",
+    "Atacama Yungay Hyper-Arid Core (Chile)",
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)"
+   ],
+   "control_ranks": [
+    33,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 33,
+   "benchmark_median_rank": 13.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "moon_aristarchus_plateau",
+   "name": "Aristarchus Plateau (Vallis Schr\u00f6teri)",
+   "body": "moon",
+   "top3": [
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
+    "Pisgah Crater & Lava Field (California, USA)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
+   ],
+   "control_ranks": [
+    9,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 9,
+   "benchmark_median_rank": 25.5,
+   "top5_kept_under_weight_changes": 3
+  },
+  {
+   "target": "moon_marius_hills",
+   "name": "Marius Hills Lava Skylight",
+   "body": "moon",
+   "top3": [
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
+    "Pisgah Crater & Lava Field (California, USA)",
+    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)"
+   ],
+   "control_ranks": [
+    12,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 12,
+   "benchmark_median_rank": 25.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "moon_schrodinger_basin",
+   "name": "Schr\u00f6dinger Peak-Ring Basin",
+   "body": "moon",
+   "top3": [
+    "Bardenas Reales Clay Badlands (Spain)",
+    "Dasht-e Lut Hyper-Arid Yardangs (Iran)",
+    "Pisgah Crater & Lava Field (California, USA)"
+   ],
+   "control_ranks": [
+    18,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 18,
+   "benchmark_median_rank": 26.5,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "moon_peary_rim",
+   "name": "Peary Crater North Pole Rim",
+   "body": "moon",
+   "top3": [
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
+    "Aouelloul Impact Crater (Mauritania)"
+   ],
+   "control_ranks": [
+    16,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 16,
+   "benchmark_median_rank": 26.0,
+   "top5_kept_under_weight_changes": 3
+  },
+  {
+   "target": "moon_von_karman",
+   "name": "Von K\u00e1rm\u00e1n Crater (South Pole-Aitken)",
+   "body": "moon",
+   "top3": [
+    "Dasht-e Lut Hyper-Arid Yardangs (Iran)",
+    "Pisgah Crater & Lava Field (California, USA)",
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)"
+   ],
+   "control_ranks": [
+    9,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 9,
+   "benchmark_median_rank": 26.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_jezero_crater",
+   "name": "Jezero Crater Delta",
+   "body": "mars",
+   "top3": [
+    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)",
+    "Bardenas Reales Clay Badlands (Spain)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
+   ],
+   "control_ranks": [
+    17,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 17,
+   "benchmark_median_rank": 26.5,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_arcadia_planitia",
+   "name": "Arcadia Planitia Ice Plains",
+   "body": "mars",
+   "top3": [
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
+    "Aouelloul Impact Crater (Mauritania)",
+    "Bardenas Reales Clay Badlands (Spain)"
+   ],
+   "control_ranks": [
+    13,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 13,
+   "benchmark_median_rank": 25.5,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "mars_gale_crater",
+   "name": "Gale Crater (Mount Sharp Slopes)",
+   "body": "mars",
+   "top3": [
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
+   ],
+   "control_ranks": [
+    15,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 15,
+   "benchmark_median_rank": 24.5,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_oxia_planum",
+   "name": "Oxia Planum Clay Basin",
+   "body": "mars",
+   "top3": [
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Makgadikgadi Salt Pan (Botswana)"
+   ],
+   "control_ranks": [
+    14,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 14,
+   "benchmark_median_rank": 26.5,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "mars_mawrth_vallis",
+   "name": "Mawrth Vallis Outflow Channel",
+   "body": "mars",
+   "top3": [
+    "Atacama Yungay Hyper-Arid Core (Chile)",
+    "Craters of the Moon Lava Tubes (Idaho, USA)",
+    "Roter Kamm Impact Crater (Namibia)"
+   ],
+   "control_ranks": [
+    32,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 32,
+   "benchmark_median_rank": 15.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_hellas_planitia",
+   "name": "Hellas Planitia Deep Basin",
+   "body": "mars",
+   "top3": [
+    "Pisgah Crater & Lava Field (California, USA)",
+    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
+    "Roter Kamm Impact Crater (Namibia)"
+   ],
+   "control_ranks": [
+    25,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 25,
+   "benchmark_median_rank": 23.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_utopia_planitia",
+   "name": "Utopia Planitia Scalloped Ice",
+   "body": "mars",
+   "top3": [
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
+   ],
+   "control_ranks": [
+    15,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 15,
+   "benchmark_median_rank": 27.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_melas_chasma",
+   "name": "Valles Marineris (Melas Chasma)",
+   "body": "mars",
+   "top3": [
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
+    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)"
+   ],
+   "control_ranks": [
+    17,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 17,
+   "benchmark_median_rank": 24.5,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "mars_olympus_lava_tubes",
+   "name": "Arsia / Tharsis Basalt Lava Tubes",
+   "body": "mars",
+   "top3": [
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Craters of the Moon Lava Tubes (Idaho, USA)",
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)"
+   ],
+   "control_ranks": [
+    6,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 6,
+   "benchmark_median_rank": 27.0,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "mars_phoenix_polar",
+   "name": "Vastitas Borealis (North Polar Plains)",
+   "body": "mars",
+   "top3": [
+    "McMurdo Dry Valleys (Antarctica)",
+    "Mount Etna Upper Ash Slopes (Italy)",
+    "Atacama Yungay Hyper-Arid Core (Chile)"
+   ],
+   "control_ranks": [
+    35,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 35,
+   "benchmark_median_rank": 17.5,
+   "top5_kept_under_weight_changes": 4
+  }
+ ]
+}

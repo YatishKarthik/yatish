@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Play, Search } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
@@ -8,11 +8,21 @@ import { Tabs, Status, Bar, Kpi, similarityWord, PCT } from "@/components/ui";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 
-/* ---------- data shapes (unchanged API) ---------- */
+/* ---------- data shapes ---------- */
+export type DataStatus = "measured" | "derived" | "modelled" | "typical" | "procedural" | "unknown";
+const STATUS_INFO: Record<DataStatus, { word: string; level: "good" | "warn" | "bad"; what: string }> = {
+  measured: { word: "Measured", level: "good", what: "read directly from a satellite or climate product" },
+  derived: { word: "Derived", level: "good", what: "computed from measured elevation data" },
+  modelled: { word: "Modelled", level: "warn", what: "produced by a simple physical model" },
+  typical: { word: "Typical value", level: "warn", what: "a representative value for this kind of site, not measured here" },
+  procedural: { word: "Placeholder", level: "bad", what: "no data covered this site; a shape model stands in" },
+  unknown: { word: "Unknown", level: "bad", what: "source not recorded" },
+};
+function SourceTag({ s }: { s?: DataStatus }) { const k = STATUS_INFO[s ?? "unknown"]; return <span title={k.what}><Status level={k.level}>{k.word}</Status></span>; }
 export interface ParamSim {
   label: string; unit: string; pillar: string; similarity: number; target_val: number; earth_val: number;
   earth_agency?: string; earth_instrument?: string; space_agency?: string; space_instrument?: string;
-  status?: "measured" | "derived" | "calibrated";
+  earth_status?: DataStatus; space_status?: DataStatus; status?: DataStatus;
 }
 export interface MatrixRow { test: string; scenario: "rover" | "landing" | "mining"; status: "REPRESENTATIVE" | "PARTIAL" | "NOT_REPRESENTATIVE"; confidence: number; reason: string }
 export interface BestPerTestRow { test: string; scenario: "rover" | "landing" | "mining"; best_site_id: string; best_site_name: string; rank: number; status: MatrixRow["status"]; confidence: number; reason: string }
@@ -23,6 +33,7 @@ export interface EarthMatch {
   parameter_similarities: Record<string, ParamSim>; representativeness_matrix: MatrixRow[];
   scenarios: Record<string, { status: string; score: number; uncertainty: number; conformal_interval: [number, number]; note: string }>;
   diurnal_sol_curve?: number[]; heightmap_url: string; radar_url: string;
+  similarity_before_vegetation_rule?: number; vegetation_gate?: number; ndvi?: number; water_fraction?: number;
 }
 export interface MatchPayload {
   search_time_ms: number; earth_sites_scanned: number; overall_best_id?: string; best_per_test?: BestPerTestRow[];
@@ -33,7 +44,7 @@ export interface MatchPayload {
 /* ---------- plain-language dictionaries ---------- */
 const PILLARS: { key: keyof EarthMatch["pillar_scores"]; label: string; what: string; weight: number }[] = [
   { key: "topo", label: "Terrain shape", what: "How steep and how rough the ground is, from elevation maps.", weight: 0.30 },
-  { key: "radar", label: "Surface roughness (radar)", what: "How rocky the surface looks to radar: boulders, blocks and texture.", weight: 0.30 },
+  { key: "radar", label: "Surface texture", what: "How broken and blocky the ground is, measured as texture in the elevation grid.", weight: 0.30 },
   { key: "mineral", label: "Rock and soil", what: "What the ground is made of and how bare it is, from satellite colour bands.", weight: 0.25 },
   { key: "thermal", label: "Day-night heat", what: "How hot and cold it gets and how big the daily swing is.", weight: 0.15 },
 ];
@@ -43,9 +54,9 @@ const PARAM_HELP: Record<string, { name: string; what: string }> = {
   slope_p90: { name: "Steepest common slope", what: "The slope that only 10% of the area is steeper than. Shows the worst patches a rover meets." },
   tri_ruggedness: { name: "Ruggedness", what: "How much the height jumps between neighbouring points. High means lumpy, broken ground." },
   concavity: { name: "Pits and craters", what: "Whether the ground tends to form bowls (craters, pits) or domes." },
-  sar_backscatter: { name: "Radar brightness", what: "How strongly radar bounces back. Rough, rocky ground is bright; smooth sand is dark." },
-  sar_entropy: { name: "Radar texture", what: "How jumbled the radar image is. Boulder fields score high." },
-  sar_contrast: { name: "Radar contrast", what: "How sharply bright and dark patches alternate. Picks out blocks and ridges." },
+  sar_backscatter: { name: "Texture roughness", what: "A single roughness index from height spread and texture contrast. Higher means rougher, blockier ground." },
+  sar_entropy: { name: "Texture variety", what: "How jumbled the slope pattern is. Broken, cratered ground scores high; smooth plains score low." },
+  sar_contrast: { name: "Texture contrast", what: "How sharply steep and flat patches alternate. Picks out ridges, scarps and crater walls." },
   bareness_index: { name: "Bare ground", what: "1 means no plants at all; lower values mean vegetation, which the Moon and Mars do not have." },
   iron_oxide_ratio: { name: "Iron oxide (rust)", what: "How red and iron-rich the surface is. Mars is high; basalt and anorthosite are low." },
   clay_hydroxyl_ratio: { name: "Clay content", what: "Signs of clay minerals formed by water. Important for drilling and for Mars delta sites." },
@@ -57,7 +68,7 @@ const PARAM_HELP: Record<string, { name: string; what: string }> = {
 
 const TEST_HELP: Record<string, { ask: string; why: string }> = {
   "Slope Climbing & Wheel Traction": { ask: "Can a rover climb and grip here?", why: "Depends on slopes and ruggedness. Gravity still differs, so grip on Earth is always higher." },
-  "Radar / Darkness Boulder Navigation": { ask: "Can a rover find its way between boulders in the dark?", why: "Depends on radar roughness matching. Plants confuse radar, so green sites fail this." },
+  "Radar / Darkness Boulder Navigation": { ask: "Can a rover find its way across broken ground?", why: "Depends on surface texture matching. Plant cover hides the rocks, so green sites fail this." },
   "Lander Touchdown Tilt & Stability": { ask: "Will a lander stay upright when it touches down?", why: "Depends on slope spread and surface roughness around the pad." },
   "Thruster Plume & Dust Ejecta": { ask: "What does the engine blast do to the ground?", why: "Earth's air damps the plume. In near-vacuum, dust flies far and fast. Earth can rarely stand in for this." },
   "Rock / Ice Drill Bit Hardness": { ask: "Does the drill bit meet the same kind of rock?", why: "Depends on the mineral match. Wet soil never behaves like dry regolith." },
@@ -68,6 +79,45 @@ const STATUS_WORD: Record<MatrixRow["status"], { word: string; level: "good" | "
   PARTIAL: { word: "Partly Useful", level: "warn" },
   NOT_REPRESENTATIVE: { word: "Not Useful For This", level: "bad" },
 };
+
+function DataNote({ m, world }: { m: EarthMatch; world: string }) {
+  const p = m.parameter_similarities;
+  const terrainE = p.slope_mean?.earth_status, terrainT = p.slope_mean?.space_status, comp = p.bareness_index?.earth_status, temp = p.temp_max_c?.earth_status;
+  const bits: string[] = [];
+  bits.push(terrainE === "measured" && terrainT === "measured" ? "Terrain for both sites is measured" : terrainT !== "measured" ? `Terrain for ${world} is a placeholder shape model` : "Terrain for the Earth site is a placeholder");
+  bits.push(comp === "measured" ? "Earth surface composition is measured by Sentinel-2" : "Earth surface composition is a typical value");
+  bits.push(temp === "measured" ? "Earth temperatures are NASA POWER climatology" : "Earth temperatures are typical values");
+  bits.push(`${world === "the Moon" ? "Moon" : "Mars"} composition and temperatures are typical published values`);
+  return <p className="text-xs muted leading-relaxed border-l-2 pl-3" style={{ borderColor: "var(--accent)" }}><b style={{ color: "var(--text)" }}>Where the data comes from.</b> {bits.join(". ")}. Each value&apos;s source is tagged in the Measurements tab.</p>;
+}
+
+interface Validation {
+  earth_sites: number;
+  negative_controls: { count: number; median_rank: number; share_in_bottom_half: number; best_rank_seen: number };
+  negative_controls_without_vegetation_rule?: { median_rank: number; share_in_bottom_half: number; best_rank_seen: number };
+  benchmarks: { count: number; median_rank: number; share_in_top_half: number };
+  weight_sensitivity: { mean_top5_kept: number; min_top5_kept: number };
+  ensemble_calibration: { coverage_per_scenario: number[]; calibration_sites: number };
+}
+
+function Evidence() {
+  const [v, setV] = useState<Validation | null>(null);
+  useEffect(() => { fetch("http://127.0.0.1:8000/api/validation").then((r) => (r.ok ? r.json() : null)).then(setV).catch(() => setV(null)); }, []);
+  if (!v) return null;
+  const nc = v.negative_controls, raw = v.negative_controls_without_vegetation_rule;
+  return (
+    <div className="card-solid p-3">
+      <div className="font-semibold mb-1">Does the score mean anything? Checks across all 20 targets</div>
+      <ul className="flex flex-col gap-1.5 mt-2">
+        <li><b>Unsuitable control sites</b> (rainforest, wetland, farmland, polders): median rank {nc.median_rank} of {v.earth_sites}, {Math.round(nc.share_in_bottom_half * 100)}% in the bottom half{raw ? `. Without the bare-ground rule: median ${raw.median_rank}, ${Math.round(raw.share_in_bottom_half * 100)}% in the bottom half` : ""}. Best rank any control reached: {nc.best_rank_seen}.</li>
+        <li><b>Established analog sites</b> used by space agencies: median rank {v.benchmarks.median_rank}, {Math.round(v.benchmarks.share_in_top_half * 100)}% in the top half. Each benchmark is an analog for particular targets, not all of them, so a middling average is expected.</li>
+        <li><b>Weight sensitivity</b>: moving any one group weight by ±20% keeps on average {v.weight_sensitivity.mean_top5_kept} of the top 5 (never fewer than {v.weight_sensitivity.min_top5_kept}).</li>
+        <li><b>Uncertainty calibration</b>: on {v.ensemble_calibration.calibration_sites} held-out Earth sites the 90% band contained the true value {v.ensemble_calibration.coverage_per_scenario.map((c) => `${Math.round(c * 100)}%`).join(", ")} of the time for the rover, landing and mining scenarios.</li>
+      </ul>
+      <p className="muted mt-2">Reproduce with <code className="font-mono">python data-pipeline/03_validate.py</code>.</p>
+    </div>
+  );
+}
 
 type View = "summary" | "tests" | "best" | "day" | "measure" | "expert";
 
@@ -195,6 +245,10 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
             <div className="pt-4 flex-1 overflow-y-auto" key={view}>
               {view === "summary" && (
                 <div className="flex flex-col gap-4 rise" data-tour="summary">
+                  <DataNote m={m} world={world} />
+                  {m.vegetation_gate !== undefined && m.vegetation_gate < 1 && (
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--warn)" }}>The bare-ground rule cut this site&apos;s score{m.vegetation_gate === 0 ? " to zero" : ` to ${Math.round(m.vegetation_gate * 100)}%`}: Sentinel-2 sees {m.ndvi !== undefined && m.ndvi > 0.2 ? `plant cover (NDVI ${m.ndvi.toFixed(2)})` : ""}{m.ndvi !== undefined && m.ndvi > 0.2 && (m.water_fraction ?? 0) > 0.2 ? " and " : ""}{(m.water_fraction ?? 0) > 0.2 ? `${Math.round((m.water_fraction ?? 0) * 100)}% open water` : ""}. The Moon and Mars have neither. Before the rule it scored {Math.round((m.similarity_before_vegetation_rule ?? 0) * 100)}.</p>
+                  )}
                   <p className="text-[15px] leading-relaxed">
                     <b>{m.name}</b> is <Status level={sw.level}>{sw.word}</Status> to {t.name} overall, with a match score of <b>{Math.round(m.similarity_score * 100)} out of 100</b>.
                     It resembles the destination most in <b>{best.label.toLowerCase()}</b> ({Math.round(m.pillar_scores[best.key] * 100)}) and least in <b>{worst.label.toLowerCase()}</b> ({Math.round(m.pillar_scores[worst.key] * 100)}).
@@ -307,6 +361,10 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                               <span style={{ color: "var(--earth)" }}>Earth {v.earth_val} {v.unit}</span>
                               <span style={{ color: "var(--space)" }}>{world} {v.target_val} {v.unit}</span>
                             </div>
+                            <div className="flex flex-wrap justify-between items-center gap-2 mt-1.5 text-[11px]">
+                              <span className="flex items-center gap-1.5"><SourceTag s={v.earth_status} /><span className="faint truncate max-w-[220px]" title={v.earth_instrument}>{v.earth_instrument}</span></span>
+                              <span className="flex items-center gap-1.5"><span className="faint truncate max-w-[220px]" title={v.space_instrument}>{v.space_instrument}</span><SourceTag s={v.space_status} /></span>
+                            </div>
                           </div>
                         ); })}
                       </div>
@@ -324,6 +382,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                     <Kpi label="90% interval" value={`${m.conformal_90_interval[0].toFixed(2)}–${m.conformal_90_interval[1].toFixed(2)}`} sub="Conformal band: 9 times in 10 the true value should fall inside it (calibrated on 14 held-out sites)." />
                     <Kpi label="Search time" value={`${data.search_time_ms} ms`} sub={`Time to compare all ${data.earth_sites_scanned} Earth sites on the server.`} />
                   </div>
+                  <Evidence />
                   <div className="card-solid p-3">
                     <div className="font-semibold mb-1">Scenario model</div>
                     <p className="muted mb-2">Ensemble predictions of how well a rover, landing or mining test would transfer (0 to 1). They inform the Tests tab and the uncertainty; they do not change the ranking.</p>
@@ -334,18 +393,18 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                   </div>
                   <div className="card-solid p-3">
                     <div className="font-semibold mb-1">Group weights</div>
-                    <p className="muted mb-2">Terrain and radar carry the most weight because they decide whether vehicles can move and land at all; temperatures carry the least because Earth can never match them in absolute terms.</p>
+                    <p className="muted mb-2">Terrain and surface texture carry the most weight because they decide whether vehicles can move and land at all; temperatures carry the least because Earth can never match them in absolute terms. After weighting, a bare-ground rule multiplies the score: full at Sentinel-2 NDVI 0.20 or less and up to 20% open water, falling to zero at NDVI 0.30 or 50% water, because the Moon and Mars have neither plants nor open water.</p>
                     <div className="flex flex-wrap gap-3 font-mono">{PILLARS.map((p) => <span key={p.key}>{p.label} {p.weight.toFixed(2)}</span>)}</div>
                   </div>
                   <div className="card-solid p-3">
                     <div className="font-semibold mb-1">Data sources per parameter</div>
-                    <p className="muted mb-2">Which instrument each value came from on each world. &quot;Measured&quot; is read directly from the sensor, &quot;derived&quot; is computed from sensor data, &quot;calibrated&quot; is adjusted to a common scale.</p>
+                    <p className="muted mb-2">Where each value came from for these two sites. {(Object.keys(STATUS_INFO) as DataStatus[]).filter((k) => k !== "unknown").map((k) => `${STATUS_INFO[k].word}: ${STATUS_INFO[k].what}`).join(". ")}.</p>
                     <table className="w-full text-[11px]">
-                      <thead><tr className="muted text-left"><th className="font-normal pb-1">Parameter</th><th className="font-normal">Earth</th><th className="font-normal">{world}</th><th className="font-normal">Status</th></tr></thead>
-                      <tbody>{params.map(([k, v]) => <tr key={k} className="border-t line"><td className="py-1 pr-2">{PARAM_HELP[k]?.name ?? v.label}</td><td className="pr-2">{v.earth_agency}: {v.earth_instrument}</td><td className="pr-2">{v.space_agency}: {v.space_instrument}</td><td>{v.status}</td></tr>)}</tbody>
+                      <thead><tr className="muted text-left"><th className="font-normal pb-1">Parameter</th><th className="font-normal">Earth</th><th className="font-normal">{world}</th></tr></thead>
+                      <tbody>{params.map(([k, v]) => <tr key={k} className="border-t line"><td className="py-1 pr-2">{PARAM_HELP[k]?.name ?? v.label}</td><td className="pr-2">{v.earth_instrument} <SourceTag s={v.earth_status} /></td><td className="pr-2">{v.space_instrument} <SourceTag s={v.space_status} /></td></tr>)}</tbody>
                     </table>
                   </div>
-                  <p className="muted leading-relaxed">Limits worth stating: the ensemble is trained on labels that are themselves formulas of the input features, so its uncertainty is epistemic only; the calibration set is 14 sites, so the 90% guarantee is coarse; Moon and Mars radar and thermal values come from different instruments (S-band Mini-RF, Diviner, THEMIS) than the Earth ones (C-band RADARSAT, MODIS), and are compared after standardisation.</p>
+                  <p className="muted leading-relaxed">Limits worth stating. Terrain is measured for every site that has a product (Copernicus GLO-30 on Earth, LRO LOLA altimetry on the Moon, MRO CTX stereo models on Mars). Surface texture is computed from that terrain, not from radar. Surface composition is measured by Sentinel-2 on Earth but uses typical rock-class values on the Moon and Mars. Earth temperatures are NASA POWER 2 m air climatology; Moon and Mars temperatures are published typical surface ranges, so the two are compared by pattern, not by value. The ensemble is trained on labels that are formulas of the features, so its uncertainty is epistemic only, and the calibration set is 14 sites, so the 90% band is coarse.</p>
                 </div>
               )}
             </div>

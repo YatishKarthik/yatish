@@ -297,15 +297,15 @@ def build_registry():
         ("earth_makgadikgadi_pan", "Makgadikgadi Salt Pan (Botswana)", "novel_candidate", -20.71, 24.95, 900, 5.0, 39.0, "flat_plain", "evaporite_sulfate", 0.0, "Vast desiccated paleolake evaporite crust modeling Jezero drying."),
         ("earth_lake_natron", "Lake Natron Hyper-Alkaline Basin (Tanzania)", "novel_candidate", -2.42, 36.01, 610, 18.0, 41.0, "flat_plain", "clay_carbonate", 0.0, "Carbonate-rich volcanic evaporite basin matching Mars carbonates."),
 
-        # --- NEGATIVE CONTROLS (8 Non-Analog Biomes to test AI rejection!) ---
-        ("earth_amazon_rainforest", "Amazon Basin Rainforest (Manaus, Brazil)", "negative_control", -3.10, -60.02, 80, 22.0, 33.0, "flat_plain", "biomass_wet", 0.0, "Dense tropical canopy & saturated humidity. AI must reject."),
-        ("earth_everglades_wetland", "Florida Everglades Wetlands (USA)", "negative_control", 25.75, -80.80, 2, 16.0, 33.0, "flat_plain", "biomass_wet", 0.0, "Flooded sawgrass marsh. AI must reject."),
-        ("earth_congo_basin", "Congo Basin Tropical Forest (DRC)", "negative_control", 0.50, 22.00, 350, 21.0, 32.0, "flat_plain", "biomass_wet", 0.0, "Continuous equatorial rainforest canopy. AI must reject."),
-        ("earth_borneo_peat_swamp", "Borneo Tropical Peatland (Indonesia)", "negative_control", -2.30, 113.90, 25, 23.0, 34.0, "flat_plain", "biomass_wet", 0.0, "Waterlogged organic peat swamp. AI must reject."),
-        ("earth_iowa_cropland", "Iowa Irrigated Farmland (USA)", "negative_control", 42.03, -93.62, 290, -12.0, 30.0, "flat_plain", "biomass_wet", 0.1, "Dense agricultural vegetation & wet loam soil. AI must reject."),
-        ("earth_sundarbans_delta", "Sundarbans Mangrove Delta (Bangladesh)", "negative_control", 22.00, 89.50, 3, 15.0, 35.0, "flat_plain", "biomass_wet", 0.0, "Tidal mangrove swamp & muddy rivers. AI must reject."),
-        ("earth_pantanal_wetland", "Pantanal Flooded Plain (Brazil)", "negative_control", -17.70, -56.90, 110, 18.0, 36.0, "flat_plain", "biomass_wet", 0.0, "World's largest tropical wetland. AI must reject."),
-        ("earth_dutch_polders", "Dutch Agricultural Polders (Netherlands)", "negative_control", 52.50, 5.50, -3, 0.0, 23.0, "flat_plain", "biomass_wet", 0.05, "Managed green grasslands below sea level. AI must reject.")
+        # --- NEGATIVE CONTROLS (8 non-analog biomes that a useful score must rank low) ---
+        ("earth_amazon_rainforest", "Amazon Basin Rainforest (Manaus, Brazil)", "negative_control", -2.95, -59.95, 80, 22.0, 33.0, "flat_plain", "biomass_wet", 0.0, "Dense tropical canopy & saturated humidity. Control site: should rank near the bottom."),
+        ("earth_everglades_wetland", "Florida Everglades Wetlands (USA)", "negative_control", 25.75, -80.80, 2, 16.0, 33.0, "flat_plain", "biomass_wet", 0.0, "Flooded sawgrass marsh. Control site: should rank near the bottom."),
+        ("earth_congo_basin", "Congo Basin Tropical Forest (DRC)", "negative_control", 0.50, 22.00, 350, 21.0, 32.0, "flat_plain", "biomass_wet", 0.0, "Continuous equatorial rainforest canopy. Control site: should rank near the bottom."),
+        ("earth_borneo_peat_swamp", "Borneo Tropical Peatland (Indonesia)", "negative_control", -2.30, 113.90, 25, 23.0, 34.0, "flat_plain", "biomass_wet", 0.0, "Waterlogged organic peat swamp. Control site: should rank near the bottom."),
+        ("earth_iowa_cropland", "Iowa Irrigated Farmland (USA)", "negative_control", 42.03, -93.62, 290, -12.0, 30.0, "flat_plain", "biomass_wet", 0.1, "Dense agricultural vegetation & wet loam soil. Control site: should rank near the bottom."),
+        ("earth_sundarbans_delta", "Sundarbans Mangrove Delta (Bangladesh)", "negative_control", 22.00, 89.50, 3, 15.0, 35.0, "flat_plain", "biomass_wet", 0.0, "Tidal mangrove swamp & muddy rivers. Control site: should rank near the bottom."),
+        ("earth_pantanal_wetland", "Pantanal Flooded Plain (Brazil)", "negative_control", -17.70, -56.90, 110, 18.0, 36.0, "flat_plain", "biomass_wet", 0.0, "World's largest tropical wetland. Control site: should rank near the bottom."),
+        ("earth_dutch_polders", "Dutch Agricultural Polders (Netherlands)", "negative_control", 52.50, 5.50, -3, 0.0, 23.0, "flat_plain", "biomass_wet", 0.05, "Managed green grasslands below sea level. Control site: should rank near the bottom.")
     ]
 
     earth_analogs = []

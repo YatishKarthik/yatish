@@ -1,22 +1,28 @@
-import io
+"""
+Builds the 14 features per site from the real-data cache (data/real, written by 02_fetch_real_data.py).
+
+Every value carries a status:
+  measured      read directly from an instrument product (Copernicus DEM, LOLA, CTX DTM, Sentinel-2, NASA POWER)
+  derived       computed from measured data (slope and texture statistics from the elevation grid)
+  modelled      produced by a simple physical model (the 24-hour temperature curve)
+  typical       a representative value for the site's rock class or a published temperature range, not measured here
+  procedural    no data product covered the site, so a shape model stands in; never presented as data
+"""
 import json
 import math
 import hashlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
-import requests
-from PIL import Image
 from scipy.ndimage import gaussian_filter, sobel
 from skimage.feature import graycomatrix, graycoprops
 
 ROOT = Path(__file__).resolve().parent.parent
+REAL_DIR = ROOT / "data" / "real"   # written by 02_fetch_real_data.py
 CONFIG_PATH = ROOT / "data" / "config" / "sites.json"
-CACHE_DIR = ROOT / "data" / "raw" / "earth_cache"
 OUT_PROCESSED = ROOT / "data" / "processed"
 OUT_ASSETS = ROOT / "backend" / "static" / "assets"
 
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
 OUT_PROCESSED.mkdir(parents=True, exist_ok=True)
 OUT_ASSETS.mkdir(parents=True, exist_ok=True)
 
@@ -27,65 +33,8 @@ def stable_seed(site_id: str) -> int:
     return int(hashlib.md5(site_id.encode("utf-8")).hexdigest()[:8], 16)
 
 
-def deg2num(lat_deg: float, lon_deg: float, zoom: int) -> tuple[int, int]:
-    lat_rad = math.radians(lat_deg)
-    n = 2.0 ** zoom
-    xtile = int((lon_deg + 180.0) / 360.0 * n)
-    ytile = int((1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n)
-    return xtile, ytile
-
-
-def clean_dem_outliers(elev_m: np.ndarray) -> np.ndarray:
-    """Clamps extreme satellite DEM void spikes and applies gentle Gaussian filter to prevent jagged cliffs."""
-    p_low, p_high = np.percentile(elev_m, [1.5, 98.5])
-    clamped = np.clip(elev_m, p_low, p_high)
-    return gaussian_filter(clamped, sigma=0.92)
-
-
-def fetch_copernicus_glo30_dem(site: dict) -> tuple[np.ndarray, float, float, str]:
-    """
-    Extracts 30m Earth topography strictly from the ESA Copernicus Data Space Ecosystem
-    (Copernicus DEM GLO-30m Open Data).
-    Returns: (normalized_128x128_grid, relief_m, pixel_m, instrument_tag)
-    """
-    site_id = site["id"]
-    lat = float(site["lat"])
-    lon = float(site["lon"])
-    zoom = 12 if abs(lat) > 65 else 13
-
-    tile_width_m = 40075016.686 * math.cos(math.radians(lat)) / (2.0 ** zoom)
-    pixel_m = tile_width_m / GRID_RES
-
-    cache_file = CACHE_DIR / f"{site_id}_glo30_dem.npy"
-    if cache_file.exists():
-        elev_m = clean_dem_outliers(np.load(cache_file))
-        relief_m = float(np.clip(elev_m.max() - elev_m.min(), 8.0, 480.0))
-        norm = (elev_m - elev_m.min()) / (elev_m.max() - elev_m.min() + 1e-8)
-        return norm, relief_m, pixel_m, "ESA Copernicus DEM GLO-30m"
-
-    xtile, ytile = deg2num(lat, lon, zoom)
-    url = f"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{zoom}/{xtile}/{ytile}.png"
-
-    try:
-        resp = requests.get(url, timeout=12)
-        resp.raise_for_status()
-        img = Image.open(io.BytesIO(resp.content)).convert("RGB")
-        img_small = img.resize((GRID_RES, GRID_RES), Image.Resampling.BILINEAR)
-        arr = np.asarray(img_small, dtype=np.float32)
-        elev_raw = (arr[:, :, 0] * 256.0 + arr[:, :, 1] + arr[:, :, 2] / 256.0) - 32768.0
-        np.save(cache_file, elev_raw)
-
-        elev_m = clean_dem_outliers(elev_raw)
-        relief_m = float(np.clip(elev_m.max() - elev_m.min(), 8.0, 480.0))
-        norm = (elev_m - elev_m.min()) / (elev_m.max() - elev_m.min() + 1e-8)
-        return norm, relief_m, pixel_m, "ESA Copernicus DEM GLO-30m"
-    except Exception:
-        norm, relief_m = generate_planetary_mesh(site)
-        return norm, relief_m, 2000.0 / GRID_RES, "ESA Copernicus DEM GLO-30m (Calibrated)"
-
-
 def generate_planetary_mesh(site: dict) -> tuple[np.ndarray, float]:
-    """Generates high-fidelity heightmaps calibrated to NASA LRO LOLA (Moon) and NASA PDS MOLA (Mars)."""
+    """Fallback only: a procedural shape model of the site's landform class, used when no elevation product covers it."""
     site_id = site["id"]
     morph = site.get("morphology", "flat_plain")
     rng = np.random.default_rng(stable_seed(site_id))
@@ -146,8 +95,8 @@ def generate_planetary_mesh(site: dict) -> tuple[np.ndarray, float]:
 
 
 def mineral_values(profile: str, rng: np.random.Generator) -> tuple[float, float, float, float]:
-    """ESA Sentinel-2 MSI (Earth) & NASA PDS CRISM (Mars) mineral spectral proxies."""
-    jitter = lambda s: float(rng.normal(0, s))
+    """Representative surface values for a rock class (used where no Sentinel-2 measurement exists, and for the Moon and Mars)."""
+    jitter = lambda s: 0.0   # class means only; no invented scatter
     if profile == "biomass_wet":
         return (
             float(np.clip(0.03 + jitter(0.015), 0.01, 0.10)),
@@ -230,12 +179,12 @@ def generate_diurnal_sol_curve(tmin: float, tmax: float, body: str) -> list[floa
     return curve
 
 
-def compute_features(site: dict, heightmap: np.ndarray, relief_m: float, pixel_m: float, tmin: float, tmax: float, frost: float, provenance: dict) -> dict:
+def compute_features(site: dict, heightmap: np.ndarray, relief_m: float, pixel_m: float, tmin: float, tmax: float, frost: float, provenance: dict, surface: tuple | None = None, delta: float | None = None) -> dict:
     rng = np.random.default_rng(stable_seed(site["id"]) + 99)
     body = site.get("body", "earth")
     elev_m = heightmap * relief_m
 
-    # Pillar 1: Topography (ESA Copernicus DEM GLO-30 / NASA LRO LOLA)
+    # Pillar 1: Topography, from the elevation grid
     dx = sobel(elev_m, axis=1) / (8.0 * pixel_m)
     dy = sobel(elev_m, axis=0) / (8.0 * pixel_m)
     slope_deg = np.degrees(np.arctan(np.sqrt(dx ** 2 + dy ** 2)))
@@ -245,17 +194,18 @@ def compute_features(site: dict, heightmap: np.ndarray, relief_m: float, pixel_m
     tri = float(np.std(elev_m))
     concavity = float(np.mean(sobel(dx, axis=1) + sobel(dy, axis=0)))
 
-    # Pillar 2: Radar Roughness (CSA RADARSAT-1 / RCM & NASA LRO Mini-RF)
+    # Pillar 2: Surface texture. A grey-level co-occurrence texture of the slope image; a terrain-roughness proxy,
+    # not radar. (The column names keep the sar_ prefix so the API stays stable.)
     grad_norm = ((slope_deg / (slope_deg.max() + 1e-6)) * 255).astype(np.uint8)
     glcm = graycomatrix(grad_norm, distances=[1], angles=[0, np.pi / 4], levels=256, symmetric=True, normed=True)
     sar_entropy = float(-np.sum(glcm * np.log(glcm + 1e-12)))
     sar_contrast = float(graycoprops(glcm, "contrast")[0, 0])
     sar_backscatter = float(np.clip((tri / 160.0) + (sar_contrast / 750.0), 0.05, 0.96))
 
-    # Pillar 3: Minerals & Bareness (ESA Copernicus Sentinel-2 MSI / NASA PDS CRISM)
-    bareness, iron_ratio, clay_ratio, albedo = mineral_values(site.get("mineral_profile", "mare_basalt"), rng)
+    # Pillar 3: Surface composition. Measured Sentinel-2 indices where available, else class-typical values
+    bareness, iron_ratio, clay_ratio, albedo = surface if surface is not None else mineral_values(site.get("mineral_profile", "mare_basalt"), rng)
 
-    # Pillar 4: Thermal Regime & Atmosphere (NASA Earthdata MODIS / JAXA G-Portal / NASA LRO Diviner)
+    # Pillar 4: Temperatures. NASA POWER for Earth; published typical ranges for the Moon and Mars
     pressure = float(site.get("pressure_bar", 1.013))
     gravity = float(site.get("gravity_m_s2", 9.81))
     diurnal_curve = generate_diurnal_sol_curve(tmin, tmax, body)
@@ -286,19 +236,44 @@ def compute_features(site: dict, heightmap: np.ndarray, relief_m: float, pixel_m
         "albedo": round(albedo, 3),
         "temp_min_c": round(tmin, 1),
         "temp_max_c": round(tmax, 1),
-        "temp_delta_c": round(tmax - tmin, 1),
+        "temp_delta_c": round(delta if delta is not None else tmax - tmin, 1),
         "frost_persistence": round(frost, 3),
         "atm_convection_factor": round(pressure / 1.013, 4),
         # 24-Hour Diurnal Sol Thermal Curve
         "diurnal_sol_curve": diurnal_curve,
-        # Explicit Multi-Agency Provenance
+        # Where every group of values came from, with its status
         "provenance": provenance,
     }
 
 
+def load_real(site_id: str) -> dict:
+    f = REAL_DIR / f"{site_id}.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+
+
+def to_heightmap(real: dict) -> tuple[np.ndarray, float] | None:
+    h = real.get("heights_m")
+    if not h:
+        return None
+    elev = np.asarray(h, dtype=np.float64).reshape(GRID_RES, GRID_RES)
+    elev = gaussian_filter(elev, sigma=0.6)   # light smoothing of resampling steps only
+    relief = float(max(elev.max() - elev.min(), 1.0))
+    return (elev - elev.min()) / relief, relief
+
+
+def describe_dem(body: str, dem: dict) -> dict:
+    if body == "earth":
+        return {"agency": "ESA", "instrument": f"Copernicus DEM GLO-30 ({dem.get('product', '')})", "status": "measured"}
+    if body == "moon":
+        return {"agency": "NASA", "instrument": f"LRO LOLA altimeter returns, {dem.get('points', 0)} points gridded ({int(100 * dem.get('cells_with_returns', 0))}% of cells hit)", "status": "measured"}
+    off = dem.get("offset_km", 0)
+    where = "" if off < 1 else f", nearest DTM {off:.0f} km from the nominal site"
+    return {"agency": "NASA / USGS", "instrument": f"MRO CTX stereo DTM {dem.get('product', '')}{where}", "status": "measured"}
+
+
 def main():
     print("=" * 76)
-    print("STRICT MULTI-AGENCY COMPLIANCE PIPELINE (NASA / CSA / ESA / JAXA ONLY)")
+    print("Celestra feature extraction (real-data cache: data/real)")
     print("=" * 76)
 
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -306,85 +281,76 @@ def main():
 
     all_sites = config["targets"] + config["earth_analogs"]
     features_list = []
+    pixel_m = 2000.0 / GRID_RES     # every tile is 2 km across
+    counts = {"dem": 0, "spectra": 0, "climate": 0}
 
     for idx, site in enumerate(all_sites, 1):
         site_id = site["id"]
         body = site.get("body", "earth")
+        real = load_real(site_id)
+        hm = to_heightmap(real)
+        frost = float(site.get("frost", 0.0))
 
-        if body == "earth":
-            heightmap, relief_m, pixel_m, topo_tag = fetch_copernicus_glo30_dem(site)
-            tmin = float(site["temp_min_c"])
-            tmax = float(site["temp_max_c"])
-            frost = float(site.get("frost", 0.0))
-
-            provenance = {
-                "topography": {"agency": "ESA", "instrument": "Copernicus DEM GLO-30m", "status": "measured"},
-                "radar": {"agency": "CSA", "instrument": "RADARSAT-1 Open Archive / RCM", "status": "derived"},
-                "mineral": {"agency": "ESA", "instrument": "Copernicus Sentinel-2 L2A MSI", "status": "measured"},
-                "thermal": {"agency": "NASA / JAXA", "instrument": "NASA Earthdata MODIS LST + JAXA G-Portal", "status": "calibrated"},
-            }
-        elif body == "moon":
-            heightmap, relief_m = generate_planetary_mesh(site)
-            pixel_m = 2000.0 / GRID_RES
-            tmin = float(site["temp_min_c"])
-            tmax = float(site["temp_max_c"])
-            frost = float(site.get("frost", 0.0))
-
-            provenance = {
-                "topography": {"agency": "NASA", "instrument": "LRO LOLA (Laser Altimeter)", "status": "measured"},
-                "radar": {"agency": "NASA", "instrument": "LRO Mini-RF (SAR)", "status": "derived"},
-                "mineral": {"agency": "NASA", "instrument": "LRO LROC / PDS M3", "status": "measured"},
-                "thermal": {"agency": "NASA", "instrument": "LRO Diviner Lunar Radiometer", "status": "measured"},
-            }
+        if hm is not None:
+            heightmap, relief_m = hm
+            topo = describe_dem(body, real["dem"])
+            counts["dem"] += 1
         else:
             heightmap, relief_m = generate_planetary_mesh(site)
-            pixel_m = 2000.0 / GRID_RES
-            tmin = float(site["temp_min_c"])
-            tmax = float(site["temp_max_c"])
-            frost = float(site.get("frost", 0.0))
+            topo = {"agency": "none", "instrument": f"Procedural shape model of a {site.get('morphology', 'plain').replace('_', ' ')} (no elevation product covers this site)", "status": "procedural"}
 
-            provenance = {
-                "topography": {"agency": "NASA", "instrument": "NASA PDS MGS MOLA", "status": "measured"},
-                "radar": {"agency": "NASA", "instrument": "NASA PDS SHARAD (Subsurface)", "status": "derived"},
-                "mineral": {"agency": "NASA", "instrument": "NASA PDS MRO CRISM", "status": "measured"},
-                "thermal": {"agency": "NASA", "instrument": "NASA PDS Odyssey THEMIS", "status": "measured"},
-            }
+        texture = {"agency": topo["agency"], "instrument": "Texture statistics of the slope grid (terrain-roughness proxy, not radar)", "status": "derived" if topo["status"] == "measured" else "procedural"}
 
-        feat = compute_features(site, heightmap, relief_m, pixel_m, tmin, tmax, frost, provenance)
+        surface, delta = None, None
+        spectra, climate = real.get("spectra", {}), real.get("climate", {})
+        water = float(spectra.get("water_fraction", 0.0) or 0.0) if body == "earth" else 0.0
+        if body == "earth" and spectra.get("bareness_index") is not None:
+            surface = (spectra["bareness_index"], spectra["iron_oxide_ratio"], spectra["clay_hydroxyl_ratio"], spectra["albedo"])
+            comp = {"agency": "ESA", "instrument": f"Sentinel-2 L2A {spectra['scene']}, cloud-masked land pixels ({int(100 * spectra.get('clear_fraction', 1))}% of the window clear, {int(100 * water)}% open water)", "status": "measured"}
+            counts["spectra"] += 1
+        elif body == "earth" and "water_fraction" in spectra:
+            _, iron, clay, alb = mineral_values(site.get("mineral_profile", "mare_basalt"), None)
+            surface = (0.0, iron, clay, alb)
+            comp = {"agency": "ESA", "instrument": f"Sentinel-2 L2A {spectra['scene']}: the window is open water, no bare ground", "status": "measured"}
+            counts["spectra"] += 1
+        else:
+            comp = {"agency": "none", "instrument": f"Typical values for {site.get('mineral_profile', 'basalt').replace('_', ' ')} (not measured here)", "status": "typical"}
+
+        if body == "earth" and "temp_max_c" in climate:
+            tmin, tmax, delta = climate["temp_min_c"], climate["temp_max_c"], climate["temp_delta_c"]
+            therm = {"agency": "NASA", "instrument": "NASA POWER climatology (MERRA-2 2 m air temperature)", "status": "measured"}
+            counts["climate"] += 1
+        else:
+            tmin, tmax = float(site["temp_min_c"]), float(site["temp_max_c"])
+            therm = {"agency": "none", "instrument": "Published typical surface-temperature range for this kind of site (not measured here)" if body != "earth" else "Typical range entered by hand (not measured here)", "status": "typical"}
+
+        provenance = {"topography": topo, "radar": texture, "mineral": comp, "thermal": therm,
+                      "curve": {"agency": "none", "instrument": "Sine-based day-night model between the low and high", "status": "modelled"}}
+
+        feat = compute_features(site, heightmap, relief_m, pixel_m, tmin, tmax, frost, provenance, surface, delta)
+        feat["water_fraction"] = round(water, 3)
         features_list.append(feat)
 
-        # Export 3D elevation asset
         with open(OUT_ASSETS / f"{site_id}_dem.json", "w", encoding="utf-8") as f:
             json.dump({
-                "site_id": site_id,
-                "name": site["name"],
-                "body": body,
-                "resolution": GRID_RES,
-                "relief_m": round(relief_m, 1),
-                "data_provenance": provenance,
-                "diurnal_sol_curve": feat["diurnal_sol_curve"],
-                "data": np.round(heightmap.flatten(), 4).tolist(),
+                "site_id": site_id, "name": site["name"], "body": body, "resolution": GRID_RES, "extent_m": 2000,
+                "relief_m": round(relief_m, 1), "data_provenance": provenance,
+                "diurnal_sol_curve": feat["diurnal_sol_curve"], "data": np.round(heightmap.flatten(), 4).tolist(),
             }, f)
 
-        # Export SAR radar matrix
-        sar_matrix = np.clip(sobel(heightmap) * 4.2 + 0.12, 0.0, 1.0)
+        texture_grid = np.clip(sobel(heightmap) * 4.2 + 0.12, 0.0, 1.0)
         with open(OUT_ASSETS / f"{site_id}_sar.json", "w", encoding="utf-8") as f:
-            json.dump({
-                "site_id": site_id,
-                "sar_entropy": feat["sar_entropy"],
-                "sar_source": provenance["radar"]["instrument"],
-                "data": np.round(sar_matrix.flatten(), 4).tolist(),
-            }, f)
+            json.dump({"site_id": site_id, "sar_entropy": feat["sar_entropy"], "sar_source": texture["instrument"],
+                       "data": np.round(texture_grid.flatten(), 4).tolist()}, f)
 
-        print(f"  [{idx:02d}/80] {body.upper():5} | {site_id:27} | Relief: {relief_m:5.0f}m | Topo: {provenance['topography']['agency']} | Therm: {provenance['thermal']['agency']}")
+        print(f"  [{idx:02d}/{len(all_sites)}] {body:5} | {site_id:28} | relief {relief_m:6.0f} m | terrain {topo['status']:10} | surface {comp['status']:8} | temps {therm['status']}")
 
     df = pd.DataFrame(features_list)
     df.to_parquet(OUT_PROCESSED / "tiles.parquet", index=False)
     df.to_csv(OUT_PROCESSED / "tiles.csv", index=False)
-
     print("=" * 76)
-    print("COMPLIANCE VERIFIED! All 80 sites mapped to NASA / CSA / ESA / JAXA.")
-    print(f"• Output Parquet: {OUT_PROCESSED / 'tiles.parquet'}")
+    print(f"Real elevation: {counts['dem']}/{len(all_sites)} sites · Sentinel-2: {counts['spectra']} Earth sites · NASA POWER: {counts['climate']} Earth sites")
+    print(f"Wrote {OUT_PROCESSED / 'tiles.parquet'}")
     print("=" * 76)
 
 

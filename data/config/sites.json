@@ -87,7 +87,7 @@
     },
     {
       "id": "moon_aristarchus_plateau",
-      "name": "Aristarchus Plateau (Vallis Schr\u00f6teri)",
+      "name": "Aristarchus Plateau (Vallis Schröteri)",
       "body": "moon",
       "lat": 23.7,
       "lon": -47.4,
@@ -121,7 +121,7 @@
     },
     {
       "id": "moon_schrodinger_basin",
-      "name": "Schr\u00f6dinger Peak-Ring Basin",
+      "name": "Schrödinger Peak-Ring Basin",
       "body": "moon",
       "lat": -75.0,
       "lon": 132.4,
@@ -155,7 +155,7 @@
     },
     {
       "id": "moon_von_karman",
-      "name": "Von K\u00e1rm\u00e1n Crater (South Pole-Aitken)",
+      "name": "Von Kármán Crater (South Pole-Aitken)",
       "body": "moon",
       "lat": -44.8,
       "lon": 175.9,
@@ -201,7 +201,7 @@
       "morphology": "polygon_plain",
       "mineral_profile": "basalt_ice",
       "frost": 0.92,
-      "primary_challenge": "Flat low-elevation volcanic plains concealing thick water-ice sheets just 1\u20133 m below dust.",
+      "primary_challenge": "Flat low-elevation volcanic plains concealing thick water-ice sheets just 1–3 m below dust.",
       "recommended_hardware_test": "shallow_sheet_ice_mining"
     },
     {
@@ -548,7 +548,7 @@
     },
     {
       "id": "earth_ries_crater",
-      "name": "N\u00f6rdlinger Ries Impact Basin (Germany)",
+      "name": "Nördlinger Ries Impact Basin (Germany)",
       "body": "earth",
       "type": "benchmark",
       "lat": 48.88,
@@ -867,7 +867,7 @@
       "morphology": "lava_pit",
       "mineral_profile": "mare_basalt",
       "frost": 0.0,
-      "geology": "JPL Mars rover wheel-wear testbed in rough 'a'\u0101 basalt lava."
+      "geology": "JPL Mars rover wheel-wear testbed in rough 'a'ā basalt lava."
     },
     {
       "id": "earth_craters_of_the_moon",
@@ -956,7 +956,7 @@
     },
     {
       "id": "earth_kau_volcanic_desert",
-      "name": "Ka'\u016b Volcanic Ash Desert (Hawaii, USA)",
+      "name": "Ka'ū Volcanic Ash Desert (Hawaii, USA)",
       "body": "earth",
       "type": "novel_candidate",
       "lat": 19.36,
@@ -1041,7 +1041,7 @@
     },
     {
       "id": "earth_rio_tinto",
-      "name": "R\u00edo Tinto Iron-Sulfate Basin (Spain)",
+      "name": "Río Tinto Iron-Sulfate Basin (Spain)",
       "body": "earth",
       "type": "benchmark",
       "lat": 37.71,
@@ -1231,8 +1231,8 @@
       "name": "Amazon Basin Rainforest (Manaus, Brazil)",
       "body": "earth",
       "type": "negative_control",
-      "lat": -3.1,
-      "lon": -60.02,
+      "lat": -2.95,
+      "lon": -59.95,
       "elevation_m": 80,
       "gravity_m_s2": 9.81,
       "pressure_bar": 1.013,
@@ -1241,7 +1241,8 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.0,
-      "geology": "Dense tropical canopy & saturated humidity. AI must reject."
+      "geology": "Dense tropical canopy & saturated humidity. Control site: should rank near the bottom.",
+      "note": "Moved from -3.10, -60.02 (central Manaus) to Reserva Ducke, the protected rainforest north of the city, so the control samples forest rather than city."
     },
     {
       "id": "earth_everglades_wetland",
@@ -1258,7 +1259,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.0,
-      "geology": "Flooded sawgrass marsh. AI must reject."
+      "geology": "Flooded sawgrass marsh. Control site: should rank near the bottom."
     },
     {
       "id": "earth_congo_basin",
@@ -1275,7 +1276,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.0,
-      "geology": "Continuous equatorial rainforest canopy. AI must reject."
+      "geology": "Continuous equatorial rainforest canopy. Control site: should rank near the bottom."
     },
     {
       "id": "earth_borneo_peat_swamp",
@@ -1292,7 +1293,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.0,
-      "geology": "Waterlogged organic peat swamp. AI must reject."
+      "geology": "Waterlogged organic peat swamp. Control site: should rank near the bottom."
     },
     {
       "id": "earth_iowa_cropland",
@@ -1309,7 +1310,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.1,
-      "geology": "Dense agricultural vegetation & wet loam soil. AI must reject."
+      "geology": "Dense agricultural vegetation & wet loam soil. Control site: should rank near the bottom."
     },
     {
       "id": "earth_sundarbans_delta",
@@ -1326,7 +1327,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.0,
-      "geology": "Tidal mangrove swamp & muddy rivers. AI must reject."
+      "geology": "Tidal mangrove swamp & muddy rivers. Control site: should rank near the bottom."
     },
     {
       "id": "earth_pantanal_wetland",
@@ -1343,7 +1344,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.0,
-      "geology": "World's largest tropical wetland. AI must reject."
+      "geology": "World's largest tropical wetland. Control site: should rank near the bottom."
     },
     {
       "id": "earth_dutch_polders",
@@ -1360,7 +1361,7 @@
       "morphology": "flat_plain",
       "mineral_profile": "biomass_wet",
       "frost": 0.05,
-      "geology": "Managed green grasslands below sea level. AI must reject."
+      "geology": "Managed green grasslands below sea level. Control site: should rank near the bottom."
     }
   ]
 }

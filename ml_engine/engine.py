@@ -18,92 +18,37 @@ FEATURE_COLS = [
     "temp_min_c", "temp_max_c", "temp_delta_c"
 ]
 
+# Plain labels per feature and which provenance group of a site's row says where the value came from.
 FEATURE_META = {
-    "slope_mean": {
-        "label": "Mean Slope", "unit": "deg", "pillar": "topo",
-        "earth_agency": "ESA", "earth_instrument": "Copernicus DEM GLO-30m",
-        "moon_instrument": "NASA LRO LOLA", "mars_instrument": "NASA PDS MOLA",
-        "status": "measured"
-    },
-    "slope_p90": {
-        "label": "90th-Pct Slope", "unit": "deg", "pillar": "topo",
-        "earth_agency": "ESA", "earth_instrument": "Copernicus DEM GLO-30m",
-        "moon_instrument": "NASA LRO LOLA", "mars_instrument": "NASA PDS MOLA",
-        "status": "measured"
-    },
-    "tri_ruggedness": {
-        "label": "Terrain Ruggedness (TRI)", "unit": "m", "pillar": "topo",
-        "earth_agency": "ESA", "earth_instrument": "Copernicus DEM GLO-30m",
-        "moon_instrument": "NASA LRO LOLA", "mars_instrument": "NASA PDS MOLA",
-        "status": "derived"
-    },
-    "concavity": {
-        "label": "Pit & Crater Concavity", "unit": "idx", "pillar": "topo",
-        "earth_agency": "ESA", "earth_instrument": "Copernicus DEM GLO-30m",
-        "moon_instrument": "NASA LRO LOLA", "mars_instrument": "NASA PDS MOLA",
-        "status": "derived"
-    },
-    "sar_backscatter": {
-        "label": "SAR Backscatter", "unit": "norm", "pillar": "radar",
-        "earth_agency": "CSA", "earth_instrument": "RADARSAT-1 / RCM",
-        "moon_instrument": "NASA LRO Mini-RF", "mars_instrument": "NASA PDS SHARAD",
-        "status": "derived"
-    },
-    "sar_entropy": {
-        "label": "SAR Boulder Entropy", "unit": "bits", "pillar": "radar",
-        "earth_agency": "CSA", "earth_instrument": "RADARSAT-1 / RCM",
-        "moon_instrument": "NASA LRO Mini-RF", "mars_instrument": "NASA PDS SHARAD",
-        "status": "derived"
-    },
-    "sar_contrast": {
-        "label": "SAR Texture Contrast", "unit": "idx", "pillar": "radar",
-        "earth_agency": "CSA", "earth_instrument": "RADARSAT-1 / RCM",
-        "moon_instrument": "NASA LRO Mini-RF", "mars_instrument": "NASA PDS SHARAD",
-        "status": "derived"
-    },
-    "bareness_index": {
-        "label": "Bare-Earth Index (1-NDVI)", "unit": "idx", "pillar": "mineral",
-        "earth_agency": "ESA", "earth_instrument": "Sentinel-2 MSI (B04/B08)",
-        "moon_instrument": "NASA LRO LROC", "mars_instrument": "NASA PDS CRISM",
-        "status": "measured"
-    },
-    "iron_oxide_ratio": {
-        "label": "Iron Oxide Spectral Ratio", "unit": "idx", "pillar": "mineral",
-        "earth_agency": "ESA", "earth_instrument": "Sentinel-2 MSI (B04/B02)",
-        "moon_instrument": "NASA LRO / PDS M3", "mars_instrument": "NASA PDS CRISM",
-        "status": "measured"
-    },
-    "clay_hydroxyl_ratio": {
-        "label": "Clay / Hydroxyl Ratio", "unit": "idx", "pillar": "mineral",
-        "earth_agency": "ESA", "earth_instrument": "Sentinel-2 MSI (B11/B12)",
-        "moon_instrument": "NASA PDS M3", "mars_instrument": "NASA PDS CRISM",
-        "status": "measured"
-    },
-    "albedo": {
-        "label": "Surface Albedo", "unit": "idx", "pillar": "mineral",
-        "earth_agency": "ESA", "earth_instrument": "Sentinel-2 MSI (Albedo)",
-        "moon_instrument": "NASA LRO LOLA/Diviner", "mars_instrument": "NASA PDS MOLA/TES",
-        "status": "measured"
-    },
-    "temp_min_c": {
-        "label": "Minimum Temperature", "unit": "°C", "pillar": "thermal",
-        "earth_agency": "NASA / JAXA", "earth_instrument": "MODIS LST + JAXA G-Portal",
-        "moon_instrument": "NASA LRO Diviner", "mars_instrument": "NASA PDS THEMIS",
-        "status": "calibrated"
-    },
-    "temp_max_c": {
-        "label": "Maximum Temperature", "unit": "°C", "pillar": "thermal",
-        "earth_agency": "NASA / JAXA", "earth_instrument": "MODIS LST + JAXA G-Portal",
-        "moon_instrument": "NASA LRO Diviner", "mars_instrument": "NASA PDS THEMIS",
-        "status": "calibrated"
-    },
-    "temp_delta_c": {
-        "label": "Diurnal Thermal Swing", "unit": "°C", "pillar": "thermal",
-        "earth_agency": "NASA / JAXA", "earth_instrument": "MODIS LST Day-Night",
-        "moon_instrument": "NASA LRO Diviner", "mars_instrument": "NASA PDS THEMIS",
-        "status": "calibrated"
-    },
+    "slope_mean": {"label": "Mean Slope", "unit": "deg", "pillar": "topo", "group": "topography"},
+    "slope_p90": {"label": "90th-Pct Slope", "unit": "deg", "pillar": "topo", "group": "topography"},
+    "tri_ruggedness": {"label": "Terrain Ruggedness", "unit": "m", "pillar": "topo", "group": "topography"},
+    "concavity": {"label": "Pit & Crater Concavity", "unit": "idx", "pillar": "topo", "group": "topography"},
+    "sar_backscatter": {"label": "Texture Roughness Index", "unit": "idx", "pillar": "radar", "group": "radar"},
+    "sar_entropy": {"label": "Texture Entropy", "unit": "bits", "pillar": "radar", "group": "radar"},
+    "sar_contrast": {"label": "Texture Contrast", "unit": "idx", "pillar": "radar", "group": "radar"},
+    "bareness_index": {"label": "Bare Ground (1-NDVI)", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "iron_oxide_ratio": {"label": "Iron Oxide Ratio (red/blue)", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "clay_hydroxyl_ratio": {"label": "Clay / Hydroxyl Ratio (SWIR)", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "albedo": {"label": "Surface Albedo", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "temp_min_c": {"label": "Coldest Typical Temperature", "unit": "°C", "pillar": "thermal", "group": "thermal"},
+    "temp_max_c": {"label": "Warmest Typical Temperature", "unit": "°C", "pillar": "thermal", "group": "thermal"},
+    "temp_delta_c": {"label": "Day-Night Swing", "unit": "°C", "pillar": "thermal", "group": "thermal"},
 }
+
+
+def _prov(row, group: str) -> dict:
+    """The provenance record of one group for one site, whether it was stored as a dict, a struct or a string."""
+    p = row.get("provenance", {})
+    if isinstance(p, str):
+        import ast
+        try:
+            p = ast.literal_eval(p)
+        except Exception:
+            p = {}
+    g = (p or {}).get(group) or {}
+    return {"agency": g.get("agency", "none"), "instrument": g.get("instrument", "unknown"), "status": g.get("status", "unknown")}
+
 
 PILLARS = {
     "topo": ["slope_mean", "slope_p90", "tri_ruggedness", "concavity"],
@@ -226,13 +171,12 @@ class PlanetaryAnalogEngine:
         self.ensemble.fit_and_calibrate(X, Y)
 
     def _param_similarities(self, target_row, earth_row, target_norm, earth_norm) -> dict:
-        target_body = target_row["body"]
         param_sims = {}
         for idx, col in enumerate(FEATURE_COLS):
             z_diff = abs(float(target_norm[idx]) - float(earth_norm[idx]))
             sim = float(np.exp(-0.55 * z_diff))
             meta = FEATURE_META[col]
-            space_inst = meta["moon_instrument"] if target_body == "moon" else meta["mars_instrument"]
+            ep, tp = _prov(earth_row, meta["group"]), _prov(target_row, meta["group"])
 
             param_sims[col] = {
                 "label": meta["label"],
@@ -241,11 +185,14 @@ class PlanetaryAnalogEngine:
                 "similarity": round(sim, 3),
                 "target_val": round(float(target_row[col]), 3),
                 "earth_val": round(float(earth_row[col]), 3),
-                "earth_agency": meta["earth_agency"],
-                "earth_instrument": meta["earth_instrument"],
-                "space_agency": "NASA",
-                "space_instrument": space_inst,
-                "status": meta["status"],
+                "earth_agency": ep["agency"],
+                "earth_instrument": ep["instrument"],
+                "earth_status": ep["status"],
+                "space_agency": tp["agency"],
+                "space_instrument": tp["instrument"],
+                "space_status": tp["status"],
+                # the weaker of the two, so a comparison is never shown as more certain than its worst input
+                "status": ep["status"] if ep["status"] != "measured" else tp["status"],
             }
         return param_sims
 
@@ -258,7 +205,7 @@ class PlanetaryAnalogEngine:
 
     def _build_representativeness_matrix(self, target_row, earth_row, pillar_scores, epi_std) -> list:
         bareness = float(earth_row["bareness_index"])
-        is_vegetated = bareness < 0.30
+        is_vegetated = bareness < 0.70   # Sentinel-2 NDVI above 0.30
         g_t = float(target_row["gravity_m_s2"])
         p_t = float(target_row["pressure_bar"])
         body_name = target_row["body"].capitalize()
@@ -275,9 +222,9 @@ class PlanetaryAnalogEngine:
                 "status": "PARTIAL" if is_vegetated else ("REPRESENTATIVE" if topo_s >= 0.65 else "PARTIAL"),
                 "confidence": round(float(np.clip(topo_s - epi_std[0] * 0.5, 0.35, 0.96)), 2),
                 "reason": (
-                    f"ESA Copernicus DEM slope matches ({int(topo_s*100)}%), but vegetation/soil moisture alters tire traction."
+                    f"Slopes match ({int(topo_s*100)}%), but plants and moist soil change how tyres grip."
                     if is_vegetated
-                    else f"ESA Copernicus DEM slope & ruggedness match ({int(topo_s*100)}%), though {body_name} {g_t} m/s² gravity lowers normal grip."
+                    else f"Slope and ruggedness match ({int(topo_s*100)}%), though {body_name}'s {g_t} m/s² gravity presses the wheels down less, so grip is lower there."
                 ),
             },
             {
@@ -286,9 +233,9 @@ class PlanetaryAnalogEngine:
                 "status": "NOT_REPRESENTATIVE" if is_vegetated else ("REPRESENTATIVE" if radar_s >= 0.65 else "PARTIAL"),
                 "confidence": round(float(np.clip(radar_s - epi_std[0] * 0.4, 0.35, 0.95)), 2),
                 "reason": (
-                    "Plant canopy scatters radar waves differently from bare planetary boulders."
+                    "Plant cover hides the rocks and changes the surface texture, so navigation tests do not transfer."
                     if is_vegetated
-                    else f"CSA RADARSAT-1 boulder entropy matches ({int(radar_s*100)}%). Caveat: CSA C-band vs LRO Mini-RF S-band."
+                    else f"Surface texture from the elevation grid matches ({int(radar_s*100)}%). Rock-scale texture needs radar or rover imagery to confirm."
                 ),
             },
             {
@@ -296,14 +243,14 @@ class PlanetaryAnalogEngine:
                 "scenario": "landing",
                 "status": "REPRESENTATIVE" if (topo_s >= 0.60 and radar_s >= 0.60) else "PARTIAL",
                 "confidence": round(float(np.clip((topo_s + radar_s) / 2 - epi_std[1] * 0.5, 0.35, 0.94)), 2),
-                "reason": f"ESA Copernicus GLO-30m slope distribution ({int(topo_s*100)}% match) safely tests lander leg tip-over envelope.",
+                "reason": f"Slope distribution matches ({int(topo_s*100)}%), so it can test whether lander legs stay upright on touchdown.",
             },
             {
                 "test": "Thruster Plume & Dust Ejecta",
                 "scenario": "landing",
                 "status": "NOT_REPRESENTATIVE" if p_t < 0.05 else "PARTIAL",
                 "confidence": round(float(np.clip(0.88 - epi_std[1], 0.50, 0.95)), 2),
-                "reason": f"Earth 1.01 bar air suppresses exhaust plumes; {body_name} {p_t} bar vacuum blasts ejecta wide at supersonic speeds.",
+                "reason": f"Earth's 1 bar air slows engine exhaust and dust; at {p_t} bar on {body_name} the blast throws regolith far and fast. Earth rarely stands in for this.",
             },
             {
                 "test": "Rock / Ice Drill Bit Hardness",
@@ -311,9 +258,9 @@ class PlanetaryAnalogEngine:
                 "status": "NOT_REPRESENTATIVE" if is_vegetated else ("REPRESENTATIVE" if min_s >= 0.65 else "PARTIAL"),
                 "confidence": round(float(np.clip(min_s - epi_std[2] * 0.4, 0.35, 0.95)), 2),
                 "reason": (
-                    f"Low bareness ({bareness:.2f}): wet organic soil does not replicate dry extraterrestrial bedrock."
+                    f"Plants cover much of the ground (Sentinel-2 NDVI {1 - bareness:.2f}): wet, organic soil does not behave like dry regolith."
                     if is_vegetated
-                    else f"ESA Sentinel-2 mineral ratios ({earth_row['mineral_profile'].replace('_', ' ')}) match target rock hardness ({int(min_s*100)}%)."
+                    else f"Surface composition ({earth_row['mineral_profile'].replace('_', ' ')}) is close to the target's ({int(min_s*100)}% match)."
                 ),
             },
             {
@@ -321,7 +268,7 @@ class PlanetaryAnalogEngine:
                 "scenario": "mining",
                 "status": "NOT_REPRESENTATIVE",
                 "confidence": round(float(np.clip(0.92 - therm_s * 0.1, 0.70, 0.96)), 2),
-                "reason": f"CONFORMAL OOD: Earth air convection cools drill motors; {body_name} vacuum causes rapid thermal seizure.",
+                "reason": f"Never transfers: on Earth the air carries heat away from motors and drill bits; at {p_t} bar on {body_name} there is almost no air, so hardware keeps its heat and can seize.",
             },
         ]
 
@@ -351,6 +298,14 @@ class PlanetaryAnalogEngine:
                 + 0.25 * pillar_scores["mineral"]
                 + 0.15 * pillar_scores["thermal"]
             )
+            # Bare-ground rule: the Moon and Mars have no plants and no open water, so a site covered by either cannot
+            # be an analog whatever its shape. Full score at Sentinel-2 NDVI <= 0.20, falling to zero at 0.30; likewise
+            # full score up to 20% open water in the window, falling to zero at 50%.
+            ndvi = 1.0 - float(earth_row["bareness_index"])
+            water = float(earth_row.get("water_fraction", 0.0) or 0.0)
+            veg_gate = float(np.clip((0.30 - ndvi) / 0.10, 0.0, 1.0) * np.clip((0.50 - water) / 0.30, 0.0, 1.0))
+            ungated_sim = overall_sim
+            overall_sim = overall_sim * veg_gate
 
             pred_mean, epi_std, conf_low, conf_high = self.ensemble.predict_with_conformal(earth_norm)
             avg_uncertainty = float(np.mean(epi_std))
@@ -395,6 +350,10 @@ class PlanetaryAnalogEngine:
                 "mineral_profile": earth_row["mineral_profile"],
                 "geology": earth_meta.get("geology", ""),
                 "similarity_score": round(float(overall_sim), 3),
+                "similarity_before_vegetation_rule": round(float(ungated_sim), 3),
+                "vegetation_gate": round(veg_gate, 3),
+                "ndvi": round(ndvi, 3),
+                "water_fraction": round(water, 3),
                 "epistemic_uncertainty": round(avg_uncertainty, 3),
                 "conformal_90_interval": [
                     round(float(np.clip(overall_sim - avg_uncertainty * 1.6, 0, 1)), 3),

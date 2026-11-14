@@ -13,8 +13,8 @@ from ml_engine.engine import PlanetaryAnalogEngine
 from backend.sim_physics import DualPhysicsSimulator
 
 app = FastAPI(
-    title="TERRA-TWIN Planetary Analog API",
-    description="Uncertainty-Aware Multi-Agency Planetary Analog Finder & Dual Simulator Backend",
+    title="Celestra Planetary Analog API",
+    description="Planetary analog finder and dual-world simulator backend",
     version="2.1.0",
 )
 
@@ -44,7 +44,7 @@ class SimRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"system": "TERRA-TWIN v2.1", "status": "operational"}
+    return {"system": "Celestra v2.2", "status": "operational"}
 
 
 @app.get("/api/targets")
@@ -61,6 +61,16 @@ def match_target_site(target_id: str, top_k: int = 60):
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/validation")
+def get_validation():
+    """Results of data-pipeline/03_validate.py: controls, benchmarks, weight sensitivity, ensemble calibration."""
+    import json
+    path = ROOT / "data" / "processed" / "validation.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Run data-pipeline/03_validate.py first.")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 @app.post("/api/simulate")

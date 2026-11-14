@@ -105,7 +105,7 @@ function solarCanvas(size = 256): HTMLCanvasElement {
 function tex(canvas: HTMLCanvasElement, repeat = 1): THREE.CanvasTexture { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat); t.anisotropy = 8; return t; }
 
 function groundPalette(body: Body, mineral: string, sensor: Sensor) {
-  // radar: a grey backscatter image, bright where the ground is rough or slopes face the beam
+  // slope view: grey, bright where the ground is steep or broken
   if (sensor === "sar") return { base: "#3a3f47", grain: "#8b949e", speck: "#d0d6dd", low: "#2b3036", mid: "#6b7480", rock: "#e5e9ee" };
   if (sensor === "thermal") return body === "earth" ? { base: "#7c2d12", grain: "#ea580c", speck: "#facc15", low: "#9a3412", mid: "#ea580c", rock: "#fde047" } : { base: "#1e3a8a", grain: "#2563eb", speck: "#93c5fd", low: "#1e3a8a", mid: "#2563eb", rock: "#93c5fd" };
   if (body === "moon") return { base: "#9aa0a8", grain: "#c3c8cf", speck: "#5b616b", low: "#7c838c", mid: "#a4abb4", rock: "#d2d6db" };
@@ -335,7 +335,7 @@ function SimScene(p: {
   const prevFocus = useRef(new THREE.Vector3());
 
   const rock = useMemo(() => {
-    if (bareness < 0.25) return { label: "wet soil and plant roots", hardness: 0.55, dry: false };
+    if (bareness < 0.70) return { label: "vegetated, moist soil", hardness: 0.55, dry: false };
     return { label: mineral.replace(/_/g, " "), hardness: THREE.MathUtils.clamp(0.75 + iron * 0.45 - clay * 0.35, 0.55, 1.65), dry: true };
   }, [bareness, iron, clay, mineral]);
 
@@ -622,6 +622,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
 
   const [grid, setGrid] = useState<number[] | null>(null);
   const [reliefM, setReliefM] = useState(120);
+  const [demSource, setDemSource] = useState<string | null>(null);
   const [tele, setTele] = useState<Telemetry>({});
   const [runs, setRuns] = useState<Record<WorldSide, RunRecord | null>>({ earth: null, space: null });
 
@@ -642,7 +643,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const url = side === "earth" ? selectedMatch.heightmap_url : t.heightmap_url;
   useEffect(() => {
     let live = true;
-    fetch(`http://127.0.0.1:8000${url}`).then((r) => r.json()).then((j) => { if (live) { setGrid(j.data); setReliefM(j.relief_m || 120); } }).catch((e) => console.error("heightmap", e));
+    fetch(`http://127.0.0.1:8000${url}`).then((r) => r.json()).then((j) => { if (live) { setGrid(j.data); setReliefM(j.relief_m || 120); setDemSource(j.data_provenance?.topography?.instrument ?? null); } }).catch((e) => console.error("heightmap", e));
     return () => { live = false; };
   }, [url]);
 
@@ -707,7 +708,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         <div className="text-xs muted" data-tour="sim-test">{phase === "land" ? "Part 1 of 2 · Landing" : phase === "drive" ? (docked ? "Part 2 of 2 · Drilling a core" : "Part 2 of 2 · Drive and sample") : "Mission: land, drive, sample"}</div>
         <div className="flex items-center gap-2">
           <div className="seg" title="How the ground is shown">
-            {([["optical", "Camera"], ["sar", "Radar"], ["thermal", "Heat"]] as [Sensor, string][]).map(([m, l]) => <button key={m} type="button" aria-pressed={sensor === m} onClick={() => setSensor(m)}>{l}</button>)}
+            {([["optical", "Camera"], ["sar", "Slope"], ["thermal", "Heat"]] as [Sensor, string][]).map(([m, l]) => <button key={m} type="button" aria-pressed={sensor === m} onClick={() => setSensor(m)}>{l}</button>)}
           </div>
           {phase === "drive" && !docked && <button type="button" className="btn btn-sm" onClick={() => { lookRef.current = { yaw: 0, pitch: 0 }; setThirdPerson((v) => !v); }}><Eye className="w-3.5 h-3.5" /> {thirdPerson ? "Chase camera" : "Driver's seat"}</button>}
           <button type="button" className="btn btn-sm" onClick={restart}><RotateCcw className="w-3.5 h-3.5" /> Restart mission</button>
@@ -827,7 +828,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
               </div>
               {side === "space" && <p className="text-xs muted mt-4">Same mission, different world: gravity is {((gravity / 9.81) * 100).toFixed(0)}% of Earth&apos;s, air pressure is {pressure} bar, and the ground here averages {ambient.toFixed(0)}°C. {pressure < 0.5 ? "With no air, motors and drill bits keep the heat they make." : ""}</p>}
               <div className="flex items-center justify-between mt-5">
-                <span className="text-xs muted">{grid ? "Terrain built from the site's elevation data." : "Loading terrain…"}</span>
+                <span className="text-xs muted">{grid ? (demSource ? `Terrain: ${demSource}` : "Terrain built from the site's elevation data.") : "Loading terrain…"}</span>
                 <button type="button" className="btn btn-primary" disabled={!grid} onClick={() => setPhase(phase === "brief-land" ? "land" : "drive")}><Play className="w-4 h-4" /> {phase === "brief-land" ? "Start the landing" : "Roll out"}</button>
               </div>
             </div>
