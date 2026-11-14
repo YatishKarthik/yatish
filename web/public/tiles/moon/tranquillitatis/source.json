@@ -1,0 +1,16 @@
+{
+ "id": "tranquillitatis",
+ "real": true,
+ "centre": {
+  "lat": 0.67,
+  "lon": 23.47
+ },
+ "extent_m": 3000,
+ "source_res_m": 34,
+ "elevation": "USGS Kaguya TC stereo DTM TC1W2B0_01_02668N009E0239__TC2W2B0_01_02668N002E0239",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 34,
+ "z_min": -2494.93,
+ "z_max": -1884.83,
+ "pixel_m": 11.719
+}

@@ -1,0 +1,16 @@
+{
+ "id": "gusev",
+ "real": true,
+ "centre": {
+  "lat": -14.57,
+  "lon": 175.47
+ },
+ "extent_m": 3000,
+ "source_res_m": 20,
+ "elevation": "USGS CTX stereo DTM D19_034808_1653_XN_14S184W__D20_034874_1653_XN_14S184W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 20,
+ "z_min": -1982.65,
+ "z_max": -1950.45,
+ "pixel_m": 11.719
+}

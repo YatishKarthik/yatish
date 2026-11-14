@@ -1,0 +1,16 @@
+{
+ "id": "nubian",
+ "real": true,
+ "centre": {
+  "lat": 20.5,
+  "lon": 32.5
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_36QVH_20231007_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 412.32,
+ "z_max": 426.68,
+ "pixel_m": 11.719
+}

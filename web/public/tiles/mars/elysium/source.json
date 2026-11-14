@@ -1,0 +1,16 @@
+{
+ "id": "elysium",
+ "real": true,
+ "centre": {
+  "lat": 4.5,
+  "lon": 135.62
+ },
+ "extent_m": 3000,
+ "source_res_m": 20,
+ "elevation": "USGS CTX stereo DTM F02_036761_1828_XN_02N224W__F04_037262_1841_XN_04N224W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 20,
+ "z_min": -2619.63,
+ "z_max": -2574.81,
+ "pixel_m": 11.719
+}

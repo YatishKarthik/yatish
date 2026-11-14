@@ -1,0 +1,7 @@
+{
+  "rewrites": [{ "source": "/((?!data/|tiles/|assets/).*)", "destination": "/index.html" }],
+  "headers": [
+    { "source": "/tiles/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] },
+    { "source": "/data/sites.json", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+  ]
+}

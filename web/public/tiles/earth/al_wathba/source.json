@@ -1,0 +1,16 @@
+{
+ "id": "al_wathba",
+ "real": true,
+ "centre": {
+  "lat": 24.17,
+  "lon": 54.6
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_40QBM_20231010_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 30.54,
+ "z_max": 70.82,
+ "pixel_m": 11.719
+}

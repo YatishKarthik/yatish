@@ -1,0 +1,16 @@
+{
+ "id": "taurus_littrow",
+ "real": true,
+ "centre": {
+  "lat": 20.08,
+  "lon": 30.77
+ },
+ "extent_m": 3000,
+ "source_res_m": 38.7,
+ "elevation": "USGS Kaguya TC stereo DTM TC2W2B0_01_00823N194E0310__TC1W2B0_01_00823N200E0310",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 38.7,
+ "z_min": -2727.89,
+ "z_max": -2617.5,
+ "pixel_m": 11.719
+}

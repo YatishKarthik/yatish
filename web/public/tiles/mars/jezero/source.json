@@ -1,0 +1,16 @@
+{
+ "id": "jezero",
+ "real": true,
+ "centre": {
+  "lat": 18.44,
+  "lon": 77.5
+ },
+ "extent_m": 3000,
+ "source_res_m": 20.1,
+ "elevation": "USGS CTX stereo DTM J10_048842_1986_XN_18N282W__J11_048908_1986_XN_18N282W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 20.1,
+ "z_min": -2620.18,
+ "z_max": -2515.47,
+ "pixel_m": 11.719
+}

@@ -1,0 +1,16 @@
+{
+ "id": "chryse",
+ "real": true,
+ "centre": {
+  "lat": 22.27,
+  "lon": -47.95
+ },
+ "extent_m": 3000,
+ "source_res_m": 20.6,
+ "elevation": "USGS CTX stereo DTM P02_001719_2024_XI_22N048W__P01_001521_2026_XI_22N048W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 20.6,
+ "z_min": -3749.61,
+ "z_max": -3722.71,
+ "pixel_m": 11.719
+}

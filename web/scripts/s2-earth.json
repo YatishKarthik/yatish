@@ -1,0 +1,408 @@
+{
+ "askja": {
+  "ndvi": -0.0752,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 0.805,
+  "clay_hydroxyl_ratio": 0.9301,
+  "scene": "S2A_28WDT_20231031_0_L2A"
+ },
+ "amboy_crater": {
+  "ndvi": 0.0688,
+  "bareness_index": 0.9312,
+  "iron_oxide_ratio": 1.5082,
+  "clay_hydroxyl_ratio": 0.9996,
+  "scene": "S2B_11SPU_20231022_0_L2A"
+ },
+ "atacama_yungay": {
+  "ndvi": 0.0743,
+  "bareness_index": 0.9257,
+  "iron_oxide_ratio": 1.7701,
+  "clay_hydroxyl_ratio": 1.0479,
+  "scene": "S2B_19KDP_20231003_0_L2A"
+ },
+ "amazon": {
+  "ndvi": 0.3105,
+  "bareness_index": 0.6895,
+  "iron_oxide_ratio": 1.6072,
+  "clay_hydroxyl_ratio": 1.7992,
+  "scene": "S2B_20MQB_20231007_0_L2A"
+ },
+ "al_wathba": {
+  "ndvi": 0.0568,
+  "bareness_index": 0.9432,
+  "iron_oxide_ratio": 1.6803,
+  "clay_hydroxyl_ratio": 1.1286,
+  "scene": "S2A_40QBM_20231010_0_L2A"
+ },
+ "black_rock": {
+  "ndvi": 0.0393,
+  "bareness_index": 0.9607,
+  "iron_oxide_ratio": 1.3514,
+  "clay_hydroxyl_ratio": 1.2256,
+  "scene": "S2B_11TLF_20231008_0_L2A"
+ },
+ "bardenas": {
+  "ndvi": 0.1392,
+  "bareness_index": 0.8608,
+  "iron_oxide_ratio": 1.7686,
+  "clay_hydroxyl_ratio": 1.1179,
+  "scene": "S2B_30TXM_20231010_0_L2A"
+ },
+ "badwater": {
+  "ndvi": -0.1826,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 1.4147,
+  "clay_hydroxyl_ratio": 1.0471,
+  "scene": "S2A_11SNA_20231020_0_L2A"
+ },
+ "bonneville": {
+  "ndvi": -0.0049,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 1.0986,
+  "clay_hydroxyl_ratio": 1.9416,
+  "scene": "S2A_12TTL_20231017_0_L2A"
+ },
+ "boreal": {
+  "ndvi": 0.5399,
+  "bareness_index": 0.4601,
+  "iron_oxide_ratio": 1.8167,
+  "clay_hydroxyl_ratio": 1.413,
+  "scene": "S2B_13VDC_20231009_0_L2A"
+ },
+ "chott_el_jerid": {
+  "ndvi": 0.0609,
+  "bareness_index": 0.9391,
+  "iron_oxide_ratio": 1.8877,
+  "clay_hydroxyl_ratio": 1.202,
+  "scene": "S2B_32SMC_20231015_0_L2A"
+ },
+ "dallol": {
+  "ndvi": 0.0124,
+  "bareness_index": 0.9876,
+  "iron_oxide_ratio": 2.1182,
+  "clay_hydroxyl_ratio": 1.292,
+  "scene": "S2B_37PFR_20231010_0_L2A"
+ },
+ "emi_koussi": {
+  "ndvi": 0.1198,
+  "bareness_index": 0.8802,
+  "iron_oxide_ratio": 1.6812,
+  "clay_hydroxyl_ratio": 1.1198,
+  "scene": "S2B_34QBG_20231027_0_L2A"
+ },
+ "dry_valleys": {
+  "ndvi": -0.0194,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 0.9821,
+  "clay_hydroxyl_ratio": 0.9932,
+  "scene": "S2B_58CDU_20231006_0_L2A"
+ },
+ "dasht_e_kavir": {
+  "ndvi": 0.0435,
+  "bareness_index": 0.9565,
+  "iron_oxide_ratio": 1.6302,
+  "clay_hydroxyl_ratio": 1.6591,
+  "scene": "S2A_40SBD_20231006_0_L2A"
+ },
+ "erg_chebbi": {
+  "ndvi": 0.0897,
+  "bareness_index": 0.9103,
+  "iron_oxide_ratio": 2.9903,
+  "clay_hydroxyl_ratio": 1.0651,
+  "scene": "S2A_30RVV_20231005_0_L2A"
+ },
+ "erta_ale": {
+  "ndvi": -0.0025,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 2.3541,
+  "clay_hydroxyl_ratio": 1.0729,
+  "scene": "S2B_37PFR_20231010_0_L2A"
+ },
+ "farm_liwa": {
+  "ndvi": 0.1271,
+  "bareness_index": 0.8729,
+  "iron_oxide_ratio": 2.0823,
+  "clay_hydroxyl_ratio": 1.1441,
+  "scene": "S2A_39QYF_20231003_0_L2A"
+ },
+ "great_sand_dunes": {
+  "ndvi": 0.0491,
+  "bareness_index": 0.9509,
+  "iron_oxide_ratio": 1.6618,
+  "clay_hydroxyl_ratio": 0.9791,
+  "scene": "S2A_13SDB_20231018_0_L2A"
+ },
+ "etosha_pan": {
+  "ndvi": 0.0295,
+  "bareness_index": 0.9705,
+  "iron_oxide_ratio": 1.3055,
+  "clay_hydroxyl_ratio": 1.2422,
+  "scene": "S2A_33KXV_20231006_0_L2A"
+ },
+ "hajar_ridge": {
+  "ndvi": 0.0885,
+  "bareness_index": 0.9115,
+  "iron_oxide_ratio": 1.7874,
+  "clay_hydroxyl_ratio": 1.1896,
+  "scene": "S2B_40QFL_20231012_0_L2A"
+ },
+ "hanksville": {
+  "ndvi": 0.0646,
+  "bareness_index": 0.9354,
+  "iron_oxide_ratio": 1.6256,
+  "clay_hydroxyl_ratio": 1.0295,
+  "scene": "S2B_12SWH_20231019_0_L2A"
+ },
+ "harrat_khaybar": {
+  "ndvi": -0.0104,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 1.3152,
+  "clay_hydroxyl_ratio": 1.0628,
+  "scene": "S2B_37REJ_20231013_0_L2A"
+ },
+ "haughton": {
+  "ndvi": -0.0172,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 0.876,
+  "clay_hydroxyl_ratio": 1.2365,
+  "scene": "S2A_16XDJ_20231006_0_L2A"
+ },
+ "jebel_hafeet": {
+  "ndvi": 0.0911,
+  "bareness_index": 0.9089,
+  "iron_oxide_ratio": 1.7955,
+  "clay_hydroxyl_ratio": 1.1981,
+  "scene": "S2B_40QCM_20231005_0_L2A"
+ },
+ "kelso_dunes": {
+  "ndvi": 0.0967,
+  "bareness_index": 0.9033,
+  "iron_oxide_ratio": 1.782,
+  "clay_hydroxyl_ratio": 1.0398,
+  "scene": "S2B_11SPU_20231022_0_L2A"
+ },
+ "karakum": {
+  "ndvi": 0.0652,
+  "bareness_index": 0.9348,
+  "iron_oxide_ratio": 1.8902,
+  "clay_hydroxyl_ratio": 1.022,
+  "scene": "S2B_40TFK_20231008_0_L2A"
+ },
+ "lake_eyre": {
+  "ndvi": 0.0544,
+  "bareness_index": 0.9456,
+  "iron_oxide_ratio": 1.5031,
+  "clay_hydroxyl_ratio": 1.5578,
+  "scene": "S2B_53JQJ_20231014_0_L2A"
+ },
+ "kharga": {
+  "ndvi": 0.084,
+  "bareness_index": 0.916,
+  "iron_oxide_ratio": 2.3825,
+  "clay_hydroxyl_ratio": 1.156,
+  "scene": "S2A_36RTP_20231010_0_L2A"
+ },
+ "liwa_dunes": {
+  "ndvi": 0.0809,
+  "bareness_index": 0.9191,
+  "iron_oxide_ratio": 2.6815,
+  "clay_hydroxyl_ratio": 1.0521,
+  "scene": "S2A_39QYF_20231003_0_L2A"
+ },
+ "licancabur": {
+  "ndvi": 0.0051,
+  "bareness_index": 0.9949,
+  "iron_oxide_ratio": 1.6827,
+  "clay_hydroxyl_ratio": 1.1124,
+  "scene": "S2A_19KFQ_20231015_0_L2A"
+ },
+ "lut_kaluts": {
+  "ndvi": 0.0611,
+  "bareness_index": 0.9389,
+  "iron_oxide_ratio": 1.7197,
+  "clay_hydroxyl_ratio": 1.0005,
+  "scene": "S2A_40REU_20231010_0_L2A"
+ },
+ "makhtesh_ramon": {
+  "ndvi": 0.0732,
+  "bareness_index": 0.9268,
+  "iron_oxide_ratio": 1.96,
+  "clay_hydroxyl_ratio": 1.111,
+  "scene": "S2B_36RXU_20231012_0_L2A"
+ },
+ "meteor_crater": {
+  "ndvi": 0.1209,
+  "bareness_index": 0.8791,
+  "iron_oxide_ratio": 2.0375,
+  "clay_hydroxyl_ratio": 1.1347,
+  "scene": "S2A_12SVD_20231014_0_L2A"
+ },
+ "mojave_cima": {
+  "ndvi": 0.1461,
+  "bareness_index": 0.8539,
+  "iron_oxide_ratio": 1.5259,
+  "clay_hydroxyl_ratio": 1.1015,
+  "scene": "S2B_11SPV_20231012_0_L2A"
+ },
+ "nubian": {
+  "ndvi": 0.0734,
+  "bareness_index": 0.9266,
+  "iron_oxide_ratio": 2.3831,
+  "clay_hydroxyl_ratio": 1.062,
+  "scene": "S2A_36QVH_20231007_0_L2A"
+ },
+ "pilbara": {
+  "ndvi": 0.1647,
+  "bareness_index": 0.8353,
+  "iron_oxide_ratio": 2.2707,
+  "clay_hydroxyl_ratio": 1.2639,
+  "scene": "S2A_50KQB_20231003_0_L2A"
+ },
+ "qaidam": {
+  "ndvi": 0.0246,
+  "bareness_index": 0.9754,
+  "iron_oxide_ratio": 1.3855,
+  "clay_hydroxyl_ratio": 1.1389,
+  "scene": "S2A_46SCH_20231031_0_L2A"
+ },
+ "richat": {
+  "ndvi": 0.0569,
+  "bareness_index": 0.9431,
+  "iron_oxide_ratio": 2.3777,
+  "clay_hydroxyl_ratio": 1.0196,
+  "scene": "S2A_29QKD_20231018_0_L2A"
+ },
+ "rio_tinto": {
+  "ndvi": 0.2747,
+  "bareness_index": 0.7253,
+  "iron_oxide_ratio": 1.7941,
+  "clay_hydroxyl_ratio": 1.3528,
+  "scene": "S2A_29SQB_20231008_0_L2A"
+ },
+ "sabkha_matti": {
+  "ndvi": 0.0517,
+  "bareness_index": 0.9483,
+  "iron_oxide_ratio": 1.9532,
+  "clay_hydroxyl_ratio": 1.0698,
+  "scene": "S2A_39QXF_20231013_0_L2A"
+ },
+ "salar_de_atacama": {
+  "ndvi": 0.051,
+  "bareness_index": 0.949,
+  "iron_oxide_ratio": 1.5475,
+  "clay_hydroxyl_ratio": 1.0289,
+  "scene": "S2A_19KEQ_20231005_0_L2A"
+ },
+ "simpson": {
+  "ndvi": 0.1442,
+  "bareness_index": 0.8558,
+  "iron_oxide_ratio": 3.8388,
+  "clay_hydroxyl_ratio": 1.1516,
+  "scene": "S2A_53JQN_20231019_0_L2A"
+ },
+ "sossusvlei": {
+  "ndvi": 0.1046,
+  "bareness_index": 0.8954,
+  "iron_oxide_ratio": 2.8621,
+  "clay_hydroxyl_ratio": 1.0768,
+  "scene": "S2A_33JWN_20231016_0_L2A"
+ },
+ "tabernas": {
+  "ndvi": 0.1554,
+  "bareness_index": 0.8446,
+  "iron_oxide_ratio": 1.6363,
+  "clay_hydroxyl_ratio": 1.2276,
+  "scene": "S2A_30SWG_20231005_0_L2A"
+ },
+ "taklamakan": {
+  "ndvi": 0.0446,
+  "bareness_index": 0.9554,
+  "iron_oxide_ratio": 1.8866,
+  "clay_hydroxyl_ratio": 0.9864,
+  "scene": "S2A_44SPJ_20231013_0_L2A"
+ },
+ "thar": {
+  "ndvi": 0.1556,
+  "bareness_index": 0.8444,
+  "iron_oxide_ratio": 1.8669,
+  "clay_hydroxyl_ratio": 1.1286,
+  "scene": "S2A_42RXQ_20231012_0_L2A"
+ },
+ "teide": {
+  "ndvi": 0.016,
+  "bareness_index": 0.984,
+  "iron_oxide_ratio": 1.6222,
+  "clay_hydroxyl_ratio": 1.0551,
+  "scene": "S2B_28RCS_20231012_0_L2A"
+ },
+ "timanfaya": {
+  "ndvi": 0.0482,
+  "bareness_index": 0.9518,
+  "iron_oxide_ratio": 1.7375,
+  "clay_hydroxyl_ratio": 1.1137,
+  "scene": "S2A_28RFT_20231014_0_L2A"
+ },
+ "tso_kar": {
+  "ndvi": 0.0741,
+  "bareness_index": 0.9259,
+  "iron_oxide_ratio": 1.8825,
+  "clay_hydroxyl_ratio": 1.2228,
+  "scene": "S2A_44SKB_20231006_0_L2A"
+ },
+ "turpan": {
+  "ndvi": 0.0618,
+  "bareness_index": 0.9382,
+  "iron_oxide_ratio": 1.8201,
+  "clay_hydroxyl_ratio": 1.005,
+  "scene": "S2B_45TYH_20231022_0_L2A"
+ },
+ "umm_as_samim": {
+  "ndvi": 0.0366,
+  "bareness_index": 0.9634,
+  "iron_oxide_ratio": 1.7622,
+  "clay_hydroxyl_ratio": 1.1966,
+  "scene": "S2A_40QCJ_20231010_0_L2A"
+ },
+ "wadi_gravel_oman": {
+  "ndvi": 0.05,
+  "bareness_index": 0.95,
+  "iron_oxide_ratio": 1.6518,
+  "clay_hydroxyl_ratio": 1.075,
+  "scene": "S2B_40QEK_20231012_0_L2A"
+ },
+ "uyuni": {
+  "ndvi": -0.0038,
+  "bareness_index": 1,
+  "iron_oxide_ratio": 1.052,
+  "clay_hydroxyl_ratio": 1.6062,
+  "scene": "S2A_19KFT_20231015_0_L2A"
+ },
+ "wahiba_sands": {
+  "ndvi": 0.0975,
+  "bareness_index": 0.9025,
+  "iron_oxide_ratio": 2.592,
+  "clay_hydroxyl_ratio": 1.0394,
+  "scene": "S2B_40QFK_20231002_0_L2A"
+ },
+ "wadi_rum": {
+  "ndvi": 0.0822,
+  "bareness_index": 0.9178,
+  "iron_oxide_ratio": 2.3352,
+  "clay_hydroxyl_ratio": 1.1047,
+  "scene": "S2B_36RYT_20231022_0_L2A"
+ },
+ "white_desert": {
+  "ndvi": 0.0807,
+  "bareness_index": 0.9193,
+  "iron_oxide_ratio": 1.9136,
+  "clay_hydroxyl_ratio": 1.0939,
+  "scene": "S2B_35RNL_20231028_0_L2A"
+ },
+ "white_sands": {
+  "ndvi": 0.0292,
+  "bareness_index": 0.9708,
+  "iron_oxide_ratio": 1.2417,
+  "clay_hydroxyl_ratio": 3.5847,
+  "scene": "S2A_13SCS_20231015_0_L2A"
+ }
+}

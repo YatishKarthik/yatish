@@ -1,0 +1,16 @@
+{
+ "id": "sossusvlei",
+ "real": true,
+ "centre": {
+  "lat": -24.73,
+  "lon": 15.3
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_33JWN_20231016_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 546.08,
+ "z_max": 792.47,
+ "pixel_m": 11.719
+}

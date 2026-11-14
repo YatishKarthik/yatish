@@ -1,0 +1,16 @@
+{
+ "id": "meteor_crater",
+ "real": true,
+ "centre": {
+  "lat": 35.027,
+  "lon": -111.022
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_12SVD_20231014_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 1562.17,
+ "z_max": 1744.91,
+ "pixel_m": 11.719
+}

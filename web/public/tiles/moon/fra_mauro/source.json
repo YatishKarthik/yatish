@@ -1,0 +1,16 @@
+{
+ "id": "fra_mauro",
+ "real": true,
+ "centre": {
+  "lat": -3.65,
+  "lon": -17.47
+ },
+ "extent_m": 3000,
+ "source_res_m": 32,
+ "elevation": "USGS Kaguya TC stereo DTM TC1W2B0_01_05207S040E3425__TC2W2B0_01_05207S035E3425",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 32,
+ "z_min": -1323.81,
+ "z_max": -947.86,
+ "pixel_m": 11.719
+}

@@ -1,0 +1,16 @@
+{
+ "id": "atacama_yungay",
+ "real": true,
+ "centre": {
+  "lat": -24.08,
+  "lon": -69.92
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2B_19KDP_20231003_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 958.13,
+ "z_max": 1221.56,
+ "pixel_m": 11.719
+}

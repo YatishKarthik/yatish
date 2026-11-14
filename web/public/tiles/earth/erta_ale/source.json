@@ -1,0 +1,16 @@
+{
+ "id": "erta_ale",
+ "real": true,
+ "centre": {
+  "lat": 13.6,
+  "lon": 40.67
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2B_37PFR_20231010_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 378.33,
+ "z_max": 595.59,
+ "pixel_m": 11.719
+}

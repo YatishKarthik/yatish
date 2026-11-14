@@ -1,0 +1,16 @@
+{
+ "id": "mauna_kea",
+ "real": true,
+ "centre": {
+  "lat": 19.82,
+  "lon": -155.47
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_5QKB_20231029_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 3773.97,
+ "z_max": 4203.91,
+ "pixel_m": 11.719
+}

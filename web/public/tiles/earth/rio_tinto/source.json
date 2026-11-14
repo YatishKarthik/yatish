@@ -1,0 +1,16 @@
+{
+ "id": "rio_tinto",
+ "real": true,
+ "centre": {
+  "lat": 37.7,
+  "lon": -6.55
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_29SQB_20231008_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 283.34,
+ "z_max": 455.46,
+ "pixel_m": 11.719
+}

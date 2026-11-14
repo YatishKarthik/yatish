@@ -1,0 +1,16 @@
+{
+ "id": "melas",
+ "real": true,
+ "centre": {
+  "lat": -10.4,
+  "lon": -72.5
+ },
+ "extent_m": 3000,
+ "source_res_m": 20,
+ "elevation": "USGS CTX stereo DTM D03_028567_1678_XI_12S072W__D01_027657_1685_XI_11S072W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 20,
+ "z_min": -3846.65,
+ "z_max": -3557.9,
+ "pixel_m": 11.719
+}

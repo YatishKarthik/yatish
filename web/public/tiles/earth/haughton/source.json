@@ -1,0 +1,16 @@
+{
+ "id": "haughton",
+ "real": true,
+ "centre": {
+  "lat": 75.38,
+  "lon": -89.67
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_16XDJ_20231006_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 116.26,
+ "z_max": 199.88,
+ "pixel_m": 11.719
+}

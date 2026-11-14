@@ -1,0 +1,16 @@
+{
+ "id": "aristarchus",
+ "real": true,
+ "centre": {
+  "lat": 26,
+  "lon": -50
+ },
+ "extent_m": 3000,
+ "source_res_m": 29.3,
+ "elevation": "USGS Kaguya TC stereo DTM TC2W2B0_01_01735N260E3101__TC1W2B0_01_01735N263E3101",
+ "imagery": "Kaguya TC orthoimage, same product",
+ "imagery_res_m": 29.3,
+ "z_min": -1181.86,
+ "z_max": -1035.42,
+ "pixel_m": 11.719
+}

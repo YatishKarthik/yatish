@@ -1,0 +1,16 @@
+{
+ "id": "richat",
+ "real": true,
+ "centre": {
+  "lat": 21.12,
+  "lon": -11.4
+ },
+ "extent_m": 3000,
+ "source_res_m": 30,
+ "elevation": "Copernicus DEM GLO-30",
+ "imagery": "Sentinel-2 L2A S2A_29QKD_20231018_0_L2A",
+ "imagery_res_m": 10,
+ "z_min": 386.94,
+ "z_max": 476.84,
+ "pixel_m": 11.719
+}

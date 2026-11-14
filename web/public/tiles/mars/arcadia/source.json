@@ -1,0 +1,16 @@
+{
+ "id": "arcadia",
+ "real": true,
+ "centre": {
+  "lat": 39.4,
+  "lon": -170.4
+ },
+ "extent_m": 3000,
+ "source_res_m": 22.3,
+ "elevation": "USGS CTX stereo DTM N05_064174_2195_XN_39N170W__N05_064464_2195_XN_39N170W",
+ "imagery": "CTX orthoimage, same product",
+ "imagery_res_m": 22.3,
+ "z_min": -4013.26,
+ "z_max": -3937.96,
+ "pixel_m": 11.719
+}
