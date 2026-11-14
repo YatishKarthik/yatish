@@ -9,6 +9,8 @@ import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from '@react-three
 import { ToneMappingMode } from 'postprocessing';
 import { Clouds, EarthMaterial, SUN_DIR, Sun } from '../scenes/Earth';
 import { Atmosphere, Galaxy } from '../scenes/Galaxy';
+import { PARAMS } from '../data/pillars';
+import { useProgress } from '../state/progress';
 import { useStore, withTarget } from '../state/store';
 import { Num } from '../ui/Num';
 import { Seg } from '../ui/Seg';
@@ -85,7 +87,7 @@ function ScanPulse({ r, trigger }: { r: number; trigger: number }) {
   );
 }
 
-function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus; pins: Pin[]; face: { lat: number; lon: number } | null; onPick: () => void }) {
+function Planet({ body, focus, pins, face, onPick, labels = true }: { body: Body; focus: Focus; pins: Pin[]; face: { lat: number; lon: number } | null; onPick: () => void; labels?: boolean }) {
   const { x, r, name, glow, k: glowK } = BODIES[body];
   const tex = useTexture(asset(`textures/${body}.jpg`));
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -95,6 +97,9 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   const group = useRef<THREE.Group>(null);
   const [hover, setHover] = useState(false);
   const focused = focus === body;
+  const drag = useRef({ on: false, manual: false, moved: 0 });
+  const faceKey = face ? `${face.lat},${face.lon}` : '';
+  useEffect(() => { drag.current.manual = false; }, [faceKey, focused]);
   const [scan, setScan] = useState(0);
   useEffect(() => { if (focused) setScan((n) => n + 1); }, [focused]);
   useEffect(() => { if (group.current) group.current.rotation.y = (-90 - (body === 'earth' ? 45 : 0)) * DEG; }, [body]);   // Earth opens on the Gulf
@@ -103,6 +108,7 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
+    if (drag.current.on || (focused && drag.current.manual)) return;   // the visitor is turning it by hand
     if (focused && face) {
       // the planet turns until the chosen place faces the camera
       const k = REDUCE ? 1 : Math.min(1, dt * 3);
@@ -119,14 +125,27 @@ function Planet({ body, focus, pins, face, onPick }: { body: Body; focus: Focus;
       {glowK > 0 && <Atmosphere r={r} colour={glow} strength={glowK} />}
       <ScanPulse r={r} trigger={scan} />
       <group ref={group}>
-        <mesh onClick={(e) => { e.stopPropagation(); onPick(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
+        <mesh
+          onClick={(e) => { e.stopPropagation(); if (drag.current.moved < 6) onPick(); }}
+          onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}
+          onPointerDown={(e) => { if (!focused) return; e.stopPropagation(); drag.current.on = true; drag.current.moved = 0; (e.target as Element).setPointerCapture?.(e.pointerId); }}
+          onPointerUp={(e) => { drag.current.on = false; (e.target as Element).releasePointerCapture?.(e.pointerId); }}
+          onPointerMove={(e) => {
+            const g = group.current;
+            if (!drag.current.on || !g) return;
+            const dx = e.nativeEvent.movementX, dy = e.nativeEvent.movementY;
+            drag.current.moved += Math.abs(dx) + Math.abs(dy);
+            if (drag.current.moved > 6) drag.current.manual = true;
+            g.rotation.y += dx * 0.006;
+            g.rotation.x = Math.min(1.2, Math.max(-1.2, g.rotation.x + dy * 0.006));
+          }}>
           <sphereGeometry args={[r, 160, 112]} />
           {body === 'earth' ? <EarthMaterial /> : <meshStandardMaterial map={tex} bumpMap={bump} bumpScale={body === 'moon' ? 0.02 : 0.012} roughness={0.95} metalness={0} />}
         </mesh>
         {body === 'earth' && <Clouds r={r} />}
         {focused && pins.map((p) => <PinMark key={p.id} pin={p} r={r} />)}
       </group>
-      {!focus && (
+      {!focus && labels && (
         <Html position={[0, -r - 0.28, 0]} center zIndexRange={[10, 0]}>
           <button type="button" onClick={onPick} className="head whitespace-nowrap px-2 py-1 hover:text-ink">{name}</button>
         </Html>
@@ -145,6 +164,7 @@ function OrbitLines({ focus }: { focus: Focus }) {
   }), []);
   useFrame((_, dt) => {
     if (!group.current) return;
+    if (!REDUCE) group.current.rotation.y += dt * 0.012;   // the plot itself turns slowly
     group.current.children.forEach((c) => {
       const m = (c as THREE.Line).material as THREE.LineBasicMaterial;
       m.opacity += ((focus ? 0 : 0.16) - m.opacity) * Math.min(1, dt * 4);
@@ -199,6 +219,10 @@ export function SystemView() {
   const [focus, setFocus] = useState<Focus>(null);
   const [dest, setDest] = useState<'mars' | 'moon'>('mars');
   const [hoverSite, setHoverSite] = useState<string | null>(null);
+  const [titled, setTitled] = useState(() => { try { return /[?&](nointro|director)/.test(window.location.search) || sessionStorage.getItem('tt-title') === '1'; } catch { return true; } });
+  const enter = (story: boolean) => { try { sessionStorage.setItem('tt-title', '1'); } catch { /* ignore */ } setTitled(true); if (story) useProgress.getState().setStory(0); };
+  const story = useProgress((s) => s.story);
+  const real = data.sites.reduce((n, s) => n + Object.values(s.params ?? {}).filter((v) => v.source === 'measured' || v.source === 'reanalysis').length, 0);
   const [jump, setJump] = useState(0);
   const go = (f: Focus) => { setFocus(f); setJump((n) => n + 1); };
   const target = data.targets[Math.max(0, targetIndex(data, targetId))];
@@ -229,9 +253,9 @@ export function SystemView() {
         <Galaxy />
         <OrbitLines focus={focus} />
         <Suspense fallback={null}>
-          <Planet body="earth" focus={focus} pins={earthPins} face={face.earth} onPick={() => pick('earth')} />
-          <Planet body="mars" focus={focus} pins={marsPins} face={face.mars} onPick={() => pick('mars')} />
-          <Planet body="moon" focus={focus} pins={moonPins} face={face.moon} onPick={() => pick('moon')} />
+          <Planet body="earth" focus={focus} pins={earthPins} face={face.earth} onPick={() => pick('earth')} labels={titled || story != null} />
+          <Planet body="mars" focus={focus} pins={marsPins} face={face.mars} onPick={() => pick('mars')} labels={titled || story != null} />
+          <Planet body="moon" focus={focus} pins={moonPins} face={face.moon} onPick={() => pick('moon')} labels={titled || story != null} />
         </Suspense>
         <Rig focus={focus} />
         {POST && (
@@ -246,7 +270,27 @@ export function SystemView() {
 
       <div key={jump} className="warp" aria-hidden />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-3 p-5">
+      {!titled && story == null && (
+        <div className="title-screen" role="dialog" aria-label="Thermal Twin">
+          <div className="title-lockup rise">
+            <p className="caps !text-[#8fe3ff]">NASA Space Apps 2026 · analog site finder</p>
+            <h1 className="title-word">THERMAL<br />TWIN</h1>
+            <p className="mt-3 max-w-md text-base">Find the places on Earth where the ground behaves like the Moon and Mars, then test what survives the trip.</p>
+            <dl className="title-stats">
+              <div><dt>Earth sites</dt><dd>{data.sites.length}</dd></div>
+              <div><dt>Targets</dt><dd>{data.targets.length}</dd></div>
+              <div><dt>Parameters</dt><dd>{PARAMS.length}</dd></div>
+              <div><dt>Real values</dt><dd>{real.toLocaleString('en-US')}</dd></div>
+            </dl>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button type="button" className="btn btn-primary !min-h-[44px] !px-5" onClick={() => enter(true)}>Begin mission</button>
+              <button type="button" className="btn !min-h-[44px] !px-5" onClick={() => enter(false)}>Explore freely</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-3 p-5 ${!titled && story == null ? 'hidden' : ''}`}>
         <ol className="hud pointer-events-auto" aria-label="Mission steps">
           <li className={`hud-step ${focus === null || focus === 'mars' || focus === 'moon' ? 'is-on' : 'is-done'}`}>
             <span className="hud-n">01</span>
@@ -267,7 +311,7 @@ export function SystemView() {
         {focus && <button type="button" className="btn pointer-events-auto" onClick={() => go(null)}>All three</button>}
       </div>
 
-      {!focus && <p className="caps pointer-events-none absolute inset-x-0 bottom-5 text-center">Same ground test, three worlds · choose a body · not to scale</p>}
+      {!focus && titled && story == null && <p className="caps pointer-events-none absolute inset-x-0 bottom-5 text-center">Same ground test, three worlds · choose a body · not to scale</p>}
       {focus === 'earth' && <p className="caps pointer-events-none absolute bottom-5 left-5 max-w-[48%]">Ranked by day–night temperature curve, slope, roughness and minerals · nothing is scored in the browser</p>}
 
       {focus && (

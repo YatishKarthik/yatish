@@ -24,6 +24,7 @@ No lockfile is committed: lockfiles written on one operating system have made np
 | `/bench/:site` | Test bench: solar power and thermal cycling on both worlds, plus a link to the rover trial |
 | `/analysis` | Parameter space: 3D PCA, k-means families, neural map, parameter scatter and correlation matrix |
 | `/challenge` | Blind match: read a target's fingerprint and pick the closest of three Earth sites |
+| (overlay) | Guided mission: seven chapters that walk a first-time visitor through the method; start it from the title screen |
 | `/survey` | Your survey record: rank, XP, badges and coverage, kept in the browser |
 | `/evidence` | Curve overlay, controls, rover ground truth, local readings |
 | `/method` | Formula, weights, data table, classes, AI statement |

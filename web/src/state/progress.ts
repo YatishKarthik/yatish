@@ -6,6 +6,8 @@ interface Saved { xp: number; scanned: string[]; surveyed: string[]; trials: num
 export interface LogLine { id: number; text: string; kind: 'info' | 'badge' | 'rank' }
 interface Progress extends Saved {
   log: LogLine[];
+  story: number | null;      // current chapter of the guided mission, or null
+  setStory: (n: number | null) => void;
   award: (what: 'scan' | 'survey' | 'trial' | 'challenge' | 'flag', id: string, extra?: number) => void;
   say: (text: string) => void;
   reset: () => void;
@@ -25,6 +27,7 @@ export const BADGES: { id: string; name: string; how: string; test: (s: Saved) =
   { id: 'gravity', name: 'Trial by gravity', how: 'Run 3 rover trials', test: (s) => s.trials >= 3 },
   { id: 'limit', name: 'Found the limit', how: 'Make a rover stick on either world', test: (s) => s.flags.includes('stuck') },
   { id: 'night', name: 'Night shift', how: 'Scrub the clock into the night', test: (s) => s.flags.includes('night') },
+  { id: 'story', name: 'Mission complete', how: 'Finish the guided mission', test: (s) => s.flags.includes('story') },
   { id: 'bench', name: 'Test engineer', how: 'Open the test bench', test: (s) => s.flags.includes('bench') },
   { id: 'analyst', name: 'Analyst', how: 'Open the parameter space', test: (s) => s.flags.includes('analysis') },
   { id: 'eye', name: 'Sharp eye', how: 'Score 4 of 5 in Blind match', test: (s) => s.best >= 4 },
@@ -43,6 +46,8 @@ let lineId = 0;
 export const useProgress = create<Progress>((set, get) => ({
   ...load(),
   log: [],
+  story: null,
+  setStory: (n) => { if (n === 7) get().award('flag', 'story'); set({ story: n != null && n > 6 ? null : n }); },
   say: (text) => set((s) => ({ log: [...s.log.slice(-29), { id: ++lineId, text, kind: 'info' }] })),
   reset: () => { save(EMPTY); set({ ...EMPTY, log: [{ id: ++lineId, text: 'Survey record cleared', kind: 'info' }] }); },
   award: (what, id, extra = 0) => {

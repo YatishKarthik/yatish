@@ -142,3 +142,11 @@ html.intro header { animation: fade var(--motion-300) var(--ease-out) 1.9s both;
   animation: tunnel 600ms cubic-bezier(0.5, 0, 0.2, 1) both; }
 @keyframes tunnel { 0% { opacity: 0; transform: scale(0.6) rotate(0deg); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(3.2) rotate(8deg); } }
 @media (prefers-reduced-motion: reduce) { .warp-tunnel { display: none; } }
+
+/* ---- title screen: a lockup over the live scene ---- */
+.title-screen { position: absolute; inset: 0; z-index: 6; display: flex; align-items: flex-end; padding: 52px; background: linear-gradient(90deg, rgba(8, 10, 14, 0.82) 0%, rgba(8, 10, 14, 0.45) 42%, rgba(8, 10, 14, 0) 70%); }
+.title-word { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: clamp(56px, 9vw, 132px); line-height: 0.92; letter-spacing: 0.06em; color: #f4f6f8; }
+.title-stats { display: flex; flex-wrap: wrap; gap: 8px 32px; margin-top: 20px; }
+.title-stats dt { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #aeb7c2; }
+.title-stats dd { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-variant-numeric: tabular-nums; color: #f4f6f8; margin: 0; }
+@media (max-width: 799px) { .title-screen { padding: 20px; background: linear-gradient(0deg, rgba(8, 10, 14, 0.9) 0%, rgba(8, 10, 14, 0.5) 60%, rgba(8, 10, 14, 0.1) 100%); } .title-stats dd { font-size: 20px; } }

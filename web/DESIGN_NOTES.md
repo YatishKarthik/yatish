@@ -91,6 +91,10 @@ The entry screen is deliberately more atmospheric than the working views.
 | Warp tunnel between the system view and the ground, 600 ms | decorative, finite, off with reduced motion |
 | Noise-generated cloud deck on Earth | decorative; not weather data |
 
+| Title screen over the live scene, with real counts | orientation: what this is and how much data is behind it |
+| Guided mission, seven chapters, each advancing when its goal is met | teaches the method in order; can be left at any time |
+| Drag a focused planet to spin it; the orbit plot turns slowly | interaction; plot rotation off with reduced motion |
+
 Progress is stored in the visitor's browser only (`localStorage`) and can be cleared from the Survey page.
 
 ## Analysis and test bench

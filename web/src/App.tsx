@@ -6,6 +6,7 @@ import { initClock, runIntro } from './state/clock';
 import { useStore } from './state/store';
 import { Chrome } from './ui/Chrome';
 import { OpsLog } from './ui/OpsLog';
+import { Story } from './ui/Story';
 import { warpWhoosh } from './ui/sound';
 import { AnalysisView } from './views/AnalysisView';
 import { BenchView } from './views/BenchView';
@@ -78,6 +79,7 @@ export default function App() {
       </Chrome>
       <WarpTunnel />
       <OpsLog />
+      <Story />
       <Director />
     </BrowserRouter>
   );
