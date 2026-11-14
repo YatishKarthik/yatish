@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/raw/
+frontend/node_modules/
+frontend/.next/
+
+# build artifacts
+frontend/tsconfig.tsbuildinfo

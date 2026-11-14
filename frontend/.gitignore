@@ -1,0 +1,12 @@
+# Python virtual environment & cache (~1.4 GB)
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Raw satellite cache (can be re-fetched anytime)
+data/raw/
+
+# Next.js dependencies & build cache (~600 MB)
+frontend/node_modules/
+frontend/.next/
