@@ -43,7 +43,7 @@ class SimRequest(BaseModel):
     scenario: str
 
 
-@app.get("/")
+@app.get("/api/status")
 def root():
     return {"system": "Celestra v2.2", "status": "operational"}
 
@@ -149,6 +149,17 @@ def simulate_dual(req: SimRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Deployed build: the exported website (frontend/out) is served from the same address as the API, so the site can
+# use relative URLs and judges open a single link. Mounted last so every /api and /static route above wins.
+WEB_DIR = ROOT / "frontend" / "out"
+if WEB_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+else:
+    @app.get("/")
+    def root_status():
+        return root()
 
 
 if __name__ == "__main__":

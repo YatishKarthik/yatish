@@ -11,8 +11,8 @@ import {
   type ArtemisInfo, type Illumination, type NightIR, type CustomInfo, type FunctionalRanking, type Contribution, type WhyInfo, type FieldReadiness,
 } from "@/components/Insights";
 import TerrainTwins from "@/components/TerrainTwins";
+import { API } from "@/lib/api";
 
-const API = "http://127.0.0.1:8000";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 
@@ -198,7 +198,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
   useEffect(() => {
     if (targetId.startsWith("custom_")) return;
     let live = true;
-    fetch(`http://127.0.0.1:8000/api/discoveries/${targetId}`)
+    fetch(`${API}/api/discoveries/${targetId}`)
       .then(async (r) => { const j = await r.json().catch(() => null); if (!live) return; if (r.ok) setAi({ id: targetId, data: j as AiDiscoveryData, error: null }); else setAi({ id: targetId, data: null, error: j?.detail ?? "AI search not available." }); })
       .catch(() => { if (live) setAi({ id: targetId, data: null, error: "AI search not available (backend not reachable)." }); });
     return () => { live = false; };

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { API } from "@/lib/api";
 
-const API = "http://127.0.0.1:8000";
 
 export interface Dem {
   resolution: number; extent_m: number; relief_m: number; data: number[];

@@ -1,0 +1,18 @@
+# Everything the deployed app needs, including live "pick any point" (requirements.txt without PyTorch, which only the offline AI training uses)
+# Running the app (backend + matching engine)
+numpy>=1.26.0,<2.3.0
+pandas>=2.2.0
+pyarrow>=17.0.0
+scipy>=1.13.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+
+# Rebuilding the data from source (data-pipeline/) and the live "pick any point" feature
+requests>=2.32.0
+rasterio>=1.3.10
+pyproj>=3.6.0
+mgrs>=1.4.6
+scikit-image>=0.24.0
+Pillow>=10.4.0
+# AI discovery training (data-pipeline/06_ai_discovery.py only; the app does not need it)

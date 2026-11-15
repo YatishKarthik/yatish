@@ -9,6 +9,7 @@ import { ArtemisBadge, artemisOrder, type ArtemisInfo } from "@/components/Insig
 import { ThemeToggle } from "@/components/ui";
 import { Tour, HelpButton, type TourStep } from "@/components/Tutorial";
 import { Splash } from "@/components/Splash";
+import { API } from "@/lib/api";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 const DualSimulator = dynamic(() => import("@/components/DualSimulator"), { ssr: false });
@@ -30,7 +31,6 @@ interface TargetSite {
   artemis?: ArtemisInfo | null;
 }
 
-const API = "http://127.0.0.1:8000";
 const fmtLat = (v: number) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? "N" : "S"}`;
 const fmtLon = (v: number) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? "E" : "W"}`;
 

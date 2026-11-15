@@ -134,6 +134,24 @@ Picking your own point on the Moon or Mars fetches terrain live, so it also need
 
 If a picked Mars point fails, run `python data-pipeline/diagnose_mars.py <lat> <lon>`. It checks the connection to NASA's HiRISE archive, the nearest terrain models and the read the app makes, with timings, and says which step fails. HiRISE has mapped only small patches of Mars, so a point more than 400 km from every HiRISE terrain model cannot be measured. Mars points are measured one at a time (a second request waits for the first), and every download now times out instead of hanging.
 
+## Deploy (free, one link for judges)
+
+The `Dockerfile` builds the website as static files and serves it from the FastAPI backend, so one container on a Hugging Face Space (free CPU tier) runs everything at a single address.
+
+1. Create a Space at huggingface.co: New Space, SDK **Docker**, template **Blank**, visibility **Public**, hardware **CPU basic (free)**.
+2. Create a write token (Settings, Access Tokens), then from the project folder:
+
+```bash
+pip install -U huggingface_hub
+hf auth login
+hf upload <your-name>/<space-name> . . --repo-type=space --exclude ".venv/*" "frontend/node_modules/*" "frontend/.next/*" "frontend/out/*" "data/raw/*" "*/__pycache__/*" ".git/*" "README.md"
+hf upload <your-name>/<space-name> deploy/space-README.md README.md --repo-type=space
+```
+
+3. The Space builds for about 5-10 minutes, then the app is at `https://<your-name>-<space-name>.hf.space`.
+
+A free Space sleeps after 48 hours without visitors and wakes in about a minute on the next visit. Local development is unchanged: `npm run dev` and `python backend/main.py` work as before.
+
 ## Rebuild the data from source (optional)
 
 ```bash
