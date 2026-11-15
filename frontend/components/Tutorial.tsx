@@ -8,6 +8,7 @@ export interface TourStep {
   title: string;
   body: string;
   side?: "top" | "bottom" | "left" | "right" | "inside";
+  screens?: string[];       // only on these screens (default: wherever the element exists)
 }
 
 interface Box { x: number; y: number; w: number; h: number }

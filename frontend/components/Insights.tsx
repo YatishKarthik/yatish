@@ -284,7 +284,7 @@ export function SunlightPanel({ body, illumination, nightIr, maxSun }: { body: "
       <div className="flex flex-col gap-2" data-tour="sunlight">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-xs font-semibold">Sunlight & Earth View</span>
-          <span className="text-[11px] faint">Modelled by Celestra from LRO LOLA terrain</span>
+          <span className="text-[11px] faint">Modelled by Celestra from NASA Moon terrain maps</span>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
           <Mini label="Sunlit" value={`${Math.round(il.sunlit_fraction * 100)}%`} sub="of the year, at the point" />

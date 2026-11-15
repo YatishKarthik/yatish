@@ -21,13 +21,13 @@ FEATURE_META = {
     "slope_p90": {"label": "90th-Pct Slope", "unit": "deg", "pillar": "topo", "group": "topography"},
     "tri_ruggedness": {"label": "Terrain Ruggedness", "unit": "m", "pillar": "topo", "group": "topography"},
     "concavity": {"label": "Pit & Crater Concavity", "unit": "idx", "pillar": "topo", "group": "topography"},
-    "sar_backscatter": {"label": "Texture Roughness Index", "unit": "idx", "pillar": "radar", "group": "radar"},
-    "sar_entropy": {"label": "Texture Entropy", "unit": "bits", "pillar": "radar", "group": "radar"},
+    "sar_backscatter": {"label": "Surface Roughness", "unit": "idx", "pillar": "radar", "group": "radar"},
+    "sar_entropy": {"label": "Texture Variety", "unit": "bits", "pillar": "radar", "group": "radar"},
     "sar_contrast": {"label": "Texture Contrast", "unit": "idx", "pillar": "radar", "group": "radar"},
-    "bareness_index": {"label": "Bare Ground (1-NDVI)", "unit": "idx", "pillar": "mineral", "group": "mineral"},
-    "iron_oxide_ratio": {"label": "Iron Oxide Ratio (red/blue)", "unit": "idx", "pillar": "mineral", "group": "mineral"},
-    "clay_hydroxyl_ratio": {"label": "Clay / Hydroxyl Ratio (SWIR)", "unit": "idx", "pillar": "mineral", "group": "mineral"},
-    "albedo": {"label": "Surface Albedo", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "bareness_index": {"label": "Bare Ground", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "iron_oxide_ratio": {"label": "Rusty (Iron-Oxide) Colour", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "clay_hydroxyl_ratio": {"label": "Clay Minerals", "unit": "idx", "pillar": "mineral", "group": "mineral"},
+    "albedo": {"label": "Surface Brightness", "unit": "idx", "pillar": "mineral", "group": "mineral"},
     "temp_min_c": {"label": "Coldest Typical Temperature", "unit": "°C", "pillar": "thermal", "group": "thermal"},
     "temp_max_c": {"label": "Warmest Typical Temperature", "unit": "°C", "pillar": "thermal", "group": "thermal"},
     "temp_delta_c": {"label": "Day-Night Swing", "unit": "°C", "pillar": "thermal", "group": "thermal"},
@@ -284,7 +284,7 @@ class PlanetaryAnalogEngine:
                     f"Plants cover much of the ground in the growing season: wet, organic soil does not behave like dry regolith."
                     if is_vegetated
                     else (f"Surface composition ({earth_row['mineral_profile'].replace('_', ' ')}) is close to the target's ({int(min_s*100)}% match)." if min_measured
-                          else f"The ground here is bare (Sentinel-2), but {body_name}'s surface composition is not measured in our data, so how similar the rock is cannot be scored. Check against orbital spectra before relying on drill tests.")
+                          else f"The ground here is bare, but {body_name}'s rock and soil are not measured in our data, so how similar the rock is cannot be scored. Check the rock type before relying on drill tests.")
                 ),
             },
             {
@@ -318,7 +318,7 @@ class PlanetaryAnalogEngine:
                 continue
             r = pd.Series(cands[cid])
             norm = ((pd.Series({c: r[c] for c in FEATURE_COLS}) - self.feature_means) / self.feature_stds).values
-            meta = {"geology": f"Found by the AI search: unnamed place at {d['lat']:.2f}, {d['lon']:.2f}. AI estimate {round(d['ai_score'] * 100)} ({round(d['ai_low'] * 100)}-{round(d['ai_high'] * 100)}), exact score from real data shown here.",
+            meta = {"geology": f"Found by the AI search: an unnamed place at {d['lat']:.2f}, {d['lon']:.2f}. The AI guessed {round(d['ai_score'] * 100)} (range {round(d['ai_low'] * 100)}-{round(d['ai_high'] * 100)}); the score shown here was then measured exactly from real data.",
                     "ai": {k: d[k] for k in ("ai_score", "ai_low", "ai_high", "ai_sigma", "confident")}}
             rows.append((r, norm, meta))
         return rows
@@ -366,7 +366,7 @@ class PlanetaryAnalogEngine:
             "permits": KNOWN_PERMITS.get(sid, "Not verified: check land ownership, protected-area rules and local research permits."),
             "permits_status": "documented" if sid in KNOWN_PERMITS else "not verified",
             "field_season": season,
-            "field_season_basis": f"Rule of thumb from MODIS land surface temperatures ({why}: typical low {tmin:.0f} °C, high {tmax:.0f} °C)",
+            "field_season_basis": f"Rule of thumb from satellite ground temperatures ({why}: typical low {tmin:.0f} °C, high {tmax:.0f} °C)",
             "low_sun_test_months": low_sun_row["reason"],
             "elevation_m": float(earth_row["elevation_m"]),
             "infrastructure": "Not verified: road access, power and nearest airport should be checked before planning a campaign.",
@@ -459,7 +459,7 @@ class PlanetaryAnalogEngine:
                 "pillar_scores": pillar_scores,
                 "contributions": contributions,
                 "why": {"helps": helps, "hurts": hurts,
-                        "gate_note": None if veg_gate >= 0.999 else f"Score multiplied by {veg_gate:.2f}: the land here is green in its greenest month (MODIS NDVI {ndvi:.2f}) or partly open water ({int(water * 100)}%)."},
+                        "gate_note": None if veg_gate >= 0.999 else f"Score multiplied by {veg_gate:.2f}: the land here turns green with plants in its greenest month, or is partly open water ({int(water * 100)}%)."},
                 "field_readiness": self._field_readiness(earth_row, rep_matrix[-1]),
                 "parameter_similarities": param_sims,
                 "representativeness_matrix": rep_matrix,

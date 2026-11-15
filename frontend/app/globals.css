@@ -202,3 +202,10 @@ html:has(.space-page), body:has(.space-page) { background: #01030a; }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise 220ms ease both; }
 .seg > button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* the walkthrough card follows the theme even on the always-dark landing page */
+.tour-pop .btn { background: var(--panel); border-color: var(--line-strong); color: var(--text); }
+.tour-pop .btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+.tour-pop .btn.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--bg-deep); font-weight: 600; }
+.tour-pop .btn:disabled { opacity: 0.4; }
+.tour-pop .muted { color: var(--muted); }

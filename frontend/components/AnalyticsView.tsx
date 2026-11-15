@@ -92,18 +92,15 @@ const nameOf = (feature: string, label: string) => PARAM_HELP[feature]?.name ?? 
 
 function DataNote({ m, world, t }: { m: EarthMatch; world: string; t: TargetInfo }) {
   const p = m.parameter_similarities;
-  const terrainE = p.slope_mean?.earth_status, terrainT = p.slope_mean?.space_status, comp = p.bareness_index?.earth_status, temp = p.temp_max_c?.earth_status;
+  const terrainOk = p.slope_mean?.earth_status === "measured" && p.slope_mean?.space_status === "measured";
+  const body = world === "the Moon" ? "the Moon" : "Mars";
   const bits: string[] = [];
-  bits.push(terrainE === "measured" && terrainT === "measured" ? "Terrain for both sites is measured" : terrainT !== "measured" ? `Terrain for ${world} is a placeholder shape model` : "Terrain for the Earth site is a placeholder");
-  bits.push(comp === "measured" ? "Earth surface composition is measured by Sentinel-2" : "Earth surface composition is a typical value");
-  bits.push(temp === "measured" ? "Earth surface temperatures are MODIS land surface temperature from NASA Worldview" : "Earth temperatures are not measured here");
-  const body = world === "the Moon" ? "Moon" : "Mars";
+  bits.push(terrainOk ? "The ground shape of both places comes from real NASA and ESA satellite elevation maps" : "Part of the terrain here is a placeholder shape");
   bits.push(p.temp_max_c?.space_status === "measured"
-    ? `${body} temperatures are measured by LRO Diviner (NASA PDS); ${body} composition is not measured in our data, so it is left out of the score`
-    : `${body} composition and temperatures are not measured in our data, so they are left out of the score (only terrain and texture are compared)`);
-  if (t.custom) bits.push("Terrain for your point was fetched live from NASA PDS");
-  if (t.illumination) bits.push("Sunlight and Earth view are modelled by Celestra from LRO LOLA terrain");
-  return <p className="text-xs muted leading-relaxed border-l-2 pl-3" style={{ borderColor: "var(--accent)" }}><b style={{ color: "var(--text)" }}>Where the data comes from.</b> {bits.join(". ")}. Each value&apos;s source is tagged in the Measurements tab.</p>;
+    ? `temperatures are measured on both worlds; ${body}'s rock and soil are not measured in our data, so they are left out of the score`
+    : `${body}'s rock, soil and temperatures are not measured in our data, so only ground shape and texture are compared`);
+  if (t.illumination) bits.push("sunlight and Earth view are modelled by Celestra from the Moon's terrain");
+  return <p className="text-xs muted leading-relaxed border-l-2 pl-3" style={{ borderColor: "var(--accent)" }}><b style={{ color: "var(--text)" }}>Where the data comes from.</b> {bits.join("; ")}. The exact instruments are listed in Expert view.</p>;
 }
 
 interface Validation {
@@ -234,7 +231,6 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
   const ask = (test: string) => TEST_HELP[test]?.ask ?? test;
 
   const isCustom = t.id.startsWith("custom_") || !!t.custom;
-  const customInstrument = data.matches[0]?.parameter_similarities.slope_mean?.space_instrument ?? "orbital elevation data";
   const sunlightPanel = <SunlightPanel body={t.body} illumination={t.illumination} nightIr={t.night_ir} maxSun={t.max_sun_elevation_deg} />;
   const sunlight = t.illumination || t.night_ir || (t.body === "moon" && (t.max_sun_elevation_deg ?? 99) < 15) ? sunlightPanel : null;
   const rankings = data.functional_rankings ?? [];
@@ -281,7 +277,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
             {t.custom && (
               <div className="text-xs leading-relaxed min-w-0">
                 <div><span className="font-semibold">A point you picked</span> at {Math.abs(t.lat).toFixed(2)}°{t.lat >= 0 ? "N" : "S"}, {Math.abs(t.lon).toFixed(2)}°{t.lon >= 0 ? "E" : "W"}.</div>
-                <p className="muted mt-1">Terrain measured live from {customInstrument}; {t.body === "moon" ? "temperatures from LRO Diviner; composition is not measured, so it is not scored." : "composition and temperatures are not measured here, so only terrain and texture are scored."}{t.custom.terrain_offset_km > 0.5 ? ` The nearest elevation data was ${t.custom.terrain_offset_km.toFixed(1)} km from your point.` : ""}</p>
+                <p className="muted mt-1">Ground shape measured live from NASA&apos;s elevation maps; {t.body === "moon" ? "temperatures are measured too; rock and soil are not, so they are not scored." : "rock, soil and temperatures are not measured here, so only ground shape and texture are scored."}{t.custom.terrain_offset_km > 0.5 ? ` The nearest elevation data was ${t.custom.terrain_offset_km.toFixed(1)} km from your point.` : ""}</p>
               </div>
             )}
             {sunlight}
@@ -309,15 +305,15 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                 <input value={filterText} onChange={(e) => setFilterText(e.target.value)} placeholder="Filter by name or rock type" className="input" style={{ paddingLeft: 28 }} />
               </div>
             </div>
-            <p className="text-xs muted mb-2">Score out of 100 · the ± is how far it moves if one measurement is dropped or a weight shifts 20%</p>
-            <div className="flex flex-col gap-1 max-h-[340px] overflow-y-auto pr-1">
+            <p className="text-xs muted mb-2">Score out of 100 · the smaller the ±, the surer the score</p>
+            <div className="relative flex-1 min-h-[340px]"><div className="absolute inset-0 flex flex-col gap-1 overflow-y-auto pr-1">
               {filtered.map((x) => {
                 const rank = x.rank || 1;
                 return (
                   <button key={x.id} type="button" onClick={() => setSelectedId(x.id)} className="row flex items-center justify-between gap-2" aria-pressed={x.id === m.id}>
                     <div className="min-w-0">
                       <div className="text-xs font-semibold flex items-center gap-1.5 truncate"><span className="font-mono muted">#{rank}</span>{x.type === "ai_discovery" && <span className="status shrink-0" style={{ background: "rgba(192,132,252,0.15)", color: "#c084fc" }}>AI find</span>}<span className="truncate">{x.name.replace(/^AI find /, "")}</span></div>
-                      <div className="text-[11px] muted mt-0.5">{x.type === "ai_discovery" ? `unnamed place · AI estimate ${PCT(x.ai?.ai_score ?? 0)} (${PCT(x.ai?.ai_low ?? 0)}–${PCT(x.ai?.ai_high ?? 0)})` : `${x.mineral_profile.replace(/_/g, " ")} · ${x.lat.toFixed(1)}°, ${x.lon.toFixed(1)}°`}</div>
+                      <div className="text-[11px] muted mt-0.5">{x.type === "ai_discovery" ? `unnamed place · AI guessed ${Math.round((x.ai?.ai_score ?? 0) * 100)} (${Math.round((x.ai?.ai_low ?? 0) * 100)}–${Math.round((x.ai?.ai_high ?? 0) * 100)})` : `${x.mineral_profile.replace(/_/g, " ")} · ${x.lat.toFixed(1)}°, ${x.lon.toFixed(1)}°`}</div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-sm font-semibold font-mono">{Math.round(x.similarity_score * 100)}</div>
@@ -326,7 +322,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                   </button>
                 );
               })}
-            </div>
+            </div></div>
           </div>
         </div>
 
@@ -372,7 +368,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                 <div className="flex flex-col gap-4 rise" data-tour="summary">
                   <DataNote m={m} world={world} t={t} />
                   {m.vegetation_gate !== undefined && m.vegetation_gate < 1 && (
-                    <p className="text-xs leading-relaxed" style={{ color: "var(--warn)" }}>The bare-ground rule cut this site&apos;s score{m.vegetation_gate === 0 ? " to zero" : ` to ${Math.round(m.vegetation_gate * 100)}%`}: Sentinel-2 sees {m.ndvi !== undefined && m.ndvi > 0.2 ? `plant cover (NDVI ${m.ndvi.toFixed(2)})` : ""}{m.ndvi !== undefined && m.ndvi > 0.2 && (m.water_fraction ?? 0) > 0.2 ? " and " : ""}{(m.water_fraction ?? 0) > 0.2 ? `${Math.round((m.water_fraction ?? 0) * 100)}% open water` : ""}. The Moon and Mars have neither. Before the rule it scored {Math.round((m.similarity_before_vegetation_rule ?? 0) * 100)}.</p>
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--warn)" }}>The bare-ground rule cut this site&apos;s score{m.vegetation_gate === 0 ? " to zero" : ` to ${Math.round(m.vegetation_gate * 100)}%`}: satellites see {m.ndvi !== undefined && m.ndvi > 0.2 ? "plants growing here" : ""}{m.ndvi !== undefined && m.ndvi > 0.2 && (m.water_fraction ?? 0) > 0.2 ? " and " : ""}{(m.water_fraction ?? 0) > 0.2 ? `${Math.round((m.water_fraction ?? 0) * 100)}% open water` : ""}. The Moon and Mars have neither. Before the rule it scored {Math.round((m.similarity_before_vegetation_rule ?? 0) * 100)}.</p>
                   )}
                   <p className="text-[15px] leading-relaxed">
                     <b>{m.name}</b> is <Status level={sw.level}>{sw.word}</Status> to {t.name} overall, with a match score of <b>{Math.round(m.similarity_score * 100)} out of 100</b>.
@@ -423,7 +419,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
               )}
 
               {view === "ai" && (
-                <AiDiscoveries data={aiData} error={aiError} world={t.name} selected={m.type === "ai_discovery" ? m.id : null} onSelect={(id) => { if (data.matches.some((x) => x.id === id)) setSelectedId(id); }} topNamedScore={data.matches.find((x) => x.type !== "ai_discovery")?.similarity_score} />
+                <AiDiscoveries data={aiData} error={aiError} world={t.name} body={t.body} selected={m.type === "ai_discovery" ? m.id : null} onSelect={(id) => { if (data.matches.some((x) => x.id === id)) setSelectedId(id); }} topNamedScore={data.matches.find((x) => x.type !== "ai_discovery")?.similarity_score} />
               )}
               {view === "use" && rankings.length > 0 && (
                 <ByUseView rankings={rankings} selectedId={m.id} onSelect={setSelectedId}
@@ -501,8 +497,8 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                               <span style={{ color: "var(--space)" }}>{world} {v.target_val} {v.unit}</span>
                             </div>
                             <div className="flex flex-wrap justify-between items-center gap-2 mt-1.5 text-[11px]">
-                              <span className="flex items-center gap-1.5"><SourceTag s={v.earth_status} /><span className="faint truncate max-w-[220px]" title={v.earth_instrument}>{v.earth_instrument}</span></span>
-                              <span className="flex items-center gap-1.5"><span className="faint truncate max-w-[220px]" title={v.space_instrument}>{v.space_instrument}</span><SourceTag s={v.space_status} /></span>
+                              <span className="flex items-center gap-1.5"><SourceTag s={v.earth_status} /><span className="faint truncate max-w-[220px]" title={v.earth_instrument}>{v.earth_agency && v.earth_agency !== "none" ? `${v.earth_agency} satellite` : "–"}</span></span>
+                              <span className="flex items-center gap-1.5"><span className="faint truncate max-w-[220px]" title={v.space_instrument}>{v.space_agency && v.space_agency !== "none" ? `${v.space_agency} orbiter` : "–"}</span><SourceTag s={v.space_status} /></span>
                             </div>
                           </div>
                         ); })}

@@ -33,32 +33,38 @@ const API = "http://127.0.0.1:8000";
 const fmtLat = (v: number) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? "N" : "S"}`;
 const fmtLon = (v: number) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? "E" : "W"}`;
 
-// The walkthrough. Steps whose element is not on screen are skipped, so this one list covers every screen.
+// The walkthrough. Shared controls are explained once on the first screen; later screens show only their own steps,
+// and steps whose element is not on screen are skipped.
 const TOUR: TourStep[] = [
-  { target: "brand", title: "What this app does", body: "You pick a place on the Moon or Mars where a base might be built. The app then finds places on Earth that behave like it, so hardware can be tested there first. Finally you can run the same test on both worlds and see what changes.", side: "bottom" },
-  { target: "worlds", title: "Start by choosing a world", body: "This is a small model of the inner solar system. Hover a body to read about it. Click the Moon or Mars to open its globe. Earth is where the testing happens, so it cannot be chosen as a destination.", side: "top" },
-  { target: "theme", title: "Light or dark", body: "Switch between light and dark mode any time. Your choice is remembered on this device.", side: "bottom" },
-  { target: "globe", title: "The destination globe", body: "Each pin is a candidate base site; amber pins on the Moon are NASA's Artemis III landing regions. Drag to turn the globe, scroll to zoom, and click a pin to select it. Click bare ground to pick any point of your own.", side: "right" },
-  { target: "candidates", title: "The same sites as a list", body: "Artemis III regions from NASA's October 2024 list come first. A dashed tag marks 2022 candidates that NASA dropped in 2024. Coordinates and elevation are shown for each site.", side: "left" },
-  { target: "custom-point", title: "Your own point", body: "Celestra measures the terrain at your point live from NASA PDS elevation data (and, on the Moon, Diviner temperatures). Anything not measured is left out of the score. Because the terrain is fetched live, it can take up to a minute.", side: "left" },
-  { target: "selected", title: "What makes this site hard", body: "Each site has one main engineering problem, written in plain words. The button below starts the search for Earth test sites that share that problem.", side: "left" },
-  { target: "summary", title: "The answer in one paragraph", body: "This tab explains the selected Earth site in plain language: how alike it is, which measurements won and lost it points, and how ready it is for a field campaign. The first line says which numbers are measured and which are typical values.", side: "bottom" },
-  { target: "earth-globe", title: "Where the matches are", body: "Every ranked Earth site is a pin. The best three are labelled. Select one and the globe turns to it.", side: "right" },
-  { target: "ranked", title: "All sites, ranked", body: "The 60 named Earth sites and the places the AI search found (violet, shown by coordinates) are ordered by how closely their measured ground and temperatures resemble the destination. The ± is how far a score moves if one measurement is dropped or a weight changes.", side: "right" },
-  { target: "ai-finds", title: "Places nobody listed", body: "A deep ensemble searched all of Earth's bare land for places like this destination. Its finds are the violet pins; each was re-checked with real data, and each can be explored and flown in the simulator like a named site. The AI Discoveries tab shows how confident the AI was.", side: "right" },
-  { target: "score", title: "The match score", body: "0 to 100. It blends what is measured for both places: terrain shape, surface texture, and (on the Moon) day-night temperatures; groups without a measurement are shown as not compared. A high score does not mean every kind of test will work there, which is what the Tests tab is for.", side: "left" },
-  { target: "sunlight", title: "Light, shadow and radio", body: "For polar Moon sites: how often the point is sunlit, how often Earth is in view for radio, and how much of the area never sees the Sun. Modelled by Celestra from LRO LOLA terrain.", side: "bottom" },
-  { target: "view-tabs", title: "Dig deeper when you want to", body: "By Use finds the best site for each test. Summary explains why the selected site matches and what fieldwork there needs. Terrain Twins shows both grounds side by side at the same scale. Expert view holds the uncertainty maths, data sources and validation.", side: "top" },
-  { target: "by-use", title: "Pick the test, then the site", body: "An Earth site can be a good stand-in for one test and useless for another. Choose a rover, landing or mining test to see its five best Earth sites. Tests whose physics does not carry over from Earth say so clearly.", side: "top" },
-  { target: "brief", title: "Take it into the field", body: "Opens a printable one-page brief for a test campaign: the top sites per test, field seasons, permits and what is still unverified. Save it as a PDF from the print dialog.", side: "bottom" },
-  { target: "launch", title: "Try it yourself", body: "Opens the simulator: drive a rover, land a lander and drill a core on the Earth site, then do the same on the destination with its real gravity and air pressure.", side: "left" },
-  { target: "sim-world", title: "Two worlds, same test", body: "Run the test on Earth first, then switch to the destination. The terrain is built from each site's real elevation data; gravity, air pressure and temperature change with the world.", side: "bottom" },
-  { target: "sim-test", title: "One mission, three parts", body: "First you land on the pad. Then the rover rolls off and drives five waypoints along a surveyed route; on the way you grab flagged rocks with the claw and dock at two stations to drill a core. Everything you collect adds to the score.", side: "bottom" },
-  { target: "sim-briefing", title: "Read the rules first", body: "Every run starts with a short briefing: what counts as a pass, what fails you, and the controls. Nothing moves until you press Start.", side: "top" },
-  { target: "sim-hud", title: "Live readings", body: "While you play, the key numbers are shown here in plain words. Red means you are close to failing.", side: "bottom" },
-  { target: "sim-score", title: "Your score", body: "Points so far, with rocks, cores and waypoints counted. The arrow points at the next waypoint. Fly the same mission on the other world and compare the two scores.", side: "left" },
-  { target: "sim-results", title: "Compare the two runs", body: "Your Earth result and destination result sit side by side with their scores. The gap between them is exactly what an Earth test can and cannot tell you about the destination.", side: "top" },
-  { target: "help", title: "Come back any time", body: "This button restarts the walkthrough for whichever screen you are on.", side: "left" },
+  // first screen only: what the app is and the controls every screen shares
+  { screens: ["picker"], target: "brand", title: "What this app does", body: "You pick a place on the Moon or Mars where a base might be built. The app finds places on Earth that behave like it, so hardware can be tested there first. Then you can run the same test on both worlds and see what changes.", side: "bottom" },
+  { screens: ["picker"], target: "worlds", title: "Start by choosing a world", body: "This is a small model of the inner solar system. Hover a body to read about it, then click the Moon or Mars to open its globe. Earth is where the testing happens, so it is not a destination.", side: "top" },
+  { screens: ["picker"], target: "theme", title: "Light or dark", body: "Switch between light and dark mode at any time. Your choice is remembered on this device.", side: "bottom" },
+  { screens: ["picker"], target: "help", title: "Help on every screen", body: "Each new screen shows a short tour of what is new on it. This button replays the tour for the screen you are on.", side: "left" },
+  // destination globe
+  { target: "globe", title: "The destination globe", body: "Each pin is a possible base site. Amber pins on the Moon are NASA's Artemis III landing regions. Drag to turn the globe, scroll to zoom and click a pin to choose it. Click bare ground to pick any point of your own.", side: "right" },
+  { target: "candidates", title: "The same sites as a list", body: "NASA's current Artemis III regions come first. A dashed tag marks regions NASA dropped from its list in 2024.", side: "left" },
+  { target: "custom-point", title: "Your own point", body: "Celestra measures the ground at your point live from NASA's maps. Anything it cannot measure is left out of the score. This can take up to a minute.", side: "left" },
+  { target: "selected", title: "What makes this site hard", body: "Each site has one main engineering problem, in plain words. The button below searches Earth for test sites that share it.", side: "left" },
+  // results
+  { target: "ranked", title: "All sites, best first", body: "Named Earth sites and places the AI found (purple, shown by coordinates) are ordered by how much their ground and temperatures resemble the destination. The small ± shows how sure the score is: the smaller, the surer.", side: "right" },
+  { target: "earth-globe", title: "Where the matches are", body: "Every ranked site is a pin; the best three are labelled. Choose one and the globe turns to it.", side: "right" },
+  { target: "ai-finds", title: "Places nobody listed", body: "An AI searched all of Earth's bare land for places like this destination. Its finds are the purple pins. Each one was double-checked with real measurements, and you can explore it and fly it in the simulator like any other site.", side: "right" },
+  { target: "score", title: "The match score", body: "0 to 100: how alike the two places are in ground shape, surface texture and, where measured, day-night temperatures. A high score does not mean every test works there, which is what the By Use tab is for.", side: "left" },
+  { target: "sunlight", title: "Light, shadow and radio", body: "For Moon sites near the pole: how often the point is in sunlight, how often Earth is in view for radio contact, and how much of the area never sees the Sun.", side: "bottom" },
+  { target: "view-tabs", title: "Dig deeper when you want to", body: "By Use finds the best site for each test. Summary explains this match in plain words. Terrain Twins shows both grounds side by side. Expert view has the data sources, maths and checks.", side: "top" },
+  { target: "by-use", title: "Pick the test, then the site", body: "A site can be good for one test and useless for another. Choose a rover, landing or mining test to see its best Earth sites. Tests that Earth cannot imitate say so.", side: "top" },
+  { target: "brief", title: "Take it into the field", body: "A printable one-page plan for a test campaign: the best sites per test, when to go, permits and what still needs checking.", side: "bottom" },
+  { target: "launch", title: "Try it yourself", body: "Opens the simulator: land, drive a rover and drill a core on the Earth site, then do the same on the destination with its real gravity and air.", side: "left" },
+  // simulator
+  { target: "sim-world", title: "Two worlds, same test", body: "Run the mission on Earth first, then switch to the destination. Both grounds are built from real elevation maps; gravity, air and temperature change with the world.", side: "bottom" },
+  { target: "sim-test", title: "One mission, two parts", body: "First land on the pad. Then the rover rolls off and drives to five waypoints, grabbing flagged rocks and stopping at two stations to drill a core. Everything you collect adds to your score.", side: "bottom" },
+  { target: "sim-relief", title: "See the slopes better", body: "Real ground can look flat on a screen. Make hills 2 or 3 times taller to see the slopes clearly. Only the picture changes: the rover and lander still feel the real slopes. Choose before you start.", side: "bottom" },
+  { target: "sim-view", title: "Three ways to look", body: "Camera is the normal view. Slope colours the ground by how steep it is for the rover. Heat shows how warm the ground is, and how the engine heats it when you land.", side: "bottom" },
+  { target: "sim-briefing", title: "Read the rules first", body: "Each part starts with a short briefing: what counts as a pass, what fails you, and the controls. Nothing moves until you press Start.", side: "top" },
+  { target: "sim-hud", title: "Live readings", body: "The key numbers while you play. Red means you are close to failing.", side: "bottom" },
+  { target: "sim-score", title: "Your score", body: "Points so far for rocks, cores and waypoints. Fly the same mission on the other world and compare.", side: "left" },
+  { target: "sim-results", title: "Compare the two runs", body: "Your Earth and destination results side by side. The gap between them is what an Earth test can and cannot tell you.", side: "top" },
 ];
 
 export default function Home() {
@@ -247,7 +253,7 @@ export default function Home() {
                     <button type="button" className="btn btn-sm btn-icon" aria-label="Clear your point" title="Clear your point" disabled={customBusy} onClick={() => { setCustomPoint(null); setCustomError(null); }}><X className="w-3.5 h-3.5" /></button>
                   </div>
                   <h3 className="text-base font-semibold font-mono mb-1">{fmtLat(customPoint.lat)}, {fmtLon(customPoint.lon)}</h3>
-                  <p className="text-xs muted leading-relaxed mb-3">Any point on {worldName}. Celestra measures the terrain here live from NASA PDS elevation data and, on the Moon, LRO Diviner temperatures. Nothing is borrowed or filled in.</p>
+                  <p className="text-xs muted leading-relaxed mb-3">Any point on {worldName}. Celestra measures the ground here live from NASA&apos;s elevation maps and, on the Moon, its temperatures. Nothing is borrowed or filled in.</p>
                   {customError && (
                     <div className="rounded-xl px-3 py-2 text-xs mb-3 flex gap-2 items-start" style={{ background: "var(--bad-soft)", color: "var(--text)" }} role="alert">
                       <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "var(--bad)" }} />
@@ -295,7 +301,7 @@ export default function Home() {
       )}
 
       <HelpButton onClick={() => setTour(true)} />
-      <Tour key={screen} steps={TOUR} open={tour} onClose={() => setTour(false)} />
+      <Tour key={screen} steps={TOUR.filter((s) => !s.screens || s.screens.includes(screen))} open={tour} onClose={() => setTour(false)} />
     </main>
   );
 }

@@ -754,7 +754,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const bare = side === "earth" ? ps?.bareness_index?.earth_val ?? 0.98 : ps?.bareness_index?.target_val ?? 1;
   const rover = ROVERS.find((r) => r.id === roverId) || ROVERS[1];
   const tempMeasured = side === "earth" ? ps?.temp_max_c?.earth_status === "measured" : ps?.temp_max_c?.space_status === "measured";
-  const tempNote = side === "earth" ? (tempMeasured ? "Range: MODIS land surface temperature (NASA Worldview)." : "") : tempMeasured ? "Range: LRO Diviner (NASA PDS)." : "Range: typical values, not measured here.";
+  const tempNote = side === "earth" ? (tempMeasured ? "Range: measured by NASA satellites." : "") : tempMeasured ? "Range: measured by NASA's Moon orbiter." : "Range: typical values, not measured here.";
   const tminC = side === "earth" ? ps?.temp_min_c?.earth_val ?? 5 : t.temp_min_c;
   const tmaxC = side === "earth" ? ps?.temp_max_c?.earth_val ?? 30 : t.temp_max_c;
   const sunElevMax = side === "earth" ? Math.min(78, 90 - Math.abs(selectedMatch.lat) + 18) : ((t as unknown as { max_sun_elevation_deg?: number }).max_sun_elevation_deg ?? Math.min(90, 90 - Math.abs(t.lat) + (t.body === "moon" ? 1.5 : 25)));
@@ -816,10 +816,13 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         </div>
         <div className="text-xs muted" data-tour="sim-test">{phase === "land" ? "Part 1 of 2 · Landing" : phase === "drive" ? (docked ? "Part 2 of 2 · Drilling a core" : "Part 2 of 2 · Drive and sample") : "Mission: land, drive, sample"}</div>
         <div className="flex items-center gap-2">
-          <div className="seg" title="Terrain heights are drawn exaggerated so real relief is visible; the rover and lander physics always use the true slopes">
-            {[1, 2, 3].map((v) => <button key={v} type="button" aria-pressed={ve === v} disabled={phase !== "brief-land" && phase !== "done"} title={phase !== "brief-land" && phase !== "done" ? "Set this before starting a mission (it rebuilds the terrain)" : undefined} onClick={() => { setVe(v); if (phase === "done") restart(); }}>{v === 1 ? "True height" : `Heights ×${v}`}</button>)}
+          <div className="flex items-center gap-1.5" data-tour="sim-relief">
+            <span className="text-[11px] muted hidden sm:inline">Hills</span>
+            <div className="seg" title="Makes hills look taller so slopes are easier to see. Only the picture changes: the rover and lander still feel the real slopes.">
+              {[1, 2, 3].map((v) => <button key={v} type="button" aria-pressed={ve === v} disabled={phase !== "brief-land" && phase !== "done"} title={phase !== "brief-land" && phase !== "done" ? "Choose this before starting a mission (it redraws the ground)" : v === 1 ? "Hills at their real height" : `Hills drawn ${v} times taller, to see slopes better`} onClick={() => { setVe(v); if (phase === "done") restart(); }}>{v === 1 ? "Real size" : `${v}× taller`}</button>)}
+            </div>
           </div>
-          <div className="seg" title="How the ground is shown">
+          <div className="seg" title="How the ground is shown" data-tour="sim-view">
             {([["optical", "Camera"], ["sar", "Slope"], ["thermal", "Heat"]] as [Sensor, string][]).map(([m, l]) => <button key={m} type="button" aria-pressed={sensor === m} onClick={() => setSensor(m)}>{l}</button>)}
           </div>
           {phase === "drive" && !docked && <button type="button" className="btn btn-sm" onClick={() => { lookRef.current = { yaw: 0, pitch: 0 }; setThirdPerson((v) => !v); }}><Eye className="w-3.5 h-3.5" /> {thirdPerson ? "Chase camera" : "Driver's seat"}</button>}
@@ -974,7 +977,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
               {side === "space" && <p className="text-xs muted mt-4">Same mission, different world: gravity is {((gravity / 9.81) * 100).toFixed(0)}% of Earth&apos;s, air pressure is {pressure} bar, and the ground here averages {ambient.toFixed(0)}°C. {pressure < 0.5 ? "With no air, motors and drill bits keep the heat they make." : ""}</p>}
               </div>
               <div className="flex items-center justify-between gap-3 px-5 py-3 border-t line shrink-0" style={{ background: "var(--panel-solid)" }}>
-                <span className="text-xs muted min-w-0 truncate">{grid ? (demSource ? `Terrain: ${demSource}` : "Terrain built from the site's elevation data.") : "Loading terrain…"}</span>
+                <span className="text-xs muted min-w-0 truncate" title={demSource ? `Source: ${demSource}` : undefined}>{grid ? "Ground built from this site's real elevation map." : "Loading terrain…"}</span>
                 <button type="button" className="btn btn-primary shrink-0" disabled={!grid} onClick={() => { if (phase === "brief-drive") done("land"); setPhase(phase === "brief-land" ? "land" : "drive"); }}><Play className="w-4 h-4" /> {phase === "brief-land" ? "Start the landing" : "Roll out"}</button>
               </div>
             </div>
