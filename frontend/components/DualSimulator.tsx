@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, OrbitControls, Stars } from "@react-three/drei";
 import { ArrowLeft, RotateCcw, Rocket, Car, CheckCircle2, XCircle, Eye, Play, Trophy } from "lucide-react";
 import type { EarthMatch, MatchPayload } from "@/components/AnalyticsView";
 import { Status } from "@/components/ui";
+import { RoverModel, LanderModel, BeaconModel, useRockParts, GroundRing, RouteRibbon, makeTerrainThermalMaterial, makeObjectThermalMaterial, useMaterialSwap, INFERNO_CSS } from "@/components/simModels";
 
 /* =====================================================================================
    One mission, three parts: land on the pad, drive the surveyed route collecting rock
@@ -31,10 +32,11 @@ const ROVERS: RoverSpec[] = [
   { id: "heavy_isru", name: "Heavy hauler", costM: 280, wheels: "Steel crawler", maxTempC: 225, radiator: 1.25, armor: 2.5, topSpeed: 3.6, grip: 1.15, heat: "Very high", tough: "Armoured", note: "Slow, tough and expensive." },
 ];
 
-const WORLD_SIZE = 60;
+const WORLD_SIZE = 96;
+const SCALE = WORLD_SIZE / 60;   // the play area was enlarged; heights scale with it so slopes stay the same
 const MASS_KG = 650;
 const WAYPOINTS = 5;
-const ROCKS = 8;
+const ROCKS = 6;
 const STATIONS = 2;
 const CORE_TARGET_M = 1.0;
 const DRILL_LIMIT_C = 110;
@@ -90,24 +92,9 @@ function panelCanvas(base = "#d6dbe3", line = "#8a94a3", size = 256): HTMLCanvas
   g.fillStyle = "#5b6472"; for (let i = 0; i < 80; i++) { g.beginPath(); g.arc(r() * size, r() * size, 2, 0, Math.PI * 2); g.fill(); }
   return c;
 }
-function foilCanvas(size = 256): HTMLCanvasElement {
-  const c = document.createElement("canvas"); c.width = c.height = size; const g = c.getContext("2d")!; const r = rng(31);
-  g.fillStyle = "#c9931c"; g.fillRect(0, 0, size, size);
-  for (let i = 0; i < 900; i++) { g.fillStyle = r() > 0.5 ? "#f5c542" : "#9a6a0e"; g.globalAlpha = 0.35; g.beginPath(); const x = r() * size, y = r() * size; g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 40, y + (r() - 0.5) * 40); g.lineTo(x + (r() - 0.5) * 40, y + (r() - 0.5) * 40); g.closePath(); g.fill(); }
-  g.globalAlpha = 1; return c;
-}
-function solarCanvas(size = 256): HTMLCanvasElement {
-  const c = document.createElement("canvas"); c.width = c.height = size; const g = c.getContext("2d")!;
-  g.fillStyle = "#0b1d4d"; g.fillRect(0, 0, size, size); g.strokeStyle = "#8fb3ff"; g.lineWidth = 2;
-  for (let i = 0; i <= 6; i++) { const p = (i * size) / 6; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, size); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(size, p); g.stroke(); }
-  return c;
-}
 function tex(canvas: HTMLCanvasElement, repeat = 1): THREE.CanvasTexture { const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat, repeat); t.anisotropy = 8; return t; }
 
-function groundPalette(body: Body, mineral: string, sensor: Sensor) {
-  // slope view: grey, bright where the ground is steep or broken
-  if (sensor === "sar") return { base: "#3a3f47", grain: "#8b949e", speck: "#d0d6dd", low: "#2b3036", mid: "#6b7480", rock: "#e5e9ee" };
-  if (sensor === "thermal") return body === "earth" ? { base: "#7c2d12", grain: "#ea580c", speck: "#facc15", low: "#9a3412", mid: "#ea580c", rock: "#fde047" } : { base: "#1e3a8a", grain: "#2563eb", speck: "#93c5fd", low: "#1e3a8a", mid: "#2563eb", rock: "#93c5fd" };
+function groundPalette(body: Body, mineral: string) {
   if (body === "moon") return { base: "#9aa0a8", grain: "#c3c8cf", speck: "#5b616b", low: "#7c838c", mid: "#a4abb4", rock: "#d2d6db" };
   if (body === "mars") return mineral === "basalt_ice" ? { base: "#8a3a1e", grain: "#b4552c", speck: "#d9d9d9", low: "#7c2d12", mid: "#a3431f", rock: "#cbd5e1" } : { base: "#9a3f1c", grain: "#c2602e", speck: "#5a1f0c", low: "#7c2d12", mid: "#c2410c", rock: "#451a03" };
   if (mineral === "biomass_wet") return { base: "#2f5e2a", grain: "#4a7c3a", speck: "#1b3d17", low: "#14532d", mid: "#3f7a32", rock: "#5b7a2a" };
@@ -117,100 +104,134 @@ function groundPalette(body: Body, mineral: string, sensor: Sensor) {
 }
 
 /* ---------- terrain ---------- */
-function Terrain({ siteId, grid, reliefM, body, mineral, sensor }: { siteId: string; grid: number[] | null; reliefM: number; body: Body; mineral: string; sensor: Sensor }) {
-  const relief = Math.max(0.8, reliefM / 36);
-  const pal = useMemo(() => groundPalette(body, mineral, sensor), [body, mineral, sensor]);
-  const map = useMemo(() => tex(noiseCanvas(hashString(siteId), pal.base, pal.grain, pal.speck), 14), [siteId, pal]);
+/* slope classes for the Slope view, in degrees: what a rover can drive */
+export const SLOPE_CLASSES = [
+  { max: 5, color: "#22c55e", label: "0–5° easy" },
+  { max: 15, color: "#eab308", label: "5–15° careful" },
+  { max: 25, color: "#f97316", label: "15–25° rover limit" },
+  { max: 90, color: "#dc2626", label: "> 25° no-go" },
+];
+function slopeColor(deg: number, out: THREE.Color) {
+  const stops = [[0, "#16a34a"], [5, "#84cc16"], [10, "#eab308"], [15, "#f59e0b"], [20, "#f97316"], [25, "#dc2626"], [40, "#7f1d1d"]] as [number, string][];
+  for (let k = 1; k < stops.length; k++) if (deg <= stops[k][0]) { const [d0, c0] = stops[k - 1], [d1, c1] = stops[k]; return out.set(c0).lerp(new THREE.Color(c1), (deg - d0) / (d1 - d0)); }
+  return out.set(stops[stops.length - 1][1]);
+}
+
+/* The surface-temperature model behind the Heat view. Sun direction and mission time come from the scene.
+   Each vertex has an equilibrium temperature from the sun's incidence on its facet (and whether a ridge shades it),
+   and its actual temperature relaxes towards it with a thermal lag, so the ground warms up as the mission goes on.
+   Vacuum: radiative balance, T = Tmax·cos(i)^¼ in kelvin, shadows fall to the night temperature (huge contrast).
+   Air: convection evens it out (smaller contrast, shadows stay milder). */
+export interface ThermalState { temps: Float32Array | null; lo: number; hi: number }
+export interface SunState { dir: THREE.Vector3; t: number }
+function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermalRef, tminC, tmaxC, airy }: { siteId: string; grid: number[] | null; reliefM: number; body: Body; mineral: string; sensor: Sensor; sunRef: React.MutableRefObject<SunState>; thermalRef: React.MutableRefObject<ThermalState>; tminC: number; tmaxC: number; airy: number }) {
+  const relief = Math.max(0.8, reliefM / 36) * SCALE;
+  const pal = useMemo(() => groundPalette(body, mineral), [body, mineral]);
+  const map = useMemo(() => tex(noiseCanvas(hashString(siteId), pal.base, pal.grain, pal.speck), 22), [siteId, pal]);
+  const thermalMat = useMemo(() => makeTerrainThermalMaterial(), []);
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 127, 127); geo.rotateX(-Math.PI / 2);
     if (!grid || grid.length !== 128 * 128) return geo;
-    const pos = geo.attributes.position, colors = new Float32Array(pos.count * 3);
+    const pos = geo.attributes.position, colors = new Float32Array(pos.count * 3), slopeColors = new Float32Array(pos.count * 3);
     for (let i = 0; i < pos.count; i++) pos.setY(i, shapeEdges(grid, pos.getX(i), pos.getZ(i), grid[i] || 0) * relief);
     geo.computeVertexNormals();
     const n = geo.attributes.normal, tmp = new THREE.Color(), low = new THREE.Color(pal.low), mid = new THREE.Color(pal.mid), rock = new THREE.Color(pal.rock);
     for (let i = 0; i < pos.count; i++) {
-      const steep = THREE.MathUtils.clamp((1 - n.getY(i)) * (sensor === "sar" ? 7 : 4.5), 0, 1);
+      const steep = THREE.MathUtils.clamp((1 - n.getY(i)) * 4.5, 0, 1);
       tmp.copy(low).lerp(mid, grid[i] || 0).lerp(rock, steep * 0.85).multiplyScalar(1.35);
       colors.set([tmp.r, tmp.g, tmp.b], i * 3);
+      slopeColor(THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(n.getY(i), -1, 1))), tmp);
+      slopeColors.set([tmp.r, tmp.g, tmp.b], i * 3);
     }
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.userData.camera = colors; geo.userData.slope = slopeColors;
+    geo.setAttribute("temp", new THREE.BufferAttribute(new Float32Array(pos.count), 1));
     return geo;
-  }, [grid, relief, pal, sensor]);
+  }, [grid, relief, pal]);
+
+  // which colours the Camera / Slope views show
+  useEffect(() => {
+    const c = geometry.getAttribute("color") as THREE.BufferAttribute | undefined; if (!c || !geometry.userData.camera) return;
+    (c.array as Float32Array).set(sensor === "sar" ? geometry.userData.slope : geometry.userData.camera); c.needsUpdate = true;
+  }, [geometry, sensor]);
+
+  // thermal model state for this terrain
+  const th = useRef<{ T: Float32Array | null; eq: Float32Array | null; lit: Uint8Array | null; sunKey: number; last: number; shadowAt: number }>({ T: null, eq: null, lit: null, sunKey: -999, last: -1, shadowAt: -99 });
+  const surfMaxC = tmaxC + (airy > 0.5 ? 18 : 0);   // sunlit ground runs hotter than the air temperature
+  const nightC = tminC + (tmaxC - tminC) * 0.12 * airy;
+  useEffect(() => {
+    th.current = { T: null, eq: null, lit: null, sunKey: -999, last: -1, shadowAt: -99 };
+    thermalRef.current = { temps: null, lo: tminC - 5, hi: surfMaxC + 5 };
+  }, [geometry, tminC, surfMaxC, thermalRef]);
+
+  useFrame(() => {
+    const pos = geometry.attributes.position, nrm = geometry.attributes.normal, tA = geometry.getAttribute("temp") as THREE.BufferAttribute | undefined;
+    if (!tA || !grid) return;
+    const sun = sunRef.current, st = th.current, N = pos.count;
+    if (st.last >= 0 && sun.t - st.last < 0.25 && sun.t >= st.last) return;
+    const dt = st.last < 0 || sun.t < st.last ? 0 : sun.t - st.last; st.last = sun.t;
+    if (!st.T) { st.T = new Float32Array(N).fill(nightC); st.eq = new Float32Array(N); st.lit = new Uint8Array(N); }
+    // ridge shadows: march across the height grid towards the sun; redone when the sun has moved a few degrees
+    const key = Math.round(Math.atan2(sun.dir.x, sun.dir.z) * 30) * 1000 + Math.round(Math.asin(sun.dir.y) * 60);
+    if (key !== st.sunKey || st.shadowAt < 0) {
+      st.sunKey = key; st.shadowAt = sun.t;
+      const cell = WORLD_SIZE / 127, hz = Math.hypot(sun.dir.x, sun.dir.z) || 1e-6, tanEl = sun.dir.y / hz, sx = sun.dir.x / hz, sz = sun.dir.z / hz;
+      for (let r = 0; r < 128; r++) for (let c = 0; c < 128; c++) {
+        const i = r * 128 + c, h0 = pos.getY(i); let lit = sun.dir.y > 0 ? 1 : 0;
+        for (let k = 1; lit && k < 60; k++) { const cc = Math.round(c + sx * k), rr = Math.round(r + sz * k); if (cc < 0 || rr < 0 || cc > 127 || rr > 127) break; if (pos.getY(rr * 128 + cc) > h0 + tanEl * k * cell + 0.02) lit = 0; }
+        st.lit![i] = lit;
+      }
+    }
+    const tnK = nightC + 273.15, tmK = surfMaxC + 273.15, tau = airy > 0.5 ? 45 : 18, a = dt > 0 ? 1 - Math.exp(-dt / tau) : 0;
+    const lo = tminC - 5, hi = surfMaxC + 5, arr = tA.array as Float32Array;
+    for (let i = 0; i < N; i++) {
+      const inc = Math.max(0, nrm.getX(i) * sun.dir.x + nrm.getY(i) * sun.dir.y + nrm.getZ(i) * sun.dir.z) * st.lit![i];
+      const vac = Math.max(tnK, tmK * Math.pow(inc, 0.25)) - 273.15;
+      const air = nightC + (surfMaxC - nightC) * (0.18 + 0.82 * inc) * (st.lit![i] ? 1 : 0.55);
+      st.eq![i] = vac + (air - vac) * Math.pow(airy, 0.35);
+      st.T[i] += (st.eq![i] - st.T[i]) * a;
+      arr[i] = (st.T[i] - lo) / (hi - lo);
+    }
+    tA.needsUpdate = true;
+    thermalRef.current = { temps: st.T, lo, hi };
+  });
+
   const half = WORLD_SIZE / 2, ext = 160;
+  const outer = sensor === "thermal" ? "#1b0a33" : sensor === "sar" ? "#30343b" : pal.low;
   return (
     <group>
-      <mesh geometry={geometry} receiveShadow><meshStandardMaterial vertexColors map={map} roughness={0.95} metalness={0.02} /></mesh>
+      <mesh geometry={geometry} receiveShadow material={sensor === "thermal" ? thermalMat : undefined}>
+        {sensor !== "thermal" && <meshStandardMaterial key={sensor} vertexColors map={sensor === "sar" ? null : map} roughness={0.95} metalness={0.02} />}
+      </mesh>
       {[[0, -(half + ext / 2), WORLD_SIZE + ext * 2, ext], [0, half + ext / 2, WORLD_SIZE + ext * 2, ext], [-(half + ext / 2), 0, ext, WORLD_SIZE], [half + ext / 2, 0, ext, WORLD_SIZE]].map(([x, z, w, h], i) => (
-        <mesh key={i} position={[x, 0, z]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[w, h]} /><meshStandardMaterial color={pal.low} map={map} roughness={0.95} /></mesh>
+        <mesh key={i} position={[x, 0, z]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[w, h]} />{sensor === "thermal" ? <meshBasicMaterial color={outer} /> : <meshStandardMaterial color={outer} map={sensor === "sar" ? null : map} roughness={0.95} />}</mesh>
       ))}
     </group>
   );
 }
 
-/* ---------- vehicles ---------- */
-function Rover({ groupRef, wheelRefs, armRef, spec }: { groupRef: React.RefObject<THREE.Group | null>; wheelRefs: React.MutableRefObject<(THREE.Group | null)[]>; armRef: React.RefObject<THREE.Group | null>; spec: RoverSpec }) {
-  const panels = useMemo(() => tex(panelCanvas()), []);
-  const solar = useMemo(() => tex(solarCanvas()), []);
-  const wheelZ = [-0.62, 0.0, 0.62];
+/* ---------- vehicles: the user's 3D models (see simModels.tsx for credits) ---------- */
+function Rover({ groupRef, armRef }: { groupRef: React.RefObject<THREE.Group | null>; armRef: React.RefObject<THREE.Group | null> }) {
   return (
     <group ref={groupRef}>
-      <mesh position={[0, 0.3, 0]} castShadow><boxGeometry args={[0.9, 0.3, 1.4]} /><meshStandardMaterial map={panels} metalness={0.4} roughness={0.5} /></mesh>
-      <mesh position={[0, 0.47, 0.1]}><boxGeometry args={[1.0, 0.04, 1.05]} /><meshStandardMaterial map={solar} metalness={0.6} roughness={0.3} /></mesh>
-      {[-1, 1].map((side) => (
-        <group key={side}>
-          <mesh position={[side * 0.5, 0.22, 0.3]}><boxGeometry args={[0.06, 0.06, 0.75]} /><meshStandardMaterial color="#9aa3ad" metalness={0.7} roughness={0.3} /></mesh>
-          <mesh position={[side * 0.5, 0.22, -0.35]} rotation={[0.5, 0, 0]}><boxGeometry args={[0.06, 0.06, 0.7]} /><meshStandardMaterial color="#9aa3ad" metalness={0.7} roughness={0.3} /></mesh>
-        </group>
-      ))}
-      <mesh position={[-0.25, 0.85, -0.5]}><cylinderGeometry args={[0.03, 0.04, 0.75, 10]} /><meshStandardMaterial color="#cbd5e1" metalness={0.6} roughness={0.3} /></mesh>
-      <mesh position={[-0.25, 1.24, -0.5]}><boxGeometry args={[0.3, 0.14, 0.16]} /><meshStandardMaterial color="#f1f5f9" /></mesh>
-      {[-0.08, 0.08].map((x) => <mesh key={x} position={[-0.25 + x, 1.24, -0.59]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.035, 0.035, 0.04, 12]} /><meshStandardMaterial color="#111827" /></mesh>)}
-      <mesh position={[0.3, 0.7, 0.45]} rotation={[-0.6, 0, 0]}><cylinderGeometry args={[0.18, 0.02, 0.08, 20]} /><meshStandardMaterial color="#e5e7eb" metalness={0.5} roughness={0.35} /></mesh>
-      {spec.radiator > 0.6 && (
-        <group position={[0, 0.5, 0.78]} rotation={[0.5, 0, 0]}>
-          <mesh><cylinderGeometry args={[0.1, 0.1, 0.5, 12]} /><meshStandardMaterial color="#374151" metalness={0.8} roughness={0.3} /></mesh>
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => <mesh key={i} rotation={[0, (i * Math.PI) / 4, 0]}><boxGeometry args={[0.32, 0.46, 0.012]} /><meshStandardMaterial color="#9ca3af" metalness={0.7} /></mesh>)}
-        </group>
-      )}
-      {/* sample arm with a claw, at the front; it swings down to grab */}
-      <group ref={armRef} position={[0.3, 0.42, -0.65]}>
-        <mesh position={[0, 0, -0.35]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.03, 0.035, 0.7, 10]} /><meshStandardMaterial color="#cbd5e1" metalness={0.7} roughness={0.3} /></mesh>
-        <mesh position={[0, 0, -0.72]}><sphereGeometry args={[0.05, 10, 10]} /><meshStandardMaterial color="#6b7280" metalness={0.8} /></mesh>
-        {[-1, 1].map((k) => <mesh key={k} position={[k * 0.07, -0.08, -0.78]} rotation={[0.3, 0, k * 0.35]}><boxGeometry args={[0.025, 0.2, 0.05]} /><meshStandardMaterial color="#f59e0b" metalness={0.7} /></mesh>)}
+      <RoverModel />
+      {/* sample arm with a claw at the front; it swings down to grab */}
+      <group ref={armRef} position={[0.3, 0.28, -0.9]}>
+        <mesh position={[0, 0, -0.3]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.025, 0.03, 0.6, 10]} /><meshStandardMaterial color="#cbd5e1" metalness={0.7} roughness={0.3} /></mesh>
+        <mesh position={[0, 0, -0.62]}><sphereGeometry args={[0.045, 10, 10]} /><meshStandardMaterial color="#6b7280" metalness={0.8} /></mesh>
+        {[-1, 1].map((k) => <mesh key={k} position={[k * 0.06, -0.07, -0.67]} rotation={[0.3, 0, k * 0.35]}><boxGeometry args={[0.022, 0.17, 0.045]} /><meshStandardMaterial color="#f59e0b" metalness={0.7} /></mesh>)}
       </group>
-      {[-1, 1].flatMap((side) => wheelZ.map((z, k) => {
-        const idx = (side < 0 ? 0 : 3) + k;
-        return (
-          <group key={idx} ref={(el) => { wheelRefs.current[idx] = el; }} position={[side * 0.62, 0, z]}>
-            <mesh rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[0.24, 0.24, 0.2, 20]} /><meshStandardMaterial color="#1f2937" roughness={0.9} /></mesh>
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => <mesh key={i} rotation={[(i * Math.PI) / 6, 0, 0]}><boxGeometry args={[0.21, 0.5, 0.03]} /><meshStandardMaterial color="#111827" roughness={0.9} /></mesh>)}
-            <mesh rotation={[0, 0, Math.PI / 2]} position={[side * 0.11, 0, 0]}><cylinderGeometry args={[0.1, 0.1, 0.02, 12]} /><meshStandardMaterial color="#9ca3af" metalness={0.7} /></mesh>
-          </group>
-        );
-      }))}
     </group>
   );
 }
 
 function Lander({ groupRef, flameRef }: { groupRef: React.RefObject<THREE.Group | null>; flameRef: React.RefObject<THREE.Group | null> }) {
-  const foil = useMemo(() => tex(foilCanvas(), 2), []);
   return (
     <group ref={groupRef}>
-      <mesh position={[0, 0.45, 0]} castShadow><cylinderGeometry args={[0.75, 0.85, 0.55, 8]} /><meshStandardMaterial map={foil} metalness={0.7} roughness={0.35} /></mesh>
-      <mesh position={[0, 0.95, 0]}><cylinderGeometry args={[0.5, 0.65, 0.5, 8]} /><meshStandardMaterial color="#e5e7eb" metalness={0.3} roughness={0.5} /></mesh>
-      <mesh position={[0, 1.3, 0]}><sphereGeometry args={[0.22, 16, 12]} /><meshStandardMaterial color="#cbd5e1" metalness={0.6} roughness={0.3} /></mesh>
-      {[0, 1, 2, 3].map((i) => { const a = (i * Math.PI) / 2; return <mesh key={i} position={[Math.cos(a) * 0.62, 0.5, Math.sin(a) * 0.62]}><sphereGeometry args={[0.2, 16, 12]} /><meshStandardMaterial color="#f8fafc" metalness={0.5} roughness={0.3} /></mesh>; })}
-      {[0, 1, 2, 3].map((i) => { const a = (i * Math.PI) / 2 + Math.PI / 4; return (
-        <group key={i} rotation={[0, a, 0]}>
-          <mesh position={[0.95, -0.1, 0]} rotation={[0, 0, 0.75]}><cylinderGeometry args={[0.035, 0.045, 1.1, 10]} /><meshStandardMaterial color="#9ca3af" metalness={0.7} roughness={0.3} /></mesh>
-          <mesh position={[0.78, 0.15, 0]} rotation={[0, 0, 1.2]}><cylinderGeometry args={[0.022, 0.022, 0.7, 8]} /><meshStandardMaterial color="#6b7280" metalness={0.7} /></mesh>
-          <mesh position={[1.32, -0.54, 0]}><cylinderGeometry args={[0.22, 0.26, 0.06, 16]} /><meshStandardMaterial color="#374151" metalness={0.5} /></mesh>
-        </group>
-      ); })}
-      <mesh position={[0, 0.02, 0]}><cylinderGeometry args={[0.14, 0.32, 0.4, 20, 1, true]} /><meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.25} side={THREE.DoubleSide} /></mesh>
-      <group ref={flameRef} position={[0, -0.5, 0]} visible={false}>
-        <mesh rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.3, 1.3, 14]} /><meshBasicMaterial color="#fb923c" transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
-        <mesh position={[0, 0.2, 0]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.15, 0.8, 10]} /><meshBasicMaterial color="#bae6fd" transparent opacity={0.95} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
+      <LanderModel />
+      <group ref={flameRef} position={[0, -0.6, 0]} visible={false}>
+        <mesh rotation={[Math.PI, 0, 0]} userData={{ keepMaterial: true }}><coneGeometry args={[0.3, 1.3, 14]} /><meshBasicMaterial color="#fb923c" transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
+        <mesh position={[0, 0.2, 0]} rotation={[Math.PI, 0, 0]} userData={{ keepMaterial: true }}><coneGeometry args={[0.15, 0.8, 10]} /><meshBasicMaterial color="#bae6fd" transparent opacity={0.95} blending={THREE.AdditiveBlending} depthWrite={false} /></mesh>
         <pointLight intensity={8} distance={12} color="#fdba74" />
       </group>
     </group>
@@ -223,7 +244,6 @@ function StationRig({ x, y, z, state, carriageRef, bitMat }: { x: number; y: num
   const col = state === "done" ? "#22c55e" : state === "lost" ? "#ef4444" : state === "active" ? "#fbbf24" : "#38bdf8";
   return (
     <group position={[x, y, z]}>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[3.0, 3.4, 40]} /><meshBasicMaterial color={col} transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} /></mesh>
       <mesh position={[0, 0.12, 0]}><boxGeometry args={[1.6, 0.16, 1.6]} /><meshStandardMaterial map={panels} metalness={0.5} roughness={0.4} /></mesh>
       {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([ax, az], i) => (
         <group key={i}>
@@ -244,40 +264,20 @@ function StationRig({ x, y, z, state, carriageRef, bitMat }: { x: number; y: num
   );
 }
 
-function Waypoint({ x, y, z, state, index }: { x: number; y: number; z: number; state: "done" | "next" | "later"; index: number }) {
-  const lamp = useRef<THREE.Mesh>(null), beam = useRef<THREE.Mesh>(null);
-  useFrame(({ clock }) => {
-    const pulse = state === "next" ? 1.6 + Math.sin(clock.elapsedTime * 4) * 1.0 : state === "done" ? 1.2 : 0.4;
-    if (lamp.current) (lamp.current.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
-    if (beam.current) (beam.current.material as THREE.MeshBasicMaterial).opacity = state === "next" ? 0.18 + Math.sin(clock.elapsedTime * 4) * 0.06 : state === "done" ? 0.06 : 0.04;
-  });
-  const col = state === "done" ? "#22c55e" : state === "next" ? "#38bdf8" : "#94a3b8";
-  return (
-    <group position={[x, y, z]}>
-      <mesh position={[0, 0.9, 0]}><cylinderGeometry args={[0.035, 0.05, 1.8, 10]} /><meshStandardMaterial color="#e5e7eb" metalness={0.6} roughness={0.35} /></mesh>
-      <mesh position={[0, 0.05, 0]}><cylinderGeometry args={[0.32, 0.4, 0.1, 16]} /><meshStandardMaterial color="#374151" metalness={0.5} /></mesh>
-      <mesh ref={lamp} position={[0, 1.95, 0]}><sphereGeometry args={[0.16, 18, 14]} /><meshStandardMaterial color={col} emissive={col} emissiveIntensity={1} /></mesh>
-      <mesh ref={beam} position={[0, 6, 0]}><cylinderGeometry args={[0.12, 0.5, 9, 16, 1, true]} /><meshBasicMaterial color={col} transparent opacity={0.1} side={THREE.DoubleSide} depthWrite={false} blending={THREE.AdditiveBlending} /></mesh>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[2.25, 2.5, 48]} /><meshBasicMaterial color={col} transparent opacity={state === "later" ? 0.22 : 0.55} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-      {Array.from({ length: index + 1 }, (_, i) => <mesh key={i} position={[0, 1.45 - i * 0.14, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[0.07, 0.015, 6, 16]} /><meshBasicMaterial color="#ffffff" /></mesh>)}
-    </group>
-  );
+function Waypoint({ x, y, z, state }: { x: number; y: number; z: number; state: "done" | "next" | "later" }) {
+  return <group position={[x, y, z]}><BeaconModel state={state} /></group>;
 }
 
-/* a flagged sample rock: a stone with a small survey light beside it and a ring that brightens as you approach */
-function SampleRock({ x, y, z, taken, near, seed }: { x: number; y: number; z: number; taken: boolean; near: boolean; seed: number }) {
-  const geo = useMemo(() => {
-    const g = new THREE.IcosahedronGeometry(0.26, 1); const pos = g.attributes.position; const r = rng(seed);
-    for (let i = 0; i < pos.count; i++) { const k = 0.82 + r() * 0.36; pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * k * 0.7, pos.getZ(i) * k); }
-    g.computeVertexNormals(); return g;
-  }, [seed]);
+/* a flagged sample rock: one of the rocks from the model, with a small light above it that brightens as you approach */
+function SampleRock({ x, y, z, taken, near, seed, geo, material }: { x: number; y: number; z: number; taken: boolean; near: boolean; seed: number; geo: THREE.BufferGeometry; material: THREE.Material }) {
+  const lamp = useRef<THREE.MeshStandardMaterial>(null);
+  useFrame(({ clock }) => { if (lamp.current) lamp.current.emissiveIntensity = near ? 2.2 + Math.sin(clock.elapsedTime * 6) * 0.8 : 0.9; });
   if (taken) return null;
+  const size = 0.5 + (seed % 5) * 0.06;
   return (
-    <group position={[x, y, z]}>
-      <mesh geometry={geo} position={[0, 0.17, 0]} rotation={[0.2, seed % 3, 0.1]} castShadow><meshStandardMaterial color="#6f655c" roughness={0.95} emissive={near ? "#38bdf8" : "#000000"} emissiveIntensity={0.25} /></mesh>
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.7, 0.8, 32]} /><meshBasicMaterial color="#38bdf8" transparent opacity={near ? 0.9 : 0.35} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-      <mesh position={[0.55, 0.35, 0]}><cylinderGeometry args={[0.012, 0.016, 0.7, 6]} /><meshStandardMaterial color="#e5e7eb" metalness={0.5} /></mesh>
-      <mesh position={[0.55, 0.74, 0]}><sphereGeometry args={[0.05, 10, 8]} /><meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={near ? 2 : 0.8} /></mesh>
+    <group position={[x, y - 0.04, z]}>
+      <mesh geometry={geo} material={material} scale={size} rotation={[0, (seed % 7) * 0.9, 0]} castShadow receiveShadow />
+      <mesh position={[0, size * 0.9 + 0.45, 0]}><octahedronGeometry args={[0.07, 0]} /><meshStandardMaterial ref={lamp} color="#67e8f9" emissive="#67e8f9" emissiveIntensity={0.9} /></mesh>
     </group>
   );
 }
@@ -298,34 +298,62 @@ function SimScene(p: {
   siteId: string; body: Body; gravity: number; pressure: number; mineral: string; iron: number; clay: number; bareness: number; ambientC: number; roughness: number;
   grid: number[] | null; reliefM: number; sensor: Sensor; rover: RoverSpec; keysRef: React.MutableRefObject<Record<string, boolean>>;
   lookRef: React.MutableRefObject<{ yaw: number; pitch: number }>; thirdPerson: boolean; runId: number; phase: Phase; paused: boolean; docked: boolean;
-  waypointIdx: number; onTelemetry: (t: Telemetry) => void; onLanded: (ok: boolean, headline: string, reason: string, numbers: { label: string; value: string }[], bonus: number) => void; onDrive: (e: DriveEvent) => void;
+  waypointIdx: number; tminC: number; tmaxC: number; sunElevMax: number; onTelemetry: (t: Telemetry) => void; onLanded: (ok: boolean, headline: string, reason: string, numbers: { label: string; value: string }[], bonus: number) => void; onDrive: (e: DriveEvent) => void;
 }) {
-  const { siteId, body, gravity, pressure, mineral, iron, clay, bareness, ambientC, roughness, grid, reliefM, sensor, rover, keysRef, lookRef, thirdPerson, runId, phase, paused, docked, waypointIdx, onTelemetry, onLanded, onDrive } = p;
+  const { siteId, body, gravity, pressure, mineral, iron, clay, bareness, ambientC, roughness, grid, reliefM, sensor, rover, keysRef, lookRef, thirdPerson, runId, phase, paused, docked, waypointIdx, tminC, tmaxC, sunElevMax, onTelemetry, onLanded, onDrive } = p;
   const getState = useThree((st) => st.get);
   const controls = useRef<{ target: THREE.Vector3; update: () => void } | null>(null);
-  const relief = Math.max(0.8, reliefM / 36);
+  const relief = Math.max(0.8, reliefM / 36) * SCALE;
+  const airy = THREE.MathUtils.clamp(pressure / 1.013, 0, 1);
+  const heightAt = useCallback((x: number, z: number) => (grid ? sample(grid, relief, x, z).h : 0), [grid, relief]);
+  const rockParts = useRockParts();
 
-  // the surveyed layout: five waypoints, eight flagged rocks, two stations; the same every run for a site
+  // the surveyed layout: five waypoints, the flagged rocks and two stations, spread out with clear space between them;
+  // the same every run for a site
   const layout = useMemo(() => {
-    if (!grid) return { route: [] as { x: number; z: number; y: number }[], rocks: [] as { x: number; z: number; y: number }[], stations: [] as { x: number; z: number; y: number }[], path: [] as [number, number, number][] };
-    const r = rng(hashString(siteId) + 11);
-    const base = [[4, -5], [-5, -10], [5, -15], [-4, -20], [1, -24]];
-    const route = base.map(([x, z]) => { const px = x + (r() - 0.5) * 4, pz = z + (r() - 0.5) * 2; return { x: px, z: pz, y: sample(grid, relief, px, pz).h }; });
-    const path: [number, number, number][] = []; let ax = 0, az = 0;
+    if (!grid) return { route: [] as { x: number; z: number; y: number }[], rocks: [] as { x: number; z: number; y: number }[], stations: [] as { x: number; z: number; y: number }[] };
+    const r = rng(hashString(siteId) + 11), H = (x: number, z: number) => sample(grid, relief, x, z).h, lim = WORLD_SIZE / 2 - 6;
+    const base = [[6, -9], [-8, -18], [8, -27], [-6, -36], [2, -43]];
+    const route = base.map(([x, z]) => { const px = x + (r() - 0.5) * 5, pz = z + (r() - 0.5) * 2.5; return { x: px, z: pz, y: H(px, pz) }; });
+    const placed: { x: number; z: number; clear: number }[] = [{ x: 0, z: 0, clear: 9 }, ...route.map((w) => ({ x: w.x, z: w.z, clear: 5 }))];
+    const free = (x: number, z: number, clear: number) => Math.abs(x) < lim && Math.abs(z) < lim && placed.every((q) => Math.hypot(q.x - x, q.z - z) >= Math.max(clear, q.clear));
+    const pick = (gen: (t: number) => [number, number], clear: number) => {
+      for (let t = 0; t < 40; t++) { const [x, z] = gen(t); if (free(x, z, clear)) { placed.push({ x, z, clear }); return { x, z, y: H(x, z) }; } }
+      const [x, z] = gen(0); placed.push({ x, z, clear }); return { x, z, y: H(x, z) };
+    };
+    const stations = [1, 3].map((i, k) => { const w = route[i], side = k ? -1 : 1; return pick((t) => [w.x + side * (7.5 + t * 0.4), w.z + 1.5 - t * 0.3], 8); });
     const rocks: { x: number; z: number; y: number }[] = [];
-    for (const w of route) {
-      const n = 18; for (let i = 0; i <= n; i++) { const x = THREE.MathUtils.lerp(ax, w.x, i / n), z = THREE.MathUtils.lerp(az, w.z, i / n); path.push([x, sample(grid, relief, x, z).h + 0.08, z]); }
-      // rocks sit a little off the route on alternate sides
-      const dx = w.x - ax, dz = w.z - az, len = Math.hypot(dx, dz) || 1, nx = -dz / len, nz = dx / len;
-      for (let k = 0; k < 2 && rocks.length < ROCKS; k++) { const f = 0.3 + k * 0.4, side = rocks.length % 2 ? 1 : -1; const x = ax + dx * f + nx * side * (2.2 + r() * 1.5), z = az + dz * f + nz * side * (2.2 + r() * 1.5); rocks.push({ x, z, y: sample(grid, relief, x, z).h }); }
-      ax = w.x; az = w.z;
-    }
-    const stations = [1, 3].map((i) => { const w = route[i]; const x = w.x + (i === 1 ? 4.5 : -4.5), z = w.z + 1.5; return { x, z, y: sample(grid, relief, x, z).h }; });
-    return { route, rocks, stations, path };
+    [0, 1, 2, 3, 4, 2].slice(0, ROCKS).forEach((l, n) => {
+      const a = l === 0 ? { x: 0, z: 0 } : route[l - 1], b = route[l], dx = b.x - a.x, dz = b.z - a.z, len = Math.hypot(dx, dz) || 1, nx = -dz / len, nz = dx / len;
+      const f = l === 0 || n === 5 ? 0.78 : 0.5, side = n % 2 ? 1 : -1;
+      rocks.push(pick((t) => { const off = (3.4 + r() * 1.4 + t * 0.12) * side * (t % 2 ? -1 : 1), g = f + (t % 3 - 1) * 0.08; return [a.x + dx * g + nx * off, a.z + dz * g + nz * off]; }, 5.5));
+    });
+    return { route, rocks, stations };
   }, [siteId, grid, relief]);
+  const routePoints = useMemo(() => [{ x: 0, z: 0 }, ...layout.route.map((w) => ({ x: w.x, z: w.z }))], [layout]);
 
-  const roverRef = useRef<THREE.Group>(null), wheels = useRef<(THREE.Group | null)[]>([]), armRef = useRef<THREE.Group>(null);
-  const landerRef = useRef<THREE.Group>(null), flameRef = useRef<THREE.Group>(null), dustRef = useRef<THREE.Group>(null), predictRef = useRef<THREE.Mesh>(null), dropRef = useRef<THREE.Mesh>(null);
+  // the sun moves through the mission; the light, the shadows and the Heat view all follow it
+  const sunRef = useRef<SunState>({ dir: new THREE.Vector3(0.5, 0.6, 0.4).normalize(), t: 0 });
+  const thermalRef = useRef<ThermalState>({ temps: null, lo: 0, hi: 1 });
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const [thermalMats] = useState(() => ({ rover: makeObjectThermalMaterial(), lander: makeObjectThermalMaterial(), station: makeObjectThermalMaterial(), rock: makeObjectThermalMaterial(), beacon: makeObjectThermalMaterial() }));
+  const thermalUniforms = useRef(thermalMats);   // updated every frame through the ref
+  const stationsRef = useRef<THREE.Group>(null), rocksRef = useRef<THREE.Group>(null), beaconsRef = useRef<THREE.Group>(null);
+  const rockT = useRef<number | null>(null);
+  const groundTempAt = useCallback((x: number, z: number) => {
+    const th = thermalRef.current; if (!th.temps) return ambientC;
+    const c = Math.round(THREE.MathUtils.clamp((x + WORLD_SIZE / 2) / WORLD_SIZE, 0, 1) * 127), r = Math.round(THREE.MathUtils.clamp((z + WORLD_SIZE / 2) / WORLD_SIZE, 0, 1) * 127);
+    return th.temps[r * 128 + c];
+  }, [ambientC]);
+
+  const roverRef = useRef<THREE.Group>(null), armRef = useRef<THREE.Group>(null), landerRef = useRef<THREE.Group>(null);
+  const thermalOn = sensor === "thermal";
+  useMaterialSwap(roverRef, thermalOn, thermalMats.rover, phase);
+  useMaterialSwap(landerRef, thermalOn, thermalMats.lander, phase);
+  useMaterialSwap(stationsRef, thermalOn, thermalMats.station, phase);
+  useMaterialSwap(rocksRef, thermalOn, thermalMats.rock, phase);
+  useMaterialSwap(beaconsRef, thermalOn, thermalMats.beacon, phase);
+  const flameRef = useRef<THREE.Group>(null), dustRef = useRef<THREE.Group>(null), predictRef = useRef<THREE.Mesh>(null), dropRef = useRef<THREE.Mesh>(null);
   const carriages = useRef<(THREE.Group | null)[]>([]), bits = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
   const [dockIdx, setDockIdx] = useState(-1);
   const [guide, setGuide] = useState<[number, number, number][]>([]);
@@ -364,7 +392,35 @@ function SimScene(p: {
 
   useFrame(({ clock, camera }, raw) => {
     const dt = Math.min(raw, 0.05), st = s.current, k = keysRef.current;
-    if (!grid || grid.length !== 128 * 128 || paused || st.done) return;
+    if (!grid || grid.length !== 128 * 128) return;
+
+    // sun: low in the morning and climbing through the mission; at the lunar poles it skims the horizon
+    {
+      const prog = THREE.MathUtils.clamp(st.t / 240, 0, 1), polar = sunElevMax < 15;
+      const el = THREE.MathUtils.degToRad(polar ? Math.max(7, sunElevMax) * (0.85 + 0.15 * Math.sin(prog * Math.PI)) : THREE.MathUtils.lerp(Math.max(8, sunElevMax * 0.3), sunElevMax, Math.sin((prog * Math.PI) / 2)));
+      const az = THREE.MathUtils.degToRad(polar ? 200 + prog * 50 : 115 + prog * 65);
+      sunRef.current.dir.set(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)).normalize();
+      sunRef.current.t = st.t;
+      const fx = phase === "land" ? st.lx : st.rx, fz = phase === "land" ? st.lz : st.rz, l = lightRef.current;
+      if (l) { l.position.set(fx + sunRef.current.dir.x * 45, sunRef.current.dir.y * 45, fz + sunRef.current.dir.z * 45); l.target.position.set(fx, 0, fz); l.target.updateMatrixWorld(); }
+    }
+    // thermal-camera colours of the objects, from the modelled ground temperature around them
+    {
+      const tm = thermalUniforms.current, th = thermalRef.current, span = th.hi - th.lo || 1, norm = (c: number) => (c - th.lo) / span;
+      const groundC = groundTempAt;
+      const rv = roverRef.current, ld = landerRef.current;
+      if (rv) { const u = tm.rover.uniforms; u.uBase.value = norm(groundC(st.rx, st.rz)) + 0.22; u.uHot.value = norm(st.motor); u.uBaseY.value = rv.position.y - 0.27; u.uHotH.value = 0.55; }
+      if (ld) { const u = tm.lander.uniforms; u.uBase.value = norm(groundC(st.lx, st.lz)) + 0.12; u.uHot.value = st.heat > 0.05 || (phase === "land" && flameRef.current?.visible) ? 1.05 : u.uBase.value; u.uBaseY.value = ld.position.y - 0.6; u.uHotH.value = 0.8; }
+      if (layout.stations.length) { const stn = layout.stations[Math.max(0, st.dock)], u = tm.station.uniforms; u.uBase.value = norm(groundC(stn.x, stn.z)) + 0.08; u.uHot.value = st.dock >= 0 ? norm(st.bit) : u.uBase.value; u.uBaseY.value = stn.y; u.uHotH.value = 1.2; }
+      if (layout.rocks.length) {
+        const mean = layout.rocks.reduce((a, rk) => a + groundC(rk.x, rk.z), 0) / layout.rocks.length;
+        if (rockT.current === null) rockT.current = mean;
+        if (!paused) rockT.current += (mean - rockT.current) * (1 - Math.exp(-dt / (airy > 0.5 ? 130 : 55)));   // rock holds heat longer than loose soil
+        const u = tm.rock.uniforms; u.uBase.value = norm(rockT.current); u.uHot.value = u.uBase.value; u.uHotH.value = 0;
+      }
+      { const u = tm.beacon.uniforms; u.uBase.value = norm(groundC(0, -20)) + 0.18; u.uHot.value = u.uBase.value; u.uHotH.value = 0; }
+    }
+    if (paused || st.done) return;
 
     /* ---------------- landing ---------------- */
     if (phase === "land") {
@@ -377,7 +433,7 @@ function SimScene(p: {
       if (thrust && st.fuel > 0) st.fuel = Math.max(0, st.fuel - dt * (3.0 + (gravity / 9.81) * 5.5));
       st.vy += (-g + power - st.vy * drag) * dt;
       st.vx = THREE.MathUtils.lerp(st.vx, (f.x * fi + r.x * ri) * 5, dt * 3); st.vz = THREE.MathUtils.lerp(st.vz, (f.z * fi + r.z * ri) * 5, dt * 3);
-      st.lx = THREE.MathUtils.clamp(st.lx + st.vx * dt, -24, 24); st.lz = THREE.MathUtils.clamp(st.lz + st.vz * dt, -24, 24); st.ly += st.vy * dt;
+      st.lx = THREE.MathUtils.clamp(st.lx + st.vx * dt, -30, 30); st.lz = THREE.MathUtils.clamp(st.lz + st.vz * dt, -30, 30); st.ly += st.vy * dt;
       const { h: gh, slopeDeg } = sample(grid, relief, st.lx, st.lz), alt = Math.max(0, st.ly - gh), padDist = Math.hypot(st.lx, st.lz);
       if (landerRef.current) landerRef.current.position.set(st.lx, Math.max(gh + 0.55, st.ly), st.lz);
       const firing = Boolean(thrust && st.fuel > 0);
@@ -387,7 +443,7 @@ function SimScene(p: {
       st.heat = want > st.heat ? Math.min(1, st.heat + dt * 1.1 * want) : Math.max(0, st.heat - dt * (pressure > 0.5 ? 0.22 : 0.07));
       if (dustRef.current) { dustRef.current.visible = st.heat > 0.08 && alt < 12; dustRef.current.position.set(st.lx, gh + 0.3, st.lz); dustRef.current.rotation.y += dt * 2; const sc = 0.8 + st.heat * (pressure < 0.05 ? 3.4 : 1.5); dustRef.current.scale.set(sc, 0.6 + st.heat, sc); }
       const tHit = (st.vy + Math.sqrt(Math.max(0, st.vy * st.vy + 2 * g * alt))) / g;
-      const px = THREE.MathUtils.clamp(st.lx + st.vx * tHit, -28, 28), pz = THREE.MathUtils.clamp(st.lz + st.vz * tHit, -28, 28);
+      const px = THREE.MathUtils.clamp(st.lx + st.vx * tHit, -(WORLD_SIZE / 2 - 2), WORLD_SIZE / 2 - 2), pz = THREE.MathUtils.clamp(st.lz + st.vz * tHit, -(WORLD_SIZE / 2 - 2), WORLD_SIZE / 2 - 2);
       if (predictRef.current) predictRef.current.position.set(px, sample(grid, relief, px, pz).h + 0.1, pz);
       if (dropRef.current) { dropRef.current.position.set(st.lx, gh + alt / 2, st.lz); dropRef.current.scale.set(1, Math.max(0.01, alt), 1); }
       if (controls.current) {
@@ -411,7 +467,7 @@ function SimScene(p: {
         st.done = phase === "land" && !ok;   // a failed landing ends the run; a good one continues (parent flips the phase)
         if (ok) st.done = false;
       }
-      if (st.t - st.emit > 0.1) { st.emit = st.t; setGuide(makeGuide(st.lx, Math.max(gh + 0.55, st.ly), st.lz, st.pad)); onTelemetry({ time: st.t.toFixed(1), alt: alt.toFixed(1), vspeed: st.vy.toFixed(1), fuel: st.fuel.toFixed(0), pad: padDist.toFixed(1), blind: st.t < st.blindUntil }); }
+      if (st.t - st.emit > 0.1) { st.emit = st.t; setGuide(makeGuide(st.lx, Math.max(gh + 0.55, st.ly), st.lz, st.pad)); onTelemetry({ time: st.t.toFixed(1), alt: alt.toFixed(1), vspeed: st.vy.toFixed(1), fuel: st.fuel.toFixed(0), pad: padDist.toFixed(1), blind: st.t < st.blindUntil, ground: groundTempAt(st.lx, st.lz).toFixed(0) }); }
       return;
     }
 
@@ -441,7 +497,7 @@ function SimScene(p: {
       else if (st.bit >= DRILL_LIMIT_C) finish("lost");
       else if (st.depth >= CORE_TARGET_M) finish("done");
       else if (leave) { st.dock = -1; onDrive({ type: "dock", on: false }); }
-      if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drill", depth: st.depth.toFixed(2), bit: st.bit.toFixed(0), on, rock: rock.label, cooling: pressure > 0.5 ? "air and rock" : "rock only (no air)", wp: st.wp }); }
+      if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drill", depth: st.depth.toFixed(2), bit: st.bit.toFixed(0), on, rock: rock.label, cooling: pressure > 0.5 ? "air and rock" : "rock only (no air)", wp: st.wp, ground: groundTempAt(st.rx, st.rz).toFixed(0) }); }
       return;
     }
 
@@ -467,8 +523,8 @@ function SimScene(p: {
     const maxSpd = (st.hot ? 0.3 : 1) * rover.topSpeed * (1 - slipRatio * 0.7);
     const drive = st.grabbing ? 0 : fwd;
     st.speed = THREE.MathUtils.lerp(st.speed, drive ? drive * maxSpd * Math.max(0.2, 1 - penalty) : 0, dt * (drive ? 2.4 : 4));
-    st.rx = THREE.MathUtils.clamp(st.rx - Math.sin(st.yaw) * st.speed * dt, -26, 26);
-    st.rz = THREE.MathUtils.clamp(st.rz - Math.cos(st.yaw) * st.speed * dt, -26, 26);
+    st.rx = THREE.MathUtils.clamp(st.rx - Math.sin(st.yaw) * st.speed * dt, -(WORLD_SIZE / 2 - 4), WORLD_SIZE / 2 - 4);
+    st.rz = THREE.MathUtils.clamp(st.rz - Math.cos(st.yaw) * st.speed * dt, -(WORLD_SIZE / 2 - 4), WORLD_SIZE / 2 - 4);
     const v = Math.abs(st.speed);
     const wear = (v * (body === "earth" ? 0.45 : 1.25) * rock.hardness * (0.7 + roughness * 0.5)) / rover.armor;
     st.wheel = Math.max(0, st.wheel - wear * dt * 0.75);
@@ -529,7 +585,6 @@ function SimScene(p: {
       g.position.set(st.rx, THREE.MathUtils.lerp(g.position.y || bodyY, bodyY, 0.35), st.rz);
       st.pitchS = THREE.MathUtils.lerp(st.pitchS, THREE.MathUtils.clamp(pitch, -0.6, 0.6), 0.2); st.rollS = THREE.MathUtils.lerp(st.rollS, THREE.MathUtils.clamp(roll, -0.6, 0.6), 0.2);
       g.rotation.set(0, st.yaw, 0); g.rotateX(st.pitchS); g.rotateZ(st.rollS);
-      offs.forEach(([lx, lz], i) => { const g = wheels.current[i]; if (g) { g.position.set(lx, THREE.MathUtils.clamp(hs[i] - bodyY + 0.24, -0.3, -0.02), lz); g.rotation.x -= (st.speed * dt) / 0.24; } });
     }
     if (thirdPerson && controls.current) {
       const focus = new THREE.Vector3(st.rx, bodyY + 0.3, st.rz);
@@ -545,45 +600,46 @@ function SimScene(p: {
     }
     const nx = layout.route[st.wp]; let bearing = 0, dist = 0;
     if (nx) { const dx = nx.x - st.rx, dz = nx.z - st.rz; dist = Math.hypot(dx, dz); bearing = THREE.MathUtils.radToDeg(Math.atan2(dx * Math.cos(st.yaw) - dz * Math.sin(st.yaw), -dx * Math.sin(st.yaw) - dz * Math.cos(st.yaw))); }
-    if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 3.0) : 0, traction: st.stuckFor / STUCK_SECONDS, nearStation: nearStation >= 0 }); }
+    if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 3.0) : 0, traction: st.stuckFor / STUCK_SECONDS, nearStation: nearStation >= 0, ground: groundTempAt(st.rx, st.rz).toFixed(0) }); }
   });
 
   const padY = grid ? sample(grid, relief, 0, 0).h : 0;
-  const bg = sensor === "sar" ? "#0a0d12" : body === "moon" ? "#02040a" : body === "mars" ? "#6b3a26" : "#7fb6d9";
-  const showLander = true;
+  const bg = sensor === "thermal" ? "#05020c" : sensor === "sar" ? "#0a0d12" : body === "moon" ? "#02040a" : body === "mars" ? "#6b3a26" : "#7fb6d9";
+  const plainView = sensor === "optical";
   return (
     <>
       <color attach="background" args={[bg]} />
-      {body !== "moon" && sensor !== "sar" && <fog attach="fog" args={[body === "mars" ? "#8a4a2e" : "#9cc6e0", 34, 125]} />}
-      {body === "moon" && <Stars radius={85} depth={30} count={1800} factor={3} fade />}
-      <hemisphereLight args={[body === "earth" ? "#dbeafe" : body === "moon" ? "#e5e7eb" : "#f5e6d8", body === "earth" ? "#4a5a3a" : body === "moon" ? "#3f444c" : "#3b2a22", body === "moon" ? 0.7 : 0.6]} />
-      <directionalLight position={[18, 26, 12]} intensity={body === "moon" ? 2.9 : 1.7} castShadow shadow-mapSize={[1024, 1024]} />
-      <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} />
-      {(thirdPerson || phase !== "drive" || docked) && <OrbitControls ref={controls as never} makeDefault enablePan={false} minDistance={2.2} maxDistance={55} maxPolarAngle={Math.PI * 0.49} />}
+      {body !== "moon" && plainView && <fog attach="fog" args={[body === "mars" ? "#8a4a2e" : "#9cc6e0", 48, 170]} />}
+      {body === "moon" && plainView && <Stars radius={110} depth={30} count={1800} factor={3} fade />}
+      <hemisphereLight args={[body === "earth" ? "#dbeafe" : body === "moon" ? "#e5e7eb" : "#f5e6d8", body === "earth" ? "#4a5a3a" : body === "moon" ? "#3f444c" : "#3b2a22", body === "moon" ? 0.75 : 0.65]} />
+      <directionalLight ref={lightRef} position={[18, 26, 12]} intensity={body === "moon" ? 2.9 : 1.8} castShadow shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={140} shadow-bias={-0.0006} />
+      <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} sunRef={sunRef} thermalRef={thermalRef} tminC={tminC} tmaxC={tmaxC} airy={airy} />
+      {(thirdPerson || phase !== "drive" || docked) && <OrbitControls ref={controls as never} makeDefault enablePan={false} minDistance={2.2} maxDistance={70} maxPolarAngle={Math.PI * 0.49} />}
 
-      {/* the pad */}
-      <mesh position={[0, padY + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[PAD_RADIUS - 0.5, PAD_RADIUS, 48]} /><meshBasicMaterial color="#34d399" transparent opacity={0.8} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-      <mesh position={[0, padY + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[PAD_RADIUS - 0.5, 48]} /><meshBasicMaterial color="#1f2937" transparent opacity={0.35} depthWrite={false} /></mesh>
-      {[[-1.2, 0, 0.3, 2.6], [1.2, 0, 0.3, 2.6], [0, 0, 2.1, 0.3]].map(([x, z, w, h], i) => <mesh key={i} position={[x, padY + 0.06, z]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[w, h]} /><meshBasicMaterial color="#e5e7eb" depthWrite={false} /></mesh>)}
+      {/* the pad: markings that lie on the ground */}
+      <GroundRing cx={0} cz={0} r0={PAD_RADIUS - 0.45} r1={PAD_RADIUS} color="#34d399" opacity={0.75} height={heightAt} />
+      <GroundRing cx={0} cz={0} r0={0} r1={PAD_RADIUS - 0.45} color="#0f172a" opacity={0.28} height={heightAt} lift={0.04} />
+      {[[-1.2, 0, 0.3, 2.6], [1.2, 0, 0.3, 2.6], [0, 0, 2.1, 0.3]].map(([x, z, w, h], i) => <mesh key={i} position={[x, padY + 0.07, z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}><planeGeometry args={[w, h]} /><meshBasicMaterial color="#e5e7eb" transparent opacity={0.85} depthWrite={false} polygonOffset polygonOffsetFactor={-3} /></mesh>)}
 
-      {showLander && <Lander groupRef={landerRef} flameRef={flameRef} />}
+      <Lander groupRef={landerRef} flameRef={flameRef} />
       {phase === "land" && (
         <>
           <group ref={dustRef} visible={false}>{[0, 1, 2, 3, 4, 5, 6, 7].map((i) => { const a = (i * Math.PI) / 4; return <mesh key={i} position={[Math.cos(a) * 0.9, (i % 2) * 0.25, Math.sin(a) * 0.9]}><dodecahedronGeometry args={[0.45, 1]} /><meshStandardMaterial color={body === "mars" ? "#d9a06b" : body === "moon" ? "#9ca3af" : "#cbd5e1"} transparent opacity={0.4} depthWrite={false} /></mesh>; })}</group>
-          <mesh position={[0, padY + 12, 0]}><cylinderGeometry args={[PAD_RADIUS * 1.6, PAD_RADIUS - 0.5, 24, 32, 1, true]} /><meshBasicMaterial color="#34d399" transparent opacity={0.06} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-          {guide.length > 1 && <Line points={guide} color="#fde68a" lineWidth={1.5} dashed dashSize={0.5} gapSize={0.3} transparent opacity={0.8} />}
-          <mesh ref={dropRef}><cylinderGeometry args={[0.015, 0.015, 1, 6]} /><meshBasicMaterial color="#e2e8f0" transparent opacity={0.5} /></mesh>
-          <mesh ref={predictRef} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.6, 0.85, 24]} /><meshBasicMaterial color="#fde68a" side={THREE.DoubleSide} depthWrite={false} /></mesh>
+          {guide.length > 1 && <Line points={guide} color="#fde68a" lineWidth={1.2} transparent opacity={0.45} />}
+          <mesh ref={dropRef}><cylinderGeometry args={[0.012, 0.012, 1, 6]} /><meshBasicMaterial color="#e2e8f0" transparent opacity={0.35} depthWrite={false} /></mesh>
+          <mesh ref={predictRef} rotation={[-Math.PI / 2, 0, 0]} renderOrder={4}><ringGeometry args={[0.6, 0.8, 32]} /><meshBasicMaterial color="#fde68a" transparent opacity={0.9} side={THREE.DoubleSide} depthWrite={false} depthTest={false} /></mesh>
         </>
       )}
 
       {(phase === "drive" || phase === "brief-drive" || phase === "done") && (
         <>
-          <Rover groupRef={roverRef} wheelRefs={wheels} armRef={armRef} spec={rover} />
-          {layout.path.length > 1 && <Line points={layout.path} color="#38bdf8" lineWidth={2} dashed dashSize={0.6} gapSize={0.35} transparent opacity={0.75} />}
-          {layout.route.map((w, i) => <Waypoint key={i} index={i} x={w.x} y={w.y} z={w.z} state={i < waypointIdx ? "done" : i === waypointIdx ? "next" : "later"} />)}
-          {layout.rocks.map((rk, i) => <SampleRock key={i} x={rk.x} y={rk.y} z={rk.z} taken={taken[i]} near={nearRock === i} seed={hashString(siteId) + i * 7} />)}
-          {layout.stations.map((stn, i) => <StationRig key={i} x={stn.x} y={stn.y} z={stn.z} state={docked && dockIdx === i ? "active" : stationState[i]} carriageRef={(el) => { carriages.current[i] = el; }} bitMat={(el) => { bits.current[i] = el; }} />)}
+          <Rover groupRef={roverRef} armRef={armRef} />
+          {routePoints.length > 1 && <RouteRibbon points={routePoints} height={heightAt} leg={waypointIdx} />}
+          <group ref={beaconsRef}>{layout.route.map((w, i) => <Waypoint key={i} x={w.x} y={w.y} z={w.z} state={i < waypointIdx ? "done" : i === waypointIdx ? "next" : "later"} />)}</group>
+          <group ref={rocksRef}>{layout.rocks.map((rk, i) => <SampleRock key={i} x={rk.x} y={rk.y} z={rk.z} taken={taken[i]} near={nearRock === i} seed={hashString(siteId) + i * 7} geo={rockParts.geos[i % rockParts.geos.length]} material={rockParts.material} />)}</group>
+          {layout.stations.map((stn, i) => { const state = docked && dockIdx === i ? "active" : stationState[i]; const col = state === "done" ? "#22c55e" : state === "lost" ? "#ef4444" : state === "active" ? "#fbbf24" : "#38bdf8"; return <GroundRing key={i} cx={stn.x} cz={stn.z} r0={3.0} r1={3.25} color={col} opacity={0.4} height={heightAt} />; })}
+          <group ref={stationsRef}>{layout.stations.map((stn, i) => <StationRig key={i} x={stn.x} y={stn.y} z={stn.z} state={docked && dockIdx === i ? "active" : stationState[i]} carriageRef={(el) => { carriages.current[i] = el; }} bitMat={(el) => { bits.current[i] = el; }} />)}</group>
         </>
       )}
     </>
@@ -602,7 +658,7 @@ const BRIEF = {
   drive: { name: "Part 2 · Drive and sample", icon: Car, goal: "Drive the surveyed route through five waypoints. Grab the flagged rocks with the claw on the way, and dock at the two stations to drill a core.",
     pass: ["Reach all five waypoints", "Rocks and cores are optional: each one adds to the score"],
     fail: ["Wheels wear to 0% on sharp rock", `Dug in: the traction warning fills up (${STUCK_SECONDS} s of spinning wheels)`, "A hot motor only slows you down"],
-    controls: ["W / A / S / D — drive", "Hold E next to a flagged rock, release when the cursor is in the green — claw grab", "F inside a station ring — dock; then hold E or SPACE to drill, release to cool; F again to leave", "Camera button — driver's seat or chase view"],
+    controls: ["W / A / S / D — drive", "Hold E next to a flagged rock, release when the cursor is in the green — claw grab", "F inside a station ring — dock; hold E or SPACE to drill, release to cool; F to leave", "Camera button — driver's seat or chase view"],
     scoring: [`${POINTS.waypoint} per waypoint`, `${POINTS.rockClean} per rock (${POINTS.rockFumbled} with a loose grip)`, `${POINTS.core} per core`, `Up to ${POINTS.timeMax} for a quick run`] },
 };
 
@@ -661,6 +717,9 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const clay = side === "earth" ? ps?.clay_hydroxyl_ratio?.earth_val ?? 0.4 : ps?.clay_hydroxyl_ratio?.target_val ?? 0.3;
   const bare = side === "earth" ? ps?.bareness_index?.earth_val ?? 0.98 : ps?.bareness_index?.target_val ?? 1;
   const rover = ROVERS.find((r) => r.id === roverId) || ROVERS[1];
+  const tminC = side === "earth" ? ps?.temp_min_c?.earth_val ?? 5 : t.temp_min_c;
+  const tmaxC = side === "earth" ? ps?.temp_max_c?.earth_val ?? 30 : t.temp_max_c;
+  const sunElevMax = side === "earth" ? Math.min(78, 90 - Math.abs(selectedMatch.lat) + 18) : ((t as unknown as { max_sun_elevation_deg?: number }).max_sun_elevation_deg ?? Math.min(90, 90 - Math.abs(t.lat) + (t.body === "moon" ? 1.5 : 25)));
   const other: WorldSide = side === "earth" ? "space" : "earth";
   const otherName = side === "earth" ? (t.body === "moon" ? "the Moon" : "Mars") : "Earth";
   const total = score.landing + score.waypoints + score.rocks + score.cores + score.time;
@@ -685,7 +744,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
     if (e.type === "dock") setDocked(e.on);
     if (e.type === "fail") { setScore((sc) => { finish("FAIL", e.headline, e.reason, sc, [{ label: "Waypoints", value: `${Math.min(Number(tele.wp ?? 0), WAYPOINTS)} of ${WAYPOINTS}` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }]); return sc; }); }
     if (e.type === "complete") {
-      const secs = Number(tele.time ?? 0), timePts = Math.round(THREE.MathUtils.clamp(POINTS.timeMax * (1 - Math.max(0, secs - 90) / 150), 0, POINTS.timeMax));
+      const secs = Number(tele.time ?? 0), timePts = Math.round(THREE.MathUtils.clamp(POINTS.timeMax * (1 - Math.max(0, secs - 130) / 170), 0, POINTS.timeMax));
       setScore((sc) => { const full = { ...sc, time: timePts }; finish("PASS", "Mission complete", `All ${WAYPOINTS} waypoints in ${secs.toFixed(0)} s, ${tally.rocks} of ${ROCKS} rocks (${tally.clean} clean grabs) and ${tally.cores} of ${STATIONS} cores. ${tally.rocks + tally.cores === ROCKS + STATIONS ? "A full haul." : "Rocks and cores you left behind are points on the table for the next run."}`, full, [{ label: "Time", value: `${secs.toFixed(0)} s` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }]); return full; });
     }
   }, [finish, say, tele.time, tele.wp, tele.wheel, tally, pressure]);
@@ -715,7 +774,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         </div>
       </div>
 
-      <div className="card overflow-hidden relative w-full h-[74vh] min-h-[520px]"
+      <div className="card overflow-hidden relative w-full h-[calc(100dvh-11.5rem)] min-h-[440px] max-h-[900px]"
         onPointerDown={(e) => { if (!thirdPerson && phase === "drive" && !docked) { drag.current = true; last.current = { x: e.clientX, y: e.clientY }; } }}
         onPointerMove={(e) => { if (drag.current) { const dx = e.clientX - last.current.x, dy = e.clientY - last.current.y; last.current = { x: e.clientX, y: e.clientY }; lookRef.current.yaw -= dx * 0.005; lookRef.current.pitch = THREE.MathUtils.clamp(lookRef.current.pitch - dy * 0.004, -0.7, 0.7); } }}
         onPointerUp={() => { drag.current = false; }} onPointerLeave={() => { drag.current = false; }}>
@@ -767,7 +826,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           </div>
         )}
         {phase === "drive" && docked && !result && (
-          <div className="absolute top-20 right-3 z-10 on-canvas px-3 py-2 text-xs w-60">
+          <div className="absolute top-16 left-3 z-10 on-canvas px-3 py-2 text-xs w-60">
             <div className="flex justify-between"><span>Bit heat</span><span className="font-mono">{tele.bit ?? Math.round(ambient)}°C</span></div>
             <div className="bar mt-1"><span style={{ width: `${Math.min(100, Math.max(0, ((Number(tele.bit ?? ambient) - ambient) / (DRILL_LIMIT_C - ambient)) * 100))}%`, background: Number(tele.bit ?? 0) > DRILL_LIMIT_C * 0.85 ? "#f87171" : "#fbbf24" }} /></div>
             <div className="flex justify-between mt-2"><span>Core</span><span className="font-mono">{tele.depth ?? "0.00"} m</span></div>
@@ -785,6 +844,23 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         {phase === "drive" && tele.hot && !result && <div className="absolute top-32 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-1.5 text-xs" style={{ borderColor: "#f87171" }}>Motor over {rover.maxTempC}°C: crawling until it cools. Ease off, or pick a rover with more heat tolerance.</div>}
         {phase === "land" && tele.blind && <div className="absolute inset-0 z-10 pointer-events-none flex items-start justify-center pt-20" style={{ background: "rgba(120, 70, 30, 0.35)", backdropFilter: "blur(3px)" }}><div className="on-canvas px-5 py-3 text-sm max-w-md text-center rise"><b>Dust blind-out.</b> With no air to slow it, the engine blast throws regolith hundreds of metres. Cameras and lidar lose the ground: this is why vacuum landings fly the last metres on inertial guidance.</div></div>}
 
+        {/* what the Slope and Heat views mean */}
+        {sensor === "sar" && (
+          <div className="absolute top-24 right-3 z-10 on-canvas px-3 py-2 text-[11px] pointer-events-none w-56">
+            <div className="font-semibold mb-1">Slope of the ground</div>
+            {SLOPE_CLASSES.map((c) => <div key={c.label} className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm" style={{ background: c.color }} />{c.label}</div>)}
+            <div className="opacity-80 mt-1">From the site&apos;s elevation data; the rover starts to slip past about 15°.</div>
+          </div>
+        )}
+        {sensor === "thermal" && (
+          <div className="absolute top-24 right-3 z-10 on-canvas px-3 py-2 text-[11px] pointer-events-none w-64">
+            <div className="flex justify-between font-semibold"><span>Surface temperature</span>{tele.ground !== undefined && <span>here {String(tele.ground)}°C</span>}</div>
+            <div className="h-2.5 rounded-full mt-1.5" style={{ background: INFERNO_CSS }} />
+            <div className="flex justify-between mt-0.5 font-mono"><span>{Math.round(tminC - 5)}°C</span><span>{Math.round(tmaxC + (pressure > 0.5 ? 18 : 0) + 5)}°C</span></div>
+            <div className="opacity-80 mt-1">{pressure < 0.05 ? "No air: sunlit slopes heat fast, shadows stay near the night low." : pressure < 0.5 ? "Thin air: big swings between sun and shade." : "Air evens it out: smaller contrast."} The ground warms as the sun climbs; motors and the drill bit glow.</div>
+          </div>
+        )}
+
         {/* on-screen controls */}
         {!paused && (
           <div className="absolute bottom-3 left-3 z-10 on-canvas px-3.5 py-2 text-xs flex items-center gap-3">
@@ -800,13 +876,14 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
 
         {/* briefings */}
         {brief && !result && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center p-4" style={{ background: "rgba(3, 6, 11, 0.55)", backdropFilter: "blur(3px)" }}>
-            <div className="card-solid p-6 max-w-2xl w-full rise" data-tour="sim-briefing">
+          <div className="absolute inset-0 z-20 flex items-center justify-center p-3" style={{ background: "rgba(3, 6, 11, 0.55)", backdropFilter: "blur(3px)" }}>
+            <div className="card-solid max-w-3xl w-full max-h-full flex flex-col rise overflow-hidden" data-tour="sim-briefing">
+              <div className="overflow-y-auto px-5 pt-5 pb-3 min-h-0">
               {phase === "brief-drive" && landing && <div className="mb-3"><Status level="good"><CheckCircle2 className="w-3.5 h-3.5" /> {landing.headline} · +{score.landing}</Status><p className="text-xs muted mt-1.5">{landing.reason}</p></div>}
               {phase === "brief-drive" && (
                 <div className="mb-4">
                   <div className="text-xs font-semibold mb-1.5">Choose a rover</div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     {ROVERS.map((r) => (
                       <button key={r.id} type="button" onClick={() => setRoverId(r.id)} className="row relative" aria-pressed={r.id === roverId} title={r.note}>
                         {r.bestFor === body && <span className="absolute -top-2 right-2 status status-good">Suits {body === "earth" ? "Earth" : body === "moon" ? "the Moon" : "Mars"}</span>}
@@ -819,25 +896,26 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
                 </div>
               )}
               <div className="flex items-center gap-2 text-xs muted"><BriefIcon className="w-4 h-4" /> {brief.name} · on {worldLabel} · {gravity} m/s² · {pressure} bar{phase === "brief-drive" ? ` · ${rover.name}` : ""}</div>
-              <h3 className="text-lg font-semibold mt-1">{brief.goal}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 text-xs">
+              <h3 className="text-base font-semibold mt-1 leading-snug">{brief.goal}</h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3 mt-3 text-xs">
                 <div><div className="font-semibold mb-1.5" style={{ color: "var(--good)" }}>You pass if</div><ul className="flex flex-col gap-1">{brief.pass.map((x) => <li key={x}>• {x}</li>)}</ul></div>
                 <div><div className="font-semibold mb-1.5" style={{ color: "var(--bad)" }}>You fail if</div><ul className="flex flex-col gap-1">{brief.fail.map((x) => <li key={x}>• {x}</li>)}</ul></div>
                 <div><div className="font-semibold mb-1.5">Controls</div><ul className="flex flex-col gap-1">{brief.controls.map((x) => <li key={x}>• {x}</li>)}</ul></div>
                 <div><div className="font-semibold mb-1.5">Points</div><ul className="flex flex-col gap-1">{brief.scoring.map((x) => <li key={x}>• {x}</li>)}</ul></div>
               </div>
               {side === "space" && <p className="text-xs muted mt-4">Same mission, different world: gravity is {((gravity / 9.81) * 100).toFixed(0)}% of Earth&apos;s, air pressure is {pressure} bar, and the ground here averages {ambient.toFixed(0)}°C. {pressure < 0.5 ? "With no air, motors and drill bits keep the heat they make." : ""}</p>}
-              <div className="flex items-center justify-between mt-5">
-                <span className="text-xs muted">{grid ? (demSource ? `Terrain: ${demSource}` : "Terrain built from the site's elevation data.") : "Loading terrain…"}</span>
-                <button type="button" className="btn btn-primary" disabled={!grid} onClick={() => setPhase(phase === "brief-land" ? "land" : "drive")}><Play className="w-4 h-4" /> {phase === "brief-land" ? "Start the landing" : "Roll out"}</button>
+              </div>
+              <div className="flex items-center justify-between gap-3 px-5 py-3 border-t line shrink-0" style={{ background: "var(--panel-solid)" }}>
+                <span className="text-xs muted min-w-0 truncate">{grid ? (demSource ? `Terrain: ${demSource}` : "Terrain built from the site's elevation data.") : "Loading terrain…"}</span>
+                <button type="button" className="btn btn-primary shrink-0" disabled={!grid} onClick={() => setPhase(phase === "brief-land" ? "land" : "drive")}><Play className="w-4 h-4" /> {phase === "brief-land" ? "Start the landing" : "Roll out"}</button>
               </div>
             </div>
           </div>
         )}
 
         {result && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center p-4" style={{ background: "rgba(3, 6, 11, 0.55)", backdropFilter: "blur(3px)" }}>
-            <div className="card-solid p-6 max-w-lg w-full text-center rise">
+          <div className="absolute inset-0 z-20 flex items-center justify-center p-3" style={{ background: "rgba(3, 6, 11, 0.55)", backdropFilter: "blur(3px)" }}>
+            <div className="card-solid p-6 max-w-lg w-full max-h-full overflow-y-auto text-center rise">
               <Status level={result.status === "PASS" ? "good" : "bad"}>{result.status === "PASS" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />} {result.status === "PASS" ? "Mission Passed" : "Mission Failed"} on {worldLabel}</Status>
               <h3 className="text-xl font-semibold mt-3">{result.headline}</h3>
               <p className="text-sm muted mt-2 text-left leading-relaxed">{result.reason}</p>
@@ -859,14 +937,17 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         )}
 
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
-          <Canvas shadows camera={{ fov: 58, near: 0.1, far: 170 }} dpr={[1, 1.75]}>
+          <Canvas shadows camera={{ fov: 58, near: 0.1, far: 260 }} dpr={[1, 1.75]}>
+            <Suspense fallback={null}>
             <SimScene key={`${runId}-${side}`} siteId={side === "earth" ? selectedMatch.id : t.id} body={body} gravity={gravity} pressure={pressure} mineral={mineral} iron={iron} clay={clay} bareness={bare} ambientC={ambient}
               roughness={selectedMatch.pillar_scores.radar} grid={grid} reliefM={reliefM} sensor={sensor} rover={rover} keysRef={keysRef} lookRef={lookRef} thirdPerson={thirdPerson}
-              runId={runId} phase={phase} paused={paused} docked={docked} waypointIdx={Number(tele.wp ?? 0)} onTelemetry={setTele} onLanded={onLanded} onDrive={onDrive} />
+              runId={runId} phase={phase} paused={paused} docked={docked} waypointIdx={Number(tele.wp ?? 0)} tminC={tminC} tmaxC={tmaxC} sunElevMax={sunElevMax} onTelemetry={setTele} onLanded={onLanded} onDrive={onDrive} />
+            </Suspense>
           </Canvas>
         </div>
       </div>
 
+      <p className="text-[11px] faint px-1 -mt-1">3D models: Curiosity rover, NASA (public domain) · Mars Polar Lander by emin31284 · beacon by AMMediaGames · rocks by Michael Hooper (Sketchfab, CC BY 4.0). Terrain from the site&apos;s real elevation data.</p>
       {(runs.earth || runs.space) && <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-tour="sim-results">
         {(["earth", "space"] as WorldSide[]).map((w) => { const r = runs[w]; const name = w === "earth" ? selectedMatch.name : t.name; return (
           <div key={w} className="card p-3.5 flex items-center justify-between gap-3">

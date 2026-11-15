@@ -87,7 +87,7 @@ What this validation cannot show:
 * The ensemble's training labels are formulas of the features, so its uncertainty is epistemic only.
 * Field-readiness entries list analog history and permits only where documented; everything else is marked "not verified".
 * Custom points borrow composition and the cold end of the temperature range from the nearest Celestra target on the same body, and say so.
-* Simulator physics are simplified and tuned for play; gravity, air pressure and temperature differences are real, vehicle numbers are illustrative.
+* Simulator physics are simplified and tuned for play; gravity, air pressure and temperature differences are real, vehicle numbers are illustrative. The Heat view is a simple surface-temperature model (sun incidence on each terrain facet, ridge shadows, radiative balance in vacuum, a thermal lag), not a measurement; the Slope view is the true slope of the terrain the rover drives on.
 * Site registry corrections: the Amazon control was moved from central Manaus (−3.10, −60.02) to Reserva Ducke (−2.95, −59.95) so it samples forest, not city. Shackleton rim, Connecting Ridge, Faustini Rim A and Peary rim had been registered at crater-centre coordinates (Faustini's sat on the permanently shadowed floor, 0% sunlit); they were moved onto the named rims with the sunlight search (`data/config/relocated_targets.json`). The old Malapert point, on the massif's flank, is replaced by the Artemis III Malapert target. A Sentinel-2 search bug (scenes near a UTM zone edge were crowded out) left Craters of the Moon on typical values; it is now measured. LOLA tiles were first gridded at 15.6 m, which left false pits along laser tracks; they are now median-gridded at ~60 m.
 
 ## Run it locally (two terminals)
@@ -153,3 +153,9 @@ AI (Anthropic's Claude, through Claude Code) was used extensively to write and r
 * Artemis III regions: NASA, "NASA Provides Update on Artemis III Moon Landing Regions" (October 2024) and the August 2022 announcement; Mons Mouton landing point from LPSC 2025 abstract 2742; Slater Plain location from Wueller et al. 2026 (JGR Planets).
 * Functional analogues: Foucher, F. et al. (2021), "Definition and use of functional analogues in planetary exploration", Planetary and Space Science 197, 105162.
 * Planet textures in `frontend/public/textures` came with the original codebase; check their licences before redistributing.
+
+**3D models** (in `frontend/public/models`, compressed with glTF-Transform):
+* Curiosity rover: NASA 3D Resources (public domain).
+* "Mars Polar Lander" by emin31284, https://sketchfab.com/3d-models/mars-polar-lander-8c87cc5b86864b5a8c986d603fda1cef, licensed CC BY 4.0.
+* "Sci-Fi Beacon/Way Point Marker Free Model" by AMMediaGames, https://sketchfab.com/3d-models/sci-fi-beaconway-point-marker-free-model-a1d91ebb3e2d41bba31c02b11423d97f, licensed CC BY 4.0.
+* "Low Poly Rocks" by Michael Hooper, https://sketchfab.com/3d-models/low-poly-rocks-9823ec262054408dbe26f6ddb9c0406e, licensed CC BY 4.0.

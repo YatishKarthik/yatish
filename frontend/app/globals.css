@@ -62,8 +62,9 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
-html, body { height: 100%; }
+html { min-height: 100%; }
 body {
+  min-height: 100vh;
   margin: 0;
   background: var(--bg);
   color: var(--text);
@@ -76,6 +77,7 @@ body {
 /* soft colour pools behind the glass so the blur has something to catch */
 .app-bg {
   position: relative;
+  flex-shrink: 0;
   background:
     radial-gradient(900px 600px at 12% 8%, var(--accent-soft), transparent 60%),
     radial-gradient(800px 600px at 88% 92%, rgba(194, 65, 12, 0.08), transparent 60%),
@@ -83,7 +85,9 @@ body {
 }
 
 /* The landing page is space in both themes. */
-.space-page { background: radial-gradient(1200px 700px at 50% 0%, #0b1a33 0%, #04070d 55%, #000 100%); color: #eef2f7; }
+.space-page { flex-shrink: 0; background: radial-gradient(1200px 700px at 50% 0%, #0b1a33 0%, #04070d 55%, #01030a 100%) #01030a; color: #eef2f7; }
+/* the page behind the space landing is space too, so overscroll and short content never show the light theme */
+html:has(.space-page), body:has(.space-page) { background: #01030a; }
 .space-page .btn { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.16); color: #eef2f7; }
 .space-page .card-solid { background: #0f1620; border-color: rgba(255, 255, 255, 0.12); color: #eef2f7; }
 .space-page .muted { color: #a3adbb; }
