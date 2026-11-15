@@ -667,6 +667,16 @@ function SimScene(p: {
   );
 }
 
+/* a small first-time hint box, centred near the top of the scene */
+function Coach({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[11] px-4 py-2.5 text-xs max-w-md rounded-xl rise pointer-events-none" style={{ background: "rgba(24, 20, 6, 0.86)", border: "1px solid rgba(251, 191, 36, 0.65)", color: "#fef3c7" }}>
+      <div className="text-[10px] uppercase tracking-wide font-semibold mb-0.5" style={{ color: "#fbbf24" }}>Tip · {title}</div>
+      <div className="leading-relaxed">{children}</div>
+    </div>
+  );
+}
+
 /* =====================================================================================
    The page around the scene
    ===================================================================================== */
@@ -706,6 +716,9 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const keysRef = useRef<Record<string, boolean>>({});
   const [ve, setVe] = useState(2);   // vertical exaggeration of the drawn terrain; physics always uses true slopes
   const cursorRef = useRef(0), cursorEl = useRef<HTMLDivElement>(null);
+  // first-time coaching hints: each shows until the player has done that thing once in this visit
+  const [coached, setCoached] = useState<Record<string, boolean>>({});
+  const done = useCallback((k: string) => setCoached((c) => (c[k] ? c : { ...c, [k]: true })), []);
   const lookRef = useRef({ yaw: 0, pitch: 0 });
   const drag = useRef(false), last = useRef({ x: 0, y: 0 });
   const toastTimer = useRef<number | null>(null);
@@ -766,13 +779,15 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
     if (e.type === "rock") { setScore((s) => ({ ...s, rocks: s.rocks + (e.clean ? POINTS.rockClean : POINTS.rockFumbled) })); setTally((x) => ({ ...x, rocks: x.rocks + 1, clean: x.clean + (e.clean ? 1 : 0) })); say(e.clean ? `Sample secured · +${POINTS.rockClean}` : `Sample secured, loose grip · +${POINTS.rockFumbled}`); }
     if (e.type === "core") { setScore((s) => ({ ...s, cores: s.cores + POINTS.core })); setTally((x) => ({ ...x, cores: x.cores + 1 })); say(`Core recovered · +${POINTS.core}`); }
     if (e.type === "station-lost") { setTally((x) => ({ ...x, lost: x.lost + 1 })); say(pressure > 0.5 ? "Bit seized: drill in shorter bursts next time" : "Bit seized: no air to cool it, drill in short bursts"); }
-    if (e.type === "dock") setDocked(e.on);
+    if (e.type === "dock") { setDocked(e.on); if (e.on) done("station"); else done("drill"); }
+    if (e.type === "rock") { done("rock"); done("grab"); }
+    if (e.type === "core" || e.type === "station-lost") done("drill");
     if (e.type === "fail") { setScore((sc) => { finish("FAIL", e.headline, e.reason, sc, [{ label: "Waypoints", value: `${Math.min(Number(tele.wp ?? 0), WAYPOINTS)} of ${WAYPOINTS}` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }]); return sc; }); }
     if (e.type === "complete") {
       const secs = Number(tele.time ?? 0), timePts = Math.round(THREE.MathUtils.clamp(POINTS.timeMax * (1 - Math.max(0, secs - 130) / 170), 0, POINTS.timeMax));
       setScore((sc) => { const full = { ...sc, time: timePts }; finish("PASS", "Mission complete", `All ${WAYPOINTS} waypoints in ${secs.toFixed(0)} s, ${tally.rocks} of ${ROCKS} rocks (${tally.clean} clean grabs) and ${tally.cores} of ${STATIONS} cores. ${tally.rocks + tally.cores === ROCKS + STATIONS ? "A full haul." : "Rocks and cores you left behind are points on the table for the next run."}`, full, [{ label: "Time", value: `${secs.toFixed(0)} s` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }]); return full; });
     }
-  }, [finish, say, tele.time, tele.wp, tele.wheel, tally, pressure]);
+  }, [finish, say, tele.time, tele.wp, tele.wheel, tally, pressure, done]);
 
   // the claw cursor is moved every animation frame straight from the scene, not through React state, so it glides
   const grabbing = Boolean(tele.grabbing);
@@ -849,14 +864,29 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           </div>
         )}
 
+        {/* first-time coaching */}
+        {phase === "land" && !coached.land && Number(tele.time ?? 0) < 9 && !tele.blind && (
+          <Coach title="First landing">Hold <b>SPACE</b> (or the button) to fire the engine and slow the fall. Keep the falling speed under {LAND_SPEED_LIMIT} m/s, and steer with <b>W A S D</b> until the yellow ring sits on the green pad.</Coach>
+        )}
+        {phase === "drive" && !docked && !result && !coached.rock && tele.nearRock && !tele.grabbing && (
+          <Coach title="Your first sample">Stop next to the flagged rock and <b>hold E</b>. The arm reaches out and a bar appears: <b>let go of E</b> when the white marker is in the green.</Coach>
+        )}
+        {phase === "drive" && !docked && !result && !coached.station && tele.nearStation && !tele.nearRock && (
+          <Coach title="Drill station">Slow down inside the ring and <b>press F</b> to dock. You will then drill a core.</Coach>
+        )}
+        {phase === "drive" && docked && !result && !coached.drill && (
+          <Coach title="Drilling a core">Hold <b>E</b> or <b>SPACE</b> to drill. Watch the bit heat: <b>release</b> to let it cool before it reaches {DRILL_LIMIT_C}°C{pressure < 0.05 ? " (no air here, so it cools slowly)" : ""}. Press <b>F</b> to leave.</Coach>
+        )}
+
         {/* prompts during the drive */}
-        {phase === "drive" && !docked && !result && (tele.nearRock || tele.nearStation) && !tele.grabbing && (
+        {phase === "drive" && !docked && !result && (tele.nearRock || tele.nearStation) && !tele.grabbing && (coached.rock || !tele.nearRock) && (coached.station || tele.nearRock) && (
           <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-2 text-xs rise">
             {tele.nearRock ? <span>Flagged rock: <b>hold E</b> to reach out, <b>release</b> when the cursor is in the green</span> : <span>Sample station: <b>press F</b> to dock and drill a core</span>}
           </div>
         )}
         {phase === "drive" && tele.grabbing && (
           <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-3 text-xs w-72">
+            {!coached.grab && <div className="mb-2 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(251, 191, 36, 0.16)", border: "1px solid rgba(251, 191, 36, 0.55)" }}>Keep holding <b>E</b>. <b>Let go</b> the moment the white marker is inside the <span style={{ color: "#4ade80" }}>green</span> band for a clean grab.</div>}
             <div className="mb-1.5">Release <b>E</b> in the green</div>
             <div className="relative h-3 rounded-full" style={{ background: "linear-gradient(90deg, #ef4444 0%, #ef4444 35%, #22c55e 35%, #22c55e 65%, #ef4444 65%, #ef4444 100%)" }}>
               <div ref={cursorEl} className="absolute top-[-3px] h-[18px] w-1 rounded bg-white" style={{ left: "calc(50% - 2px)", willChange: "left" }} />
@@ -945,7 +975,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
               </div>
               <div className="flex items-center justify-between gap-3 px-5 py-3 border-t line shrink-0" style={{ background: "var(--panel-solid)" }}>
                 <span className="text-xs muted min-w-0 truncate">{grid ? (demSource ? `Terrain: ${demSource}` : "Terrain built from the site's elevation data.") : "Loading terrain…"}</span>
-                <button type="button" className="btn btn-primary shrink-0" disabled={!grid} onClick={() => setPhase(phase === "brief-land" ? "land" : "drive")}><Play className="w-4 h-4" /> {phase === "brief-land" ? "Start the landing" : "Roll out"}</button>
+                <button type="button" className="btn btn-primary shrink-0" disabled={!grid} onClick={() => { if (phase === "brief-drive") done("land"); setPhase(phase === "brief-land" ? "land" : "drive"); }}><Play className="w-4 h-4" /> {phase === "brief-land" ? "Start the landing" : "Roll out"}</button>
               </div>
             </div>
           </div>

@@ -7,7 +7,7 @@ import type { GlobePin } from "@/components/PlanetGlobe";
 import AnalyticsView, { MatchPayload, EarthMatch } from "@/components/AnalyticsView";
 import { ArtemisBadge, artemisOrder, type ArtemisInfo } from "@/components/Insights";
 import { ThemeToggle } from "@/components/ui";
-import { Tour, HelpButton, TourPrompt, type TourStep } from "@/components/Tutorial";
+import { Tour, HelpButton, type TourStep } from "@/components/Tutorial";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 const DualSimulator = dynamic(() => import("@/components/DualSimulator"), { ssr: false });
@@ -44,8 +44,9 @@ const TOUR: TourStep[] = [
   { target: "selected", title: "What makes this site hard", body: "Each site has one main engineering problem, written in plain words. The button below starts the search for Earth test sites that share that problem.", side: "left" },
   { target: "summary", title: "The answer in one paragraph", body: "This tab explains the selected Earth site in plain language: how alike it is, which measurements won and lost it points, and how ready it is for a field campaign. The first line says which numbers are measured and which are typical values.", side: "bottom" },
   { target: "earth-globe", title: "Where the matches are", body: "Every ranked Earth site is a pin. The best three are labelled. Select one and the globe turns to it.", side: "right" },
-  { target: "ranked", title: "All sixty, ranked", body: "Sites are ordered by how closely their ground, rock and temperatures resemble the destination. The ± value is how unsure the model is about that score.", side: "right" },
-  { target: "score", title: "The match score", body: "0 to 100. It blends four things: terrain shape, surface texture, surface composition, and day-night temperature behaviour. A high score does not mean every kind of test will work there, which is what the Tests tab is for.", side: "left" },
+  { target: "ranked", title: "All sites, ranked", body: "The 60 named Earth sites and the places the AI search found (violet, shown by coordinates) are ordered by how closely their measured ground and temperatures resemble the destination. The ± is how far a score moves if one measurement is dropped or a weight changes.", side: "right" },
+  { target: "ai-finds", title: "Places nobody listed", body: "A deep ensemble searched all of Earth's bare land for places like this destination. Its finds are the violet pins; each was re-checked with real data, and each can be explored and flown in the simulator like a named site. The AI Discoveries tab shows how confident the AI was.", side: "right" },
+  { target: "score", title: "The match score", body: "0 to 100. It blends what is measured for both places: terrain shape, surface texture, and (on the Moon) day-night temperatures; groups without a measurement are shown as not compared. A high score does not mean every kind of test will work there, which is what the Tests tab is for.", side: "left" },
   { target: "sunlight", title: "Light, shadow and radio", body: "For polar Moon sites: how often the point is sunlit, how often Earth is in view for radio, and how much of the area never sees the Sun. Modelled by Celestra from LRO LOLA terrain.", side: "bottom" },
   { target: "view-tabs", title: "Dig deeper when you want to", body: "By Use finds the best site for each test. Summary explains why the selected site matches and what fieldwork there needs. Terrain Twins shows both grounds side by side at the same scale. Expert view holds the uncertainty maths, data sources and validation.", side: "top" },
   { target: "by-use", title: "Pick the test, then the site", body: "An Earth site can be a good stand-in for one test and useless for another. Choose a rover, landing or mining test to see its five best Earth sites. Tests whose physics does not carry over from Earth say so clearly.", side: "top" },
@@ -55,7 +56,7 @@ const TOUR: TourStep[] = [
   { target: "sim-test", title: "One mission, three parts", body: "First you land on the pad. Then the rover rolls off and drives five waypoints along a surveyed route; on the way you grab flagged rocks with the claw and dock at two stations to drill a core. Everything you collect adds to the score.", side: "bottom" },
   { target: "sim-briefing", title: "Read the rules first", body: "Every run starts with a short briefing: what counts as a pass, what fails you, and the controls. Nothing moves until you press Start.", side: "top" },
   { target: "sim-hud", title: "Live readings", body: "While you play, the key numbers are shown here in plain words. Red means you are close to failing.", side: "bottom" },
-  { target: "sim-score", title: "Your score", body: "Points so far out of 235, with rocks, cores and waypoints counted. The arrow points at the next waypoint. Fly the same mission on the other world and compare the two scores.", side: "left" },
+  { target: "sim-score", title: "Your score", body: "Points so far, with rocks, cores and waypoints counted. The arrow points at the next waypoint. Fly the same mission on the other world and compare the two scores.", side: "left" },
   { target: "sim-results", title: "Compare the two runs", body: "Your Earth result and destination result sit side by side with their scores. The gap between them is exactly what an Earth test can and cannot tell you about the destination.", side: "top" },
   { target: "help", title: "Come back any time", body: "This button restarts the walkthrough for whichever screen you are on.", side: "left" },
 ];
@@ -80,10 +81,18 @@ export default function Home() {
     return () => window.clearInterval(id);
   }, [customBusy]);
   const [tour, setTour] = useState(false);
-  const [prompt, setPrompt] = useState(false);
-  // offered once per visit (a new tab or window asks again)
-  useEffect(() => { try { if (!sessionStorage.getItem("celestra-tour")) { const id = window.setTimeout(() => setPrompt(true), 900); return () => window.clearTimeout(id); } } catch { /* ignore */ } }, []);
-  const seen = () => { try { sessionStorage.setItem("celestra-tour", "1"); } catch { /* ignore */ } };
+  // The walkthrough runs by itself the first time each screen is shown in this visit (Skip closes it); the ? button replays it.
+  const screen = !selectedBody ? "picker" : !matchResult ? "globe" : !simMatch ? "results" : "sim";
+  useEffect(() => {
+    let id = 0;
+    try {
+      const key = `celestra-tour-${screen}`;
+      if (!sessionStorage.getItem(key)) {
+        id = window.setTimeout(() => { try { sessionStorage.setItem(key, "1"); } catch { /* ignore */ } setTour(true); }, screen === "picker" ? 1200 : 1800);
+      }
+    } catch { /* storage blocked: no automatic tour */ }
+    return () => { window.clearTimeout(id); setTour(false); };
+  }, [screen]);
 
   const loadTargets = () => {
     setBackendError(false);
@@ -146,7 +155,7 @@ export default function Home() {
     setIsSearching(true);
     setSearchError(null);
     try {
-      const [res] = await Promise.all([fetch(`${API}/api/match/${selectedTarget.id}?top_k=60`), new Promise((r) => setTimeout(r, 500))]);
+      const [res] = await Promise.all([fetch(`${API}/api/match/${selectedTarget.id}?top_k=100&include_ai=true`), new Promise((r) => setTimeout(r, 500))]);
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.matches) {
         setSearchError(typeof data?.detail === "string" ? data.detail : `The server could not rank this site (error ${res.status}).`);
@@ -286,8 +295,7 @@ export default function Home() {
       )}
 
       <HelpButton onClick={() => setTour(true)} />
-      {prompt && !tour && <TourPrompt onSkip={() => { seen(); setPrompt(false); }} onStart={() => { seen(); setPrompt(false); setTour(true); }} />}
-      <Tour steps={TOUR} open={tour} onClose={() => setTour(false)} />
+      <Tour key={screen} steps={TOUR} open={tour} onClose={() => setTour(false)} />
     </main>
   );
 }

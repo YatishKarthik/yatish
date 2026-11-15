@@ -69,7 +69,11 @@ def modis_maps():
         tmin = np.nanmin(night, 0) - 273.15
         delta = np.nanmean(day - night, 0)
         nmax = np.nanmax(ndvi, 0)
+    # MODIS NDVI does not cover Antarctica, where nothing grows: count it as bare where temperatures were measured
+    ant = np.zeros_like(nmax, dtype=bool); ant[int((90 + 60) / 0.05):, :] = True
+    nmax = np.where(ant & ~np.isfinite(nmax) & (nd >= 1), 0.0, nmax)
     ok = (nd >= 3) & (nn >= 3)
+    ok |= ant & (nd >= 1) & (nn >= 1)   # polar night and cloud leave fewer valid months in Antarctica
     tmax[~ok] = np.nan; tmin[~ok] = np.nan; delta[~ok] = np.nan
     return tmax.astype(np.float32), tmin.astype(np.float32), delta.astype(np.float32), nmax.astype(np.float32)
 
@@ -152,6 +156,8 @@ class Exact:
         site = {"id": "probe", "name": "probe", "body": "earth", "lat": lat, "lon": lon}
         f = extract.compute_features(site, heightmap, relief, 2000.0 / extract.GRID_RES, tmin, tmax, 0.0, prov, (0.95, 1.0, 0.4, 0.25), delta)
         f["ndvi_season_max"] = sample_map(self.nmax, lat, lon)
+        f["elevation_m"] = float(np.nanmedian(h))
+        f["_heightmap"], f["_relief"] = heightmap, relief
         return f
 
     def scores(self, f):
@@ -209,6 +215,37 @@ def train_ensemble(X, Y, n_models=7, epochs=400, seed=0):
                         "coverage_per_target": cover.round(3).tolist(), "mae_per_target": mae.round(3).tolist(), "r2_per_target": r2.round(3).tolist()}
 
 
+CANDIDATES: dict = {}
+
+
+def cand_id(c):
+    return f"ai_{c[0]:.3f}_{c[1]:.3f}".replace("-", "m")
+
+
+def cand_name(c):
+    return f"AI find {abs(c[0]):.2f}°{'N' if c[0] >= 0 else 'S'} {abs(c[1]):.2f}°{'E' if c[1] >= 0 else 'W'}"
+
+
+def save_candidate(c, f):
+    """Terrain asset and feature row of a verified AI find, so the app can rank, explain and simulate it."""
+    cid = cand_id(c)
+    hm, relief = f["_heightmap"], f["_relief"]
+    prov = {"topography": {"agency": "ESA", "instrument": "Copernicus DEM GLO-30 (2 km window at the cell centre)", "status": "measured"},
+            "radar": {"agency": "ESA", "instrument": "Texture statistics of the slope grid (terrain-roughness proxy, not radar)", "status": "derived"},
+            "mineral": {"agency": "none", "instrument": "Composition not measured for AI finds; not scored", "status": "typical"},
+            "thermal": {"agency": "NASA", "instrument": "MODIS Terra monthly land surface temperature 2023, NASA Worldview (global map)", "status": "measured"},
+            "curve": {"agency": "none", "instrument": "Sine-based day-night model between the low and high", "status": "modelled"}}
+    row = {k: (float(v) if isinstance(v, (int, float, np.floating)) else v) for k, v in f.items() if not k.startswith("_") and k not in ("provenance",)}
+    row.update({"site_id": cid, "name": cand_name(c), "type": "ai_discovery", "lat": c[0], "lon": c[1], "morphology": "unknown",
+                "mineral_profile": "not measured", "water_fraction": 0.0, "ndvi_source": "MODIS Terra monthly NDVI 2023, greenest month (NASA Worldview)", "provenance": prov})
+    row["diurnal_sol_curve"] = [float(x) for x in row.get("diurnal_sol_curve", [])]
+    CANDIDATES[cid] = row
+    asset = ROOT / "backend" / "static" / "assets" / f"{cid}_dem.json"
+    asset.write_text(json.dumps({"site_id": cid, "name": cand_name(c), "body": "earth", "resolution": extract.GRID_RES, "extent_m": 2000,
+                                 "relief_m": round(float(relief), 1), "data_provenance": prov, "diurnal_sol_curve": row["diurnal_sol_curve"],
+                                 "data": np.round(hm.flatten(), 4).tolist()}), encoding="utf-8")
+
+
 def gc_km(a, b, c, d):
     a, b, c, d = map(math.radians, (a, b, c, d))
     return 6371.0 * math.acos(max(-1, min(1, math.sin(a) * math.sin(c) + math.cos(a) * math.cos(c) * math.cos(b - d))))
@@ -219,10 +256,12 @@ def main():
     maps = modis_maps(); tmax, tmin, delta, nmax = maps
     # candidate cells: bare land, not ice cap, inside Copernicus coverage
     cells = []
-    for lat in np.arange(-60 + CELL / 2, 82, CELL):
+    for lat in np.arange(-85 + CELL / 2, 82, CELL):   # includes Antarctica's ice-free ground; ice sheets fail the temperature test
         for lon in np.arange(-180 + CELL / 2, 180, CELL):
             nd = sample_map(nmax, lat, lon, 2); tx = sample_map(tmax, lat, lon, 2)
-            if np.isfinite(nd) and np.isfinite(tx) and nd <= NDVI_FULL and tx >= -5:
+            # not an ice cap: warmest month above -5 C; in Antarctica, where ice is everywhere, only ground that
+            # warms above 0 C in summer (bare rock does, ice cannot)
+            if np.isfinite(nd) and np.isfinite(tx) and nd <= NDVI_FULL and tx >= (0.0 if lat < -60 else -5):
                 cells.append((round(float(lat), 3), round(float(lon), 3)))
     print(f"candidate bare-land cells: {len(cells)}  ({time.time() - t0:.0f}s)", flush=True)
     tiles = sorted({(math.floor(a), math.floor(b)) for a, b in cells})
@@ -305,6 +344,8 @@ def main():
             s = ex_.scores(f) if f is not None else None
         except Exception:
             s, f = None, None
+        if f is not None:
+            save_candidate(c, f)
         res = (s, {k: round(float(f[k]), 3) for k in ("slope_mean", "slope_p90", "tri_ruggedness", "temp_min_c", "temp_max_c", "ndvi_season_max")} if f else None)
         vcache[c] = res
         return job, res
@@ -320,12 +361,13 @@ def main():
             s, f = results.get((tid, c), (None, None))
             exact = None if s is None else round(s[k], 3)
             would_rank = None if exact is None else 1 + sum(1 for v in named_scores if v > exact)
-            lst.append({"lat": c[0], "lon": c[1], "ai_score": round(mu, 3), "ai_low": round(lo, 3), "ai_high": round(hi, 3), "ai_sigma": round(sd, 3),
+            lst.append({"id": cand_id(c), "lat": c[0], "lon": c[1], "ai_score": round(mu, 3), "ai_low": round(lo, 3), "ai_high": round(hi, 3), "ai_sigma": round(sd, 3),
                         "confident": bool(hi - lo <= 0.12), "exact_score": exact, "inside_interval": None if exact is None else bool(lo - 1e-6 <= exact <= hi + 1e-6),
                         "would_rank_among_named": would_rank, "measured": f})
         lst.sort(key=lambda d: -(d["exact_score"] if d["exact_score"] is not None else -1))
         final[tid] = lst
     out["targets"] = final
+    (ROOT / "data" / "processed" / "ai_candidates.json").write_text(json.dumps(CANDIDATES), encoding="utf-8")
     ins = [d["inside_interval"] for v in final.values() for d in v if d["inside_interval"] is not None]
     out["verification"] = {"candidates": len(ins), "exact_inside_ai_interval": round(float(np.mean(ins)), 3) if ins else None}
     OUT.write_text(json.dumps(out, indent=1))

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { AiDiscoveries, aiPinId, fmtLatLon, type AiDiscoveryData } from "@/components/AiDiscoveries";
+import { AiDiscoveries, type AiDiscoveryData } from "@/components/AiDiscoveries";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Play, Search, FileText } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
@@ -35,6 +35,7 @@ export interface ParamSim {
 export interface MatrixRow { test: string; scenario: "rover" | "landing" | "mining"; status: "REPRESENTATIVE" | "PARTIAL" | "NOT_REPRESENTATIVE"; confidence: number; reason: string }
 export interface BestPerTestRow { test: string; scenario: "rover" | "landing" | "mining"; best_site_id: string; best_site_name: string; rank: number; status: MatrixRow["status"]; confidence: number; reason: string }
 export interface EarthMatch {
+  ai?: { ai_score: number; ai_low: number; ai_high: number; ai_sigma: number; confident: boolean } | null;
   id: string; rank?: number; name: string; type: string; data_source?: string; lat: number; lon: number; elevation_m: number;
   morphology: string; mineral_profile: string; geology: string; similarity_score: number; epistemic_uncertainty: number;
   conformal_90_interval: [number, number]; pillar_scores: { topo: number | null; radar: number | null; mineral: number | null; thermal: number | null };
@@ -195,7 +196,6 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
   const [filterText, setFilterText] = useState("");
   const [view, setView] = useState<View>("use");
   const [ai, setAi] = useState<{ id: string; data: AiDiscoveryData | null; error: string | null } | null>(null);
-  const [aiSel, setAiSel] = useState<string | null>(null);
   const [showAi, setShowAi] = useState(true);
   const targetId = data.target.id;
   useEffect(() => {
@@ -219,12 +219,10 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
     return data.matches.filter((x) => x.name.toLowerCase().includes(q) || x.mineral_profile.toLowerCase().includes(q) || x.type.toLowerCase().includes(q));
   }, [data.matches, filterText]);
 
-  const pins: GlobePin[] = useMemo(() => {
-    const named: GlobePin[] = data.matches.map((x, i) => ({ id: x.id, rank: x.rank || i + 1, name: x.name, lat: x.lat, lon: x.lon, subtitle: `${PCT(x.similarity_score)} match` }));
-    if (!showAi || !aiData) return named;
-    return [...named, ...aiData.candidates.map((c, i) => ({ id: aiPinId(c), name: `AI find #${i + 1} · ${fmtLatLon(c.lat, c.lon)}`, lat: c.lat, lon: c.lon, tone: "ai" as const,
-      subtitle: c.exact_score != null ? `exact ${PCT(c.exact_score)} · AI ${PCT(c.ai_score)} (${PCT(c.ai_low)}–${PCT(c.ai_high)})` : `AI ${PCT(c.ai_score)}`, badge: c.confident ? "AI: confident" : "AI: less certain" }))];
-  }, [data.matches, showAi, aiData]);
+  const pins: GlobePin[] = useMemo(() => data.matches.filter((x) => showAi || x.type !== "ai_discovery").map((x, i) => (x.type === "ai_discovery"
+    ? { id: x.id, rank: x.rank || i + 1, name: x.name, lat: x.lat, lon: x.lon, tone: "ai" as const, subtitle: `${PCT(x.similarity_score)} match${x.ai ? ` · AI ${PCT(x.ai.ai_score)} (${PCT(x.ai.ai_low)}–${PCT(x.ai.ai_high)})` : ""}`, badge: x.ai?.confident ? "AI find · confident" : "AI find" }
+    : { id: x.id, rank: x.rank || i + 1, name: x.name, lat: x.lat, lon: x.lon, subtitle: `${PCT(x.similarity_score)} match` })), [data.matches, showAi]);
+  const nAi = data.matches.filter((x) => x.type === "ai_discovery").length;
 
   // plain-language summary pieces
   const sw = similarityWord(m.similarity_score);
@@ -299,8 +297,8 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
               <div className="text-xs font-semibold">Earth · {data.matches.length} candidate test sites</div>
               <div className="text-[11px] opacity-80">Best three are labelled · select a site and the globe turns to it</div>
             </div>
-            <PlanetGlobe body="earth" pins={pins} selectedPinId={aiSel && view === "ai" ? aiSel : m.id} onSelectPin={(id) => { if (id.startsWith("ai:")) { setAiSel(id); setView("ai"); } else setSelectedId(id); }} />
-            {aiData && <button type="button" className="absolute bottom-3 left-3 z-10 btn btn-sm" onClick={() => setShowAi((v) => !v)} aria-pressed={showAi}><span className="w-2 h-2 rounded-full" style={{ background: "#c084fc" }} /> {showAi ? "Hide" : "Show"} AI finds ({aiData.candidates.length})</button>}
+            <PlanetGlobe body="earth" pins={pins} selectedPinId={m.id} onSelectPin={(id) => setSelectedId(id)} />
+            {nAi > 0 && <button type="button" data-tour="ai-finds" className="absolute bottom-3 left-3 z-10 btn btn-sm" onClick={() => setShowAi((v) => !v)} aria-pressed={showAi}><span className="w-2 h-2 rounded-full" style={{ background: "#c084fc" }} /> {showAi ? "Hide" : "Show"} AI finds ({nAi})</button>}
           </div>
 
           <div className="card p-4 flex-1 flex flex-col" data-tour="ranked">
@@ -318,8 +316,8 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                 return (
                   <button key={x.id} type="button" onClick={() => setSelectedId(x.id)} className="row flex items-center justify-between gap-2" aria-pressed={x.id === m.id}>
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold flex items-center gap-1.5 truncate"><span className="font-mono muted">#{rank}</span><span className="truncate">{x.name}</span></div>
-                      <div className="text-[11px] muted mt-0.5">{x.mineral_profile.replace(/_/g, " ")} · {x.lat.toFixed(1)}°, {x.lon.toFixed(1)}°</div>
+                      <div className="text-xs font-semibold flex items-center gap-1.5 truncate"><span className="font-mono muted">#{rank}</span>{x.type === "ai_discovery" && <span className="status shrink-0" style={{ background: "rgba(192,132,252,0.15)", color: "#c084fc" }}>AI find</span>}<span className="truncate">{x.name.replace(/^AI find /, "")}</span></div>
+                      <div className="text-[11px] muted mt-0.5">{x.type === "ai_discovery" ? `unnamed place · AI estimate ${PCT(x.ai?.ai_score ?? 0)} (${PCT(x.ai?.ai_low ?? 0)}–${PCT(x.ai?.ai_high ?? 0)})` : `${x.mineral_profile.replace(/_/g, " ")} · ${x.lat.toFixed(1)}°, ${x.lon.toFixed(1)}°`}</div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-sm font-semibold font-mono">{Math.round(x.similarity_score * 100)}</div>
@@ -425,7 +423,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
               )}
 
               {view === "ai" && (
-                <AiDiscoveries data={aiData} error={aiError} world={t.name} selected={aiSel} onSelect={setAiSel} topNamedScore={data.matches[0]?.similarity_score} />
+                <AiDiscoveries data={aiData} error={aiError} world={t.name} selected={m.type === "ai_discovery" ? m.id : null} onSelect={(id) => { if (data.matches.some((x) => x.id === id)) setSelectedId(id); }} topNamedScore={data.matches.find((x) => x.type !== "ai_discovery")?.similarity_score} />
               )}
               {view === "use" && rankings.length > 0 && (
                 <ByUseView rankings={rankings} selectedId={m.id} onSelect={setSelectedId}

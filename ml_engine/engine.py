@@ -296,14 +296,32 @@ class PlanetaryAnalogEngine:
             },
         ]
 
-    def match(self, target_site_id: str, top_k: int = 60) -> dict:
+    def match(self, target_site_id: str, top_k: int = 60, include_ai: bool = False) -> dict:
         target_row = self.df[self.df["site_id"] == target_site_id]
         if target_row.empty:
             raise ValueError(f"Target site '{target_site_id}' not found.")
         target_row = target_row.iloc[0]
         target_meta = self.meta_by_id[target_site_id]
         target_norm = self.norm_df.loc[target_row.name].values
-        return self.match_row(target_row, target_meta, target_norm, top_k)
+        extra = self._ai_rows(target_site_id) if include_ai else []
+        return self.match_row(target_row, target_meta, target_norm, top_k, extra_rows=extra)
+
+    def _ai_rows(self, target_id: str) -> list:
+        """Places found by the AI search (06_ai_discovery.py) for this target, as extra Earth rows with their measured
+        features, so they are ranked, explained and playable like the named sites."""
+        disc = _load_json(ROOT / "data" / "processed" / "discoveries.json").get("targets", {}).get(target_id, [])
+        cands = _load_json(ROOT / "data" / "processed" / "ai_candidates.json")
+        rows = []
+        for d in disc:
+            cid = d.get("id")
+            if not cid or cid not in cands:
+                continue
+            r = pd.Series(cands[cid])
+            norm = ((pd.Series({c: r[c] for c in FEATURE_COLS}) - self.feature_means) / self.feature_stds).values
+            meta = {"geology": f"Found by the AI search: unnamed place at {d['lat']:.2f}, {d['lon']:.2f}. AI estimate {round(d['ai_score'] * 100)} ({round(d['ai_low'] * 100)}-{round(d['ai_high'] * 100)}), exact score from real data shown here.",
+                    "ai": {k: d[k] for k in ("ai_score", "ai_low", "ai_high", "ai_sigma", "confident")}}
+            rows.append((r, norm, meta))
+        return rows
 
     def normalise(self, row: dict) -> np.ndarray:
         return ((pd.Series({c: row[c] for c in FEATURE_COLS}) - self.feature_means) / self.feature_stds).values
@@ -366,7 +384,7 @@ class PlanetaryAnalogEngine:
             "max_sun_elevation_deg": round(target_max_sun(body, float(target_row["lat"]), illum), 1),
         }
 
-    def match_row(self, target_row, target_meta: dict, target_norm: np.ndarray, top_k: int = 60, extras: dict | None = None) -> dict:
+    def match_row(self, target_row, target_meta: dict, target_norm: np.ndarray, top_k: int = 60, extras: dict | None = None, extra_rows: list | None = None) -> dict:
         t0 = time.perf_counter()
         extras = extras if extras is not None else self.target_extras(target_row)
         sun_max = extras["max_sun_elevation_deg"]
@@ -374,9 +392,9 @@ class PlanetaryAnalogEngine:
         earth_df = self.df[self.df["body"] == "earth"]
         matches = []
 
-        for idx, earth_row in earth_df.iterrows():
-            earth_norm = self.norm_df.loc[idx].values
-            earth_meta = self.meta_by_id[earth_row["site_id"]]
+        rows = [(earth_row, self.norm_df.loc[idx].values, self.meta_by_id[earth_row["site_id"]]) for idx, earth_row in earth_df.iterrows()]
+        rows += list(extra_rows or [])
+        for earth_row, earth_norm, earth_meta in rows:
 
             param_sims = self._param_similarities(target_row, earth_row, target_norm, earth_norm)
             pillar_scores = self._pillar_scores(param_sims)
@@ -418,6 +436,7 @@ class PlanetaryAnalogEngine:
             diurnal_curve = list(raw_curve) if hasattr(raw_curve, "__iter__") else []
 
             matches.append({
+                "ai": earth_meta.get("ai"),
                 "id": earth_row["site_id"],
                 "name": earth_row["name"],
                 "type": earth_row["type"],
@@ -498,7 +517,7 @@ class PlanetaryAnalogEngine:
 
         return {
             "search_time_ms": elapsed_ms,
-            "earth_sites_scanned": len(earth_df),
+            "earth_sites_scanned": len(rows),
             "target": {
                 "id": target_row["site_id"],
                 "name": target_row["name"],

@@ -4,7 +4,7 @@ import React from "react";
 import { Sparkles, CheckCircle2, AlertTriangle, MapPin } from "lucide-react";
 
 export interface AiCandidate {
-  lat: number; lon: number;
+  id?: string; lat: number; lon: number;
   ai_score: number; ai_low: number; ai_high: number; ai_sigma: number; confident: boolean;
   exact_score: number | null; inside_interval: boolean | null; would_rank_among_named: number | null;
   measured: { slope_mean: number; slope_p90: number; tri_ruggedness: number; temp_min_c: number; temp_max_c: number; ndvi_season_max: number } | null;
@@ -16,7 +16,7 @@ export interface AiDiscoveryData {
   candidates: AiCandidate[];
 }
 
-export const aiPinId = (c: { lat: number; lon: number }) => `ai:${c.lat},${c.lon}`;
+export const aiPinId = (c: { id?: string; lat: number; lon: number }) => c.id ?? `ai:${c.lat},${c.lon}`;
 export const fmtLatLon = (lat: number, lon: number) => `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? "E" : "W"}`;
 const P = (x: number) => Math.round(x * 100);
 
@@ -68,6 +68,7 @@ export function AiDiscoveries({ data, error, world, selected, onSelect, topNamed
                 <div><div className="text-[11px] muted">Exact score (verified)</div><div className="font-mono flex items-center gap-1.5">{c.exact_score == null ? <span className="muted">no 30 m data</span> : <><b>{P(c.exact_score)}</b>{c.inside_interval ? <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "var(--good)" }} /> : <AlertTriangle className="w-3.5 h-3.5" style={{ color: "var(--warn)" }} />}</>}</div></div>
                 <div><div className="text-[11px] muted">Would rank among the 60 named</div><div className="font-mono">{c.would_rank_among_named == null ? "–" : `#${c.would_rank_among_named}`}</div></div>
               </div>
+              {sel && <div className="text-[11px] mt-2" style={{ color: "#c084fc" }}>Selected: its full analysis is in the other tabs, and the simulator button at the top flies this place.</div>}
               {c.measured && sel && (
                 <div className="text-[11px] muted mt-2">Measured here: mean slope {c.measured.slope_mean.toFixed(1)}°, steep slopes {c.measured.slope_p90.toFixed(1)}°, surface {c.measured.temp_min_c.toFixed(0)}° to {c.measured.temp_max_c.toFixed(0)}°C (MODIS), greenest-month NDVI {c.measured.ndvi_season_max.toFixed(2)}. Unnamed place: shown by coordinates.</div>
               )}

@@ -55,9 +55,9 @@ def get_targets():
 
 
 @app.get("/api/match/{target_id}")
-def match_target_site(target_id: str, top_k: int = 60):
+def match_target_site(target_id: str, top_k: int = 60, include_ai: bool = False):
     try:
-        return ml_engine.match(target_id, top_k=top_k)
+        return ml_engine.match(target_id, top_k=top_k, include_ai=include_ai)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

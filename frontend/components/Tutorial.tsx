@@ -100,8 +100,11 @@ function TourInner({ steps, onClose }: { steps: TourStep[]; onClose: () => void 
         </div>
         <p className="text-[13px] mt-2 leading-relaxed">{step.body}</p>
         <div className="mt-3 flex items-center justify-between">
-          <button type="button" className="btn btn-sm" disabled={i === 0} onClick={() => setI(i - 1)}>Back</button>
-          <div className="flex gap-1" aria-hidden>{present.map((_, k) => <span key={k} className="h-1 w-3 rounded-full" style={{ background: k <= i ? "var(--accent)" : "var(--line)" }} />)}</div>
+          <div className="flex gap-1.5">
+            <button type="button" className="btn btn-sm" disabled={i === 0} onClick={() => setI(i - 1)}>Back</button>
+            {!last && <button type="button" className="btn btn-sm" onClick={onClose}>Skip tour</button>}
+          </div>
+          <div className="flex gap-1" aria-hidden>{present.map((_, k) => <span key={k} className="h-1 w-2.5 rounded-full" style={{ background: k <= i ? "var(--accent)" : "var(--line)" }} />)}</div>
           {last ? <button type="button" className="btn btn-sm btn-primary" onClick={onClose}>Done</button> : <button type="button" className="btn btn-sm btn-primary" onClick={() => setI(i + 1)}>Next</button>}
         </div>
       </div>
