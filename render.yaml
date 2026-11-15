@@ -1,0 +1,8 @@
+# Render blueprint: one free web service built from the Dockerfile (website + API at one address)
+services:
+  - type: web
+    name: celestra
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/status

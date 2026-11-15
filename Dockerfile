@@ -1,4 +1,4 @@
-# Celestra: one container that serves the website and the API (Hugging Face Spaces, Docker SDK, port 7860).
+# Celestra: one container that serves the website and the API (Render, Koyeb or any Docker host; port $PORT, default 7860).
 # Stage 1 builds the Next.js site as static files; stage 2 runs FastAPI, which serves those files and the API.
 FROM node:20-slim AS web
 WORKDIR /web
@@ -23,5 +23,6 @@ COPY --from=web --chown=user:user /web/out frontend/out
 RUN mkdir -p data/raw && chown -R user:user /app   # live custom points cache their downloads here
 USER user
 ENV PYTHONUNBUFFERED=1 HOME=/home/user
+# Hosts such as Render pass the port in $PORT; 7860 otherwise
 EXPOSE 7860
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

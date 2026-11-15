@@ -19,6 +19,10 @@ app = FastAPI(
     version="2.1.0",
 )
 
+# results are up to ~2 MB of JSON: compress them for the deployed site
+from fastapi.middleware.gzip import GZipMiddleware  # noqa: E402
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

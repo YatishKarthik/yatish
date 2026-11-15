@@ -8,7 +8,7 @@ import { ArrowLeft, RotateCcw, Rocket, Car, CheckCircle2, XCircle, Eye, Play, Tr
 import type { EarthMatch, MatchPayload } from "@/components/AnalyticsView";
 import { Status } from "@/components/ui";
 import { RoverModel, LanderModel, BeaconModel, useRockParts, GroundRing, RouteRibbon, makeTerrainThermalMaterial, makeObjectThermalMaterial, useMaterialSwap, INFERNO_CSS } from "@/components/simModels";
-import { API } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 
 /* =====================================================================================
    One mission, three parts: land on the pad, drive the surveyed route collecting rock
@@ -791,7 +791,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const url = side === "earth" ? selectedMatch.heightmap_url : t.heightmap_url;
   useEffect(() => {
     let live = true;
-    fetch(`${API}${url}`).then((r) => r.json()).then((j) => { if (live) { setGrid(j.data); setReliefM(j.relief_m || 120); setDemSource(j.data_provenance?.topography?.instrument ?? null); } }).catch((e) => console.error("heightmap", e));
+    fetch(apiUrl(url)).then((r) => r.json()).then((j) => { if (live) { setGrid(j.data); setReliefM(j.relief_m || 120); setDemSource(j.data_provenance?.topography?.instrument ?? null); } }).catch((e) => console.error("heightmap", e));
     return () => { live = false; };
   }, [url]);
 

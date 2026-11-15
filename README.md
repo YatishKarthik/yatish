@@ -136,21 +136,14 @@ If a picked Mars point fails, run `python data-pipeline/diagnose_mars.py <lat> <
 
 ## Deploy (free, one link for judges)
 
-The `Dockerfile` builds the website as static files and serves it from the FastAPI backend, so one container on a Hugging Face Space (free CPU tier) runs everything at a single address.
+The `Dockerfile` builds the website as static files and serves it from the FastAPI backend, so one container runs everything at a single address, including live "pick any point". It fits a 512 MB free instance (it peaks at about 300 MB while measuring a live point).
 
-1. Create a Space at huggingface.co: New Space, SDK **Docker**, template **Blank**, visibility **Public**, hardware **CPU basic (free)**.
-2. Create a write token (Settings, Access Tokens), then from the project folder:
+**Render (free web service):**
+1. Sign in at render.com with GitHub and allow access to this repository.
+2. New > Web Service > pick the repository and the branch with this code. Render detects the `Dockerfile` (or use New > Blueprint, which reads `render.yaml`).
+3. Instance type **Free**, then Create. The first build takes about 5-10 minutes; the app is then at `https://<service-name>.onrender.com`.
 
-```bash
-pip install -U huggingface_hub
-hf auth login
-hf upload <your-name>/<space-name> . . --repo-type=space --exclude ".venv/*" "frontend/node_modules/*" "frontend/.next/*" "frontend/out/*" "data/raw/*" "*/__pycache__/*" ".git/*" "README.md"
-hf upload <your-name>/<space-name> deploy/space-README.md README.md --repo-type=space
-```
-
-3. The Space builds for about 5-10 minutes, then the app is at `https://<your-name>-<space-name>.hf.space`.
-
-A free Space sleeps after 48 hours without visitors and wakes in about a minute on the next visit. Local development is unchanged: `npm run dev` and `python backend/main.py` work as before.
+A free instance sleeps after 15 minutes without visitors and takes about a minute to wake on the next visit. Any other Docker host works the same way (the container listens on `$PORT`, default 7860). Local development is unchanged: `npm run dev` and `python backend/main.py` work as before.
 
 ## Rebuild the data from source (optional)
 

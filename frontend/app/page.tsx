@@ -9,7 +9,7 @@ import { ArtemisBadge, artemisOrder, type ArtemisInfo } from "@/components/Insig
 import { ThemeToggle } from "@/components/ui";
 import { Tour, HelpButton, type TourStep } from "@/components/Tutorial";
 import { Splash } from "@/components/Splash";
-import { API } from "@/lib/api";
+import { API, apiUrl } from "@/lib/api";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 const DualSimulator = dynamic(() => import("@/components/DualSimulator"), { ssr: false });
@@ -106,7 +106,7 @@ export default function Home() {
 
   const loadTargets = () => {
     setBackendError(false);
-    fetch(`${API}/api/targets`)
+    fetch(apiUrl("/api/targets"))
       .then((res) => { if (!res.ok) throw new Error("Backend error"); return res.json(); })
       .then((data) => setAllTargets(data.targets || []))
       .catch(() => setBackendError(true));
@@ -174,7 +174,7 @@ export default function Home() {
     setIsSearching(true);
     setSearchError(null);
     try {
-      const [res] = await Promise.all([fetch(`${API}/api/match/${selectedTarget.id}?top_k=200&include_ai=true`), new Promise((r) => setTimeout(r, 500))]);
+      const [res] = await Promise.all([fetch(apiUrl(`/api/match/${selectedTarget.id}?top_k=200&include_ai=true`)), new Promise((r) => setTimeout(r, 500))]);
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.matches) {
         setSearchError(typeof data?.detail === "string" ? data.detail : `The server could not rank this site (error ${res.status}).`);

@@ -11,7 +11,7 @@ import {
   type ArtemisInfo, type Illumination, type NightIR, type CustomInfo, type FunctionalRanking, type Contribution, type WhyInfo, type FieldReadiness,
 } from "@/components/Insights";
 import TerrainTwins from "@/components/TerrainTwins";
-import { API } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
@@ -154,7 +154,7 @@ function BaselineTable({ b, sites }: { b: NonNullable<Validation["baseline"]>; s
 
 function Evidence() {
   const [v, setV] = useState<Validation | null>(null);
-  useEffect(() => { fetch(`${API}/api/validation`).then((r) => (r.ok ? r.json() : null)).then(setV).catch(() => setV(null)); }, []);
+  useEffect(() => { fetch(apiUrl("/api/validation")).then((r) => (r.ok ? r.json() : null)).then(setV).catch(() => setV(null)); }, []);
   if (!v) return null;
   const nc = v.negative_controls, raw = v.negative_controls_without_vegetation_rule, thr = v.bare_ground_threshold_sensitivity;
   return (
@@ -198,7 +198,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
   useEffect(() => {
     if (targetId.startsWith("custom_")) return;
     let live = true;
-    fetch(`${API}/api/discoveries/${targetId}`)
+    fetch(apiUrl(`/api/discoveries/${targetId}`))
       .then(async (r) => { const j = await r.json().catch(() => null); if (!live) return; if (r.ok) setAi({ id: targetId, data: j as AiDiscoveryData, error: null }); else setAi({ id: targetId, data: null, error: j?.detail ?? "AI search not available." }); })
       .catch(() => { if (live) setAi({ id: targetId, data: null, error: "AI search not available (backend not reachable)." }); });
     return () => { live = false; };
@@ -259,7 +259,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {!isCustom && (
-              <a className="btn" href={`${API}/api/brief/${encodeURIComponent(t.id)}#print`} target="_blank" rel="noopener noreferrer" data-tour="brief" title="A printable one-page plan for a test campaign at the top sites">
+              <a className="btn" href={apiUrl(`/api/brief/${encodeURIComponent(t.id)}#print`)} target="_blank" rel="noopener noreferrer" data-tour="brief" title="A printable one-page plan for a test campaign at the top sites">
                 <FileText className="w-4 h-4" /> Field Brief (PDF)
               </a>
             )}

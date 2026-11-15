@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { API } from "@/lib/api";
+import { apiUrl } from "@/lib/api";
 
 
 export interface Dem {
@@ -24,7 +24,7 @@ const SUN_AZ = (315 * Math.PI) / 180, SUN_ALT = (45 * Math.PI) / 180;
 const cache = new Map<string, Promise<Dem>>();
 function loadDem(url: string): Promise<Dem> {
   if (!cache.has(url)) {
-    const p = fetch(`${API}${url}`).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<Dem>; });
+    const p = fetch(apiUrl(url)).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<Dem>; });
     p.catch(() => cache.delete(url));
     cache.set(url, p);
   }
