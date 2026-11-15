@@ -103,4 +103,4 @@ def build_target(engine, body: str, lat: float, lon: float) -> tuple[dict, dict,
 
 def match_custom(engine, body: str, lat: float, lon: float, top_k: int = 60) -> dict:
     row, meta, extras = build_target(engine, body, lat, lon)
-    return engine.match_row(row, meta, engine.normalise(row), top_k, extras)
+    return engine.match_row(row, meta, engine.normalise(row), top_k, extras, extra_rows=engine.ai_pool_rows(body))

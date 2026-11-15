@@ -6,7 +6,7 @@ Built for the NASA Space Apps Challenge 2026: *Identify Earth locations that ana
 
 ## What it does
 
-1. **Pick a destination.** NASA's nine Artemis III candidate regions at the lunar south pole (Oct 2024 list), nine other Moon sites (including three 2022 Artemis candidates that were dropped, marked as such) and ten Mars sites. Or **click any point** on the Moon or Mars: its terrain is fetched live from NASA PDS (LOLA on the Moon, HiRISE on Mars) and ranked the same way.
+1. **Pick a destination.** NASA's nine Artemis III candidate regions at the lunar south pole (Oct 2024 list), nine other Moon sites (including three 2022 Artemis candidates that were dropped, marked as such) and ten Mars sites. Or **click any point** on the Moon or Mars: its terrain is fetched live from NASA PDS (LOLA on the Moon, HiRISE on Mars) and ranked the same way, against the named sites and every place the AI search found on that world.
 2. **Rank 60 Earth sites.** Fourteen measurements of terrain, surface texture, surface composition and temperatures are compared site by site; the result is a 0–100 match score, computed only from measurements that exist for both sites, with a sensitivity range, and a breakdown of how many points each measurement adds (**why this match**).
 3. **Best site per use.** An Earth site can be a good stand-in for one test and useless for another (a *functional analogue*, Foucher et al. 2021). For seven hardware tests (traction, navigation, landing stability, plume, drilling, motor cooling, low-sun camera navigation) the app ranks the best Earth sites for that use and says plainly when Earth physics cannot stand in at all.
 4. **Sunlight at the pole.** For polar Moon sites, a horizon model on LOLA terrain gives how often the Sun and Earth are above the horizon, how much of the site never sees the Sun, and a modelled peak temperature. The same model chose the landing point inside each Artemis III region.
@@ -71,7 +71,7 @@ The exact score needs a 2 km, 30 m terrain tile per place, so it cannot run ever
 
 What the model learns is Celestra's scoring, not ground truth: it is a fast emulator that makes a global search possible, and every candidate in the app shows its exact score beside the AI estimate. Composition is not part of the search. Candidates are unnamed places, shown by coordinates; access and land status are not checked.
 
-In the app, verified AI finds appear in the ranked list beside the named sites (purple pins and an "AI find" badge, togglable on the globe), with the full analysis tabs, and the simulator can fly them on their real 30 m terrain.
+In the app, verified AI finds appear in the ranked list beside the named sites (purple pins and an "AI find" badge, togglable on the globe), with the full analysis tabs, and the simulator can fly them on their real 30 m terrain. For a point you pick yourself, all AI finds on that world are scored exactly against it (the AI model only estimates scores for the 28 listed destinations, so those rows show the exact score alone).
 
 **Limits of the search:** bare land only (NDVI ≤ 0.25; forests, farmland, ocean and ice caps are excluded by design); 0.25° cells, so small outcrops inside green land are missed; composition is not used; no access, permits or land-status check.
 
@@ -103,9 +103,9 @@ What this validation cannot show:
 * Mars: for Hellas, Arsia and Utopia the nearest HiRISE DTM is 140-223 km from the nominal point; the app shows the distance.
 * Texture comes from 2 km elevation tiles, so it sees ridges and crater walls, not boulders.
 * Field-readiness entries list analog history and permits only where documented; everything else is marked "not verified".
-* Simulator physics are simplified and tuned for play. Terrain heights in the simulator can be drawn exaggerated (×2 by default, labelled, switchable to true height); the rover and lander physics always use the true slopes. The Heat view is a simple surface-temperature model seeded with the measured range, not a measurement.
+* Simulator physics are simplified and tuned for play. Hills in the simulator can be drawn taller to make slopes visible (2× by default, switchable to real size); the rover and lander physics always use the true slopes. The Heat view is a simple surface-temperature model seeded with the measured range, not a measurement.
 * Registry corrections: the Amazon control was moved from central Manaus to Reserva Ducke; Shackleton rim, Connecting Ridge, Faustini Rim A and Peary rim had been registered at crater centres and were moved onto the named rims (`data/config/relocated_targets.json`); the old Malapert point is replaced by the Artemis III Malapert target.
-* Data-source changes in this version: Moon terrain moved from USGS-repackaged LOLA point clouds and JAXA Kaguya DTMs to NASA PDS LOLA gridded DEMs; Mars terrain from USGS CTX DTMs to NASA PDS HiRISE DTMs; Earth temperatures from NASA POWER (air) to MODIS land surface temperature (Worldview); the THEMIS night-IR descriptor and the neural-network ensemble were removed. Everything now comes from the challenge's resource list.
+* Data-source changes in this version: Moon terrain moved from USGS-repackaged LOLA point clouds and JAXA Kaguya DTMs to NASA PDS LOLA gridded DEMs; Mars terrain from USGS CTX DTMs to NASA PDS HiRISE DTMs; Earth temperatures from NASA POWER (air) to MODIS land surface temperature (Worldview); the THEMIS night-IR descriptor and the old neural-network score band (trained on synthetic labels) were removed; the AI discovery ensemble that replaced it learns from exact scores on real data. Everything now comes from the challenge's resource list.
 
 ## Run it locally (two terminals)
 
@@ -138,7 +138,7 @@ pip install -r requirements.txt
 python data-pipeline/04_polar_illumination.py  # ~20 min: sunlight model, places the Artemis III targets
 python data-pipeline/02_fetch_real_data.py     # ~5-10 min, cached in data/real/
 python data-pipeline/01_fetch_and_extract.py   # features and terrain assets
-python data-pipeline/03_validate.py            # controls, benchmarks, baseline, sensitivity, calibration
+python data-pipeline/03_validate.py            # controls, benchmarks, baseline, thresholds, weight sensitivity, score range
 python data-pipeline/ai_rasters.py             # global MODIS maps from NASA Worldview (~5 min)
 python data-pipeline/06_ai_discovery.py        # AI search of all bare land (~5 min; needs torch)
 ```
@@ -150,7 +150,8 @@ backend/        FastAPI app, terrain assets, simulator physics, field brief, liv
 ml_engine/      similarity on measured features only, bare-ground rule, score ranges, per-use rankings
                 (the AI discovery model is trained offline in data-pipeline/06_ai_discovery.py; the app reads its results)
 data/           site registry, real-data cache (data/real), features, validation results
-data-pipeline/  sources_listed.py readers, 04 sunlight + Artemis placement, 02 fetch real data, 01 build features, 03 validate
+data-pipeline/  sources_listed.py readers, 04 sunlight + Artemis placement, 02 fetch real data, 01 build features, 03 validate,
+                ai_rasters.py global MODIS maps, 06 AI discovery
 frontend/       Next.js 16 + React 19 + react-three-fiber
 ```
 

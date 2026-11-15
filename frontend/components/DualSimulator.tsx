@@ -105,6 +105,8 @@ function groundPalette(body: Body, mineral: string) {
 }
 
 /* ---------- terrain ---------- */
+const UP_AXIS = new THREE.Vector3(0, 1, 0);
+
 /* slope classes for the Slope view, in degrees: what a rover can drive */
 export const SLOPE_CLASSES = [
   { max: 5, color: "#22c55e", label: "0–5° easy" },
@@ -365,6 +367,8 @@ function SimScene(p: {
   const [stationState, setStationState] = useState<("todo" | "done" | "lost")[]>(["todo", "todo"]);
   const [nearRock, setNearRock] = useState(-1);
   const prevFocus = useRef(new THREE.Vector3());
+  // chase camera: follows the rover's turns, and swings back behind it while driving unless the player is orbiting
+  const chase = useRef({ yaw: 0, orbiting: false, releasedAt: -10 });
 
   const rock = useMemo(() => {
     if (bareness < 0.70) return { label: "vegetated, moist soil", hardness: 0.55, dry: false };
@@ -391,7 +395,8 @@ function SimScene(p: {
     if (phase !== "drive" || !grid) return;
     const st = s.current, camera = getState().camera, h = sample(grid, relief, st.rx, st.rz).h;
     prevFocus.current.set(st.rx, h + 0.4, st.rz);
-    if (thirdPerson) { camera.position.set(st.rx - 4.2, h + 3.2, st.rz + 3.2); if (controls.current) { controls.current.target.set(st.rx, h + 0.4, st.rz); controls.current.update(); } }
+    chase.current.yaw = st.yaw;
+    if (thirdPerson) { camera.position.set(st.rx + Math.sin(st.yaw) * 5.2, h + 3.0, st.rz + Math.cos(st.yaw) * 5.2); if (controls.current) { controls.current.target.set(st.rx, h + 0.4, st.rz); controls.current.update(); } }
   }, [phase, thirdPerson, grid, relief, getState]);
 
   useFrame(({ clock, camera }, raw) => {
@@ -606,7 +611,16 @@ function SimScene(p: {
     }
     if (thirdPerson && controls.current) {
       const focus = new THREE.Vector3(st.rx, bodyY + 0.3, st.rz);
-      camera.position.add(focus.clone().sub(prevFocus.current));
+      const off = camera.position.clone().sub(prevFocus.current), ch = chase.current;
+      // turn with the rover
+      off.applyAxisAngle(UP_AXIS, st.yaw - ch.yaw); ch.yaw = st.yaw;
+      // while driving, ease back to a view from behind (paused for 1.5 s after the player drags the view)
+      if (!ch.orbiting && st.t - ch.releasedAt > 1.5 && Math.abs(st.speed) > 0.2) {
+        const flat = Math.hypot(off.x, off.z), az = Math.atan2(off.x, off.z), want = st.yaw;
+        const d = Math.atan2(Math.sin(want - az), Math.cos(want - az)), na = az + d * (1 - Math.exp(-dt * 2.2));
+        off.x = Math.sin(na) * flat; off.z = Math.cos(na) * flat;
+      }
+      camera.position.copy(focus).add(off);
       camera.position.y = Math.max(camera.position.y, sample(grid, relief, camera.position.x, camera.position.z).h + 0.9);
       controls.current.target.copy(focus); prevFocus.current.copy(focus); controls.current.update();
     } else if (!thirdPerson) {
@@ -636,7 +650,7 @@ function SimScene(p: {
       <directionalLight ref={lightRef} position={[18, 26, 12]} intensity={body === "moon" ? 2.9 : 1.8} castShadow shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={140} shadow-bias={-0.0006} />
       <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} sunRef={sunRef} thermalRef={thermalRef} tminC={tminC} tmaxC={tmaxC} airy={airy} ve={ve} />
-      {(thirdPerson || phase !== "drive" || docked) && <OrbitControls ref={controls as never} makeDefault enablePan={false} minDistance={2.2} maxDistance={70} maxPolarAngle={Math.PI * 0.49} />}
+      {(thirdPerson || phase !== "drive" || docked) && <OrbitControls ref={controls as never} onStart={() => { chase.current.orbiting = true; }} onEnd={() => { chase.current.orbiting = false; chase.current.releasedAt = s.current.t; }} makeDefault enablePan={false} minDistance={2.2} maxDistance={70} maxPolarAngle={Math.PI * 0.49} />}
 
       {/* the pad: markings that lie on the ground */}
       <GroundRing cx={0} cz={0} r0={PAD_RADIUS - 0.45} r1={PAD_RADIUS} color="#34d399" opacity={0.75} height={heightAt} />

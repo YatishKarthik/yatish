@@ -323,6 +323,30 @@ class PlanetaryAnalogEngine:
             rows.append((r, norm, meta))
         return rows
 
+    def ai_pool_rows(self, body: str) -> list:
+        """For a point the user picked: every place the AI search found for any listed destination on this world,
+        scored exactly against the point. The AI model itself only estimates scores for the 28 listed destinations,
+        so these rows carry no AI estimate."""
+        disc = _load_json(ROOT / "data" / "processed" / "discoveries.json").get("targets", {})
+        cands = _load_json(ROOT / "data" / "processed" / "ai_candidates.json")
+        rows, seen = [], set()
+        for tid, lst in disc.items():
+            tmeta = self.meta_by_id.get(tid, {})
+            if tmeta.get("body", tid.split("_")[0]) != body:
+                continue
+            for d in lst:
+                cid = d.get("id")
+                if not cid or cid in seen or cid not in cands:
+                    continue
+                seen.add(cid)
+                r = pd.Series(cands[cid])
+                norm = ((pd.Series({c: r[c] for c in FEATURE_COLS}) - self.feature_means) / self.feature_stds).values
+                found_for = tmeta.get("name", tid)
+                meta = {"geology": f"Found by the AI search (while looking for places like {found_for}): an unnamed place at {d['lat']:.2f}, {d['lon']:.2f}. Its score for your point was measured exactly from real data.",
+                        "ai": {"found_for": found_for}}
+                rows.append((r, norm, meta))
+        return rows
+
     def normalise(self, row: dict) -> np.ndarray:
         return ((pd.Series({c: row[c] for c in FEATURE_COLS}) - self.feature_means) / self.feature_stds).values
 

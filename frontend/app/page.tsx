@@ -142,7 +142,7 @@ export default function Home() {
     if (!customPoint || !selectedBody) return;
     setCustomBusy(true); setCustomError(null); setBusySecs(0);
     try {
-      const res = await fetch(`${API}/api/custom_target?body=${selectedBody}&lat=${customPoint.lat.toFixed(3)}&lon=${customPoint.lon.toFixed(3)}&top_k=60`);
+      const res = await fetch(`${API}/api/custom_target?body=${selectedBody}&lat=${customPoint.lat.toFixed(3)}&lon=${customPoint.lon.toFixed(3)}&top_k=200`);
       const body = await res.json().catch(() => null);
       if (!res.ok) {
         setCustomError(typeof body?.detail === "string" ? body.detail : `The server could not measure this point (error ${res.status}).`);
