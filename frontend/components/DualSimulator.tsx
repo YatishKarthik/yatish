@@ -71,10 +71,10 @@ function sample(grid: number[], relief: number, wx: number, wz: number, ve = 1):
   const grad = Math.hypot(H(wx + d, wz) - H(wx - d, wz), H(wx, wz + d) - H(wx, wz - d)) / (2 * d);
   return { h, slopeDeg: THREE.MathUtils.radToDeg(Math.atan(grad / ve)) };   // slope of the real ground, whatever the drawing exaggeration
 }
-// points on the rover (model frame, metres) that must stay above the ground: six wheel bottoms, the nose, the tail and the belly
+// points on the rover (model frame, metres) that must stay above the ground: the six wheel bottoms and the belly
 const ROVER_CONTACTS: [number, number, number][] = [
   [-0.62, -0.27, -0.62], [-0.62, -0.27, 0], [-0.62, -0.27, 0.62], [0.62, -0.27, -0.62], [0.62, -0.27, 0], [0.62, -0.27, 0.62],
-  [0, -0.12, -0.88], [0, -0.12, 0.88], [0, -0.1, 0], [-0.45, -0.12, -0.88], [0.45, -0.12, -0.88], [-0.45, -0.12, 0.88], [0.45, -0.12, 0.88],
+  [0, -0.05, 0],
 ];
 const CONTACT_TMP = new THREE.Vector3();
 const LANDER_FOOT = 0.6;   // lander origin above its footpads
@@ -381,7 +381,7 @@ function SimScene(p: {
     return { label: mineral.replace(/_/g, " "), hardness: THREE.MathUtils.clamp(0.75 + iron * 0.45 - clay * 0.35, 0.55, 1.65), dry: true };
   }, [bareness, iron, clay, mineral]);
 
-  const s = useRef({ t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: 30, hot: false, wp: 0, slip: 0, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false, pitchS: 0, rollS: 0, blindUntil: -1,
+  const s = useRef({ t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: 30, hot: false, wp: 0, slip: 0, svx: 0, svz: 0, sliding: false, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false, pitchS: 0, rollS: 0, blindUntil: -1,
     lx: 2.5, lz: 7, ly: 26, vx: 0, vy: 0, vz: 0, fuel: 100, heat: 0, landed: false, dock: -1, depth: 0, bit: 30, pulses: 0, lastDrill: false, emit: 0, pad: 0, done: false });
 
   // reset on a new run
@@ -389,7 +389,7 @@ function SimScene(p: {
     const padH = grid ? sample(grid, relief, 0, 0).h : 0;
     const startT = THREE.MathUtils.clamp(ambientC, -35, 45);
     lookRef.current = { yaw: 0, pitch: 0 };
-    s.current = { t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: startT, hot: false, wp: 0, slip: 0, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false, pitchS: 0, rollS: 0, blindUntil: -1,
+    s.current = { t: 0, rx: 0, rz: 3, yaw: 0, speed: 0, wheel: 100, motor: startT, hot: false, wp: 0, slip: 0, svx: 0, svz: 0, sliding: false, stuckFor: 0, peakSlip: 0, grabbing: false, grabT: 0, grabRock: -1, armT: 0, fPrev: false, ePrev: false, pitchS: 0, rollS: 0, blindUntil: -1,
       lx: 2.5, lz: 7, ly: padH + 22, vx: 0, vy: -0.4, vz: 0, fuel: 100, heat: 0, landed: false, dock: -1, depth: 0, bit: startT, pulses: 0, lastDrill: false, emit: 0, pad: padH, done: false };
     const camera = getState().camera;
     prevFocus.current.set(2.5, padH + 22, 7); camera.position.set(13, padH + 28, 21);
@@ -552,6 +552,25 @@ function SimScene(p: {
     st.speed = THREE.MathUtils.lerp(st.speed, drive ? drive * maxSpd * Math.max(0.2, 1 - penalty) : 0, dt * (drive ? 2.4 : 4));
     st.rx = THREE.MathUtils.clamp(st.rx - Math.sin(st.yaw) * st.speed * dt, -(WORLD_SIZE / 2 - 4), WORLD_SIZE / 2 - 4);
     st.rz = THREE.MathUtils.clamp(st.rz - Math.cos(st.yaw) * st.speed * dt, -(WORLD_SIZE / 2 - 4), WORLD_SIZE / 2 - 4);
+    // sliding (Coulomb friction): where the real slope is steeper than the wheels can hold (tan θ > μ), the rover slides
+    // downhill; wheels spinning hard on a climb also lose ground. Gravity sets how fast it slides, not whether it does.
+    {
+      const d0 = 0.6;
+      const hx = (sample(grid, relief, st.rx + d0, st.rz).h - sample(grid, relief, st.rx - d0, st.rz).h) / (2 * d0 * ve);
+      const hz = (sample(grid, relief, st.rx, st.rz + d0).h - sample(grid, relief, st.rx, st.rz - d0).h) / (2 * d0 * ve);
+      const gmag = Math.hypot(hx, hz);
+      const slideA = gravity * (Math.sin(slopeRad) - mu * 0.85 * Math.cos(slopeRad));
+      if (gmag > 1e-4) {
+        if (slideA > 0) { st.svx -= (hx / gmag) * slideA * dt * 0.6; st.svz -= (hz / gmag) * slideA * dt * 0.6; }
+        if (fwd > 0 && climb > 0 && slipRatio > 0.7) { const back = (slipRatio - 0.7) * 2.5; st.svx -= (hx / gmag) * back * dt; st.svz -= (hz / gmag) * back * dt; }
+      }
+      const damp = Math.exp(-dt * (slideA > 0 ? 0.8 : 5)); st.svx *= damp; st.svz *= damp;
+      const sv = Math.hypot(st.svx, st.svz); if (sv > 4) { st.svx *= 4 / sv; st.svz *= 4 / sv; }
+      st.rx = THREE.MathUtils.clamp(st.rx + st.svx * dt, -(WORLD_SIZE / 2 - 4), WORLD_SIZE / 2 - 4);
+      st.rz = THREE.MathUtils.clamp(st.rz + st.svz * dt, -(WORLD_SIZE / 2 - 4), WORLD_SIZE / 2 - 4);
+      st.sliding = Math.hypot(st.svx, st.svz) > 0.3;
+      if (st.sliding) st.peakSlip = Math.max(st.peakSlip, 100);
+    }
     const v = Math.abs(st.speed);
     const wear = (v * (body === "earth" ? 0.45 : 1.25) * rock.hardness * (0.7 + roughness * 0.5)) / rover.armor;
     st.wheel = Math.max(0, st.wheel - wear * dt * 0.75);
@@ -612,13 +631,13 @@ function SimScene(p: {
     if (roverRef.current) {
       const g = roverRef.current;
       g.position.set(st.rx, THREE.MathUtils.lerp(g.position.y || bodyY, bodyY, 0.35), st.rz);
-      st.pitchS = THREE.MathUtils.lerp(st.pitchS, THREE.MathUtils.clamp(pitch, -1.1, 1.1), 0.3); st.rollS = THREE.MathUtils.lerp(st.rollS, THREE.MathUtils.clamp(roll, -1.1, 1.1), 0.3);
+      st.pitchS = THREE.MathUtils.lerp(st.pitchS, THREE.MathUtils.clamp(pitch, -1.1, 1.1), 0.3); st.rollS = THREE.MathUtils.lerp(st.rollS, THREE.MathUtils.clamp(-roll, -1.1, 1.1), 0.3);   // rotateZ(+) lowers the left (-x) wheels, so the left-minus-right height difference enters negated
       g.rotation.set(0, st.yaw, 0); g.rotateX(st.pitchS); g.rotateZ(st.rollS);
       // never let a wheel or the chassis sink into the drawn ground: lift the body until every contact point is above it
       let need = -Infinity;
       for (const [lx, ly, lz] of ROVER_CONTACTS) {
         const pt = CONTACT_TMP.set(lx, ly, lz).applyQuaternion(g.quaternion);
-        need = Math.max(need, sample(grid, relief, st.rx + pt.x, st.rz + pt.z).h + 0.03 - pt.y);
+        need = Math.max(need, sample(grid, relief, st.rx + pt.x, st.rz + pt.z).h - pt.y);
       }
       if (g.position.y < need) g.position.y = need;
     }
@@ -645,7 +664,7 @@ function SimScene(p: {
     }
     const nx = layout.route[st.wp]; let bearing = 0, dist = 0;
     if (nx) { const dx = nx.x - st.rx, dz = nx.z - st.rz; dist = Math.hypot(dx, dz); bearing = THREE.MathUtils.radToDeg(Math.atan2(dx * Math.cos(st.yaw) - dz * Math.sin(st.yaw), -dx * Math.sin(st.yaw) - dz * Math.cos(st.yaw))); }
-    if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 3.0) : 0, traction: st.stuckFor / STUCK_SECONDS, nearStation: nearStation >= 0, ground: groundTempAt(st.rx, st.rz).toFixed(0) }); }
+    if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, peakSlip: st.peakSlip, sliding: st.sliding, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 3.0) : 0, traction: st.stuckFor / STUCK_SECONDS, nearStation: nearStation >= 0, ground: groundTempAt(st.rx, st.rz).toFixed(0) }); }
   });
 
   const padY = grid ? sample(grid, relief, 0, 0).h : 0;
@@ -741,7 +760,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const [runs, setRuns] = useState<Record<WorldSide, RunRecord | null>>({ earth: null, space: null });
 
   const keysRef = useRef<Record<string, boolean>>({});
-  const [ve, setVe] = useState(2);   // vertical exaggeration of the drawn terrain; physics always uses true slopes
+  const [ve, setVe] = useState(1);   // vertical exaggeration of the drawn terrain; physics always uses true slopes
   const cursorRef = useRef(0), cursorEl = useRef<HTMLDivElement>(null);
   // first-time coaching hints: each shows until the player has done that thing once in this visit
   const [coached, setCoached] = useState<Record<string, boolean>>({});
@@ -809,12 +828,12 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
     if (e.type === "dock") { setDocked(e.on); if (e.on) done("station"); else done("drill"); }
     if (e.type === "rock") { done("rock"); done("grab"); }
     if (e.type === "core" || e.type === "station-lost") done("drill");
-    if (e.type === "fail") { setScore((sc) => { finish("FAIL", e.headline, e.reason, sc, [{ label: "Waypoints", value: `${Math.min(Number(tele.wp ?? 0), WAYPOINTS)} of ${WAYPOINTS}` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }]); return sc; }); }
+    if (e.type === "fail") { setScore((sc) => { finish("FAIL", e.headline, e.reason, sc, [{ label: "Waypoints", value: `${Math.min(Number(tele.wp ?? 0), WAYPOINTS)} of ${WAYPOINTS}` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }, { label: "Peak wheel slip", value: `${tele.peakSlip ?? 0}%` }]); return sc; }); }
     if (e.type === "complete") {
       const secs = Number(tele.time ?? 0), timePts = Math.round(THREE.MathUtils.clamp(POINTS.timeMax * (1 - Math.max(0, secs - 130) / 170), 0, POINTS.timeMax));
-      setScore((sc) => { const full = { ...sc, time: timePts }; finish("PASS", "Mission complete", `All ${WAYPOINTS} waypoints in ${secs.toFixed(0)} s, ${tally.rocks} of ${ROCKS} rocks (${tally.clean} clean grabs) and ${tally.cores} of ${STATIONS} cores. ${tally.rocks + tally.cores === ROCKS + STATIONS ? "A full haul." : "Rocks and cores you left behind are points on the table for the next run."}`, full, [{ label: "Time", value: `${secs.toFixed(0)} s` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }]); return full; });
+      setScore((sc) => { const full = { ...sc, time: timePts }; finish("PASS", "Mission complete", `All ${WAYPOINTS} waypoints in ${secs.toFixed(0)} s, ${tally.rocks} of ${ROCKS} rocks (${tally.clean} clean grabs) and ${tally.cores} of ${STATIONS} cores. ${tally.rocks + tally.cores === ROCKS + STATIONS ? "A full haul." : "Rocks and cores you left behind are points on the table for the next run."}`, full, [{ label: "Time", value: `${secs.toFixed(0)} s` }, { label: "Rocks", value: `${tally.rocks} of ${ROCKS}` }, { label: "Cores", value: `${tally.cores} of ${STATIONS}` }, { label: "Wheels left", value: `${tele.wheel ?? 0}%` }, { label: "Peak wheel slip", value: `${tele.peakSlip ?? 0}%` }]); return full; });
     }
-  }, [finish, say, tele.time, tele.wp, tele.wheel, tally, pressure, done]);
+  }, [finish, say, tele.time, tele.wp, tele.wheel, tele.peakSlip, tally, pressure, done]);
 
   // the claw cursor is moved every animation frame straight from the scene, not through React state, so it glides
   const grabbing = Boolean(tele.grabbing);
@@ -874,6 +893,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           {phase === "drive" && !docked && (<>
             <span>Waypoint <b>{Math.min(Number(tele.wp ?? 0) + 1, WAYPOINTS)} of {WAYPOINTS}</b>{tele.dist ? <span className="opacity-80"> · {tele.dist} m</span> : null}</span>
             <span>Speed <b>{tele.speed || "0.0"} m/s</b></span>
+            <span title="How much the wheels spin without moving the rover: 0% is full grip, 100% is spinning in place">Wheel slip <b style={{ color: tele.sliding || Number(tele.slip ?? 0) >= 75 ? "#fca5a5" : Number(tele.slip ?? 0) >= 40 ? "#fde68a" : "#86efac" }}>{tele.sliding ? "sliding!" : `${tele.slip ?? 0}%`}</b></span>
             <span>Wheels <b style={{ color: Number(tele.wheel ?? 100) < 35 ? "#fca5a5" : "#86efac" }}>{tele.wheel ?? 100}%</b></span>
             {(tele.hot || Number(tele.motor ?? 0) > rover.maxTempC * 0.7) && <span>Motor <b style={{ color: tele.hot ? "#fca5a5" : "#fde68a" }}>{tele.motor}°C</b><span className="opacity-80"> / {rover.maxTempC}°C</span></span>}
           </>)}
@@ -887,17 +907,18 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
 
         {/* landing gauge, next to the lander so the player never looks away */}
         {phase === "land" && (() => {
-          const v = Math.abs(Number(tele.vspeed ?? 0)), alt = Number(tele.alt ?? 22), over = v > LAND_SPEED_LIMIT;
-          const col = !over ? "#86efac" : alt < 8 ? "#fca5a5" : "#fde68a";
+          // vspeed is signed: negative while falling, positive while the engine pushes the lander back up
+          const vs = Number(tele.vspeed ?? 0), rising = vs > 0.05, v = Math.abs(vs), alt = Number(tele.alt ?? 22), over = !rising && v > LAND_SPEED_LIMIT;
+          const col = rising ? "#7dd3fc" : !over ? "#86efac" : alt < 8 ? "#fca5a5" : "#fde68a";
           return (
             <div className="absolute z-10 pointer-events-none on-canvas px-4 py-3 text-center" style={{ left: "calc(50% + 110px)", top: "38%", minWidth: 150 }} aria-live="off">
-              <div className="text-[11px] uppercase tracking-wider opacity-80">Falling speed</div>
-              <div className="font-mono font-semibold leading-none mt-1" style={{ color: col, fontSize: 40 }}>{v.toFixed(1)}<span className="text-sm font-normal opacity-80"> m/s</span></div>
+              <div className="text-[11px] uppercase tracking-wider opacity-80">{rising ? "Rising" : "Falling speed"}</div>
+              <div className="font-mono font-semibold leading-none mt-1" style={{ color: col, fontSize: 40 }}>{rising ? "↑ " : ""}{v.toFixed(1)}<span className="text-sm font-normal opacity-80"> m/s</span></div>
               <div className="relative h-1.5 rounded-full mt-2" style={{ background: "rgba(255,255,255,0.18)" }}>
-                <div className="absolute left-0 top-0 h-full rounded-full" style={{ width: `${Math.min(100, (v / (LAND_SPEED_LIMIT * 2)) * 100)}%`, background: col }} />
+                <div className="absolute left-0 top-0 h-full rounded-full" style={{ width: `${rising ? 0 : Math.min(100, (v / (LAND_SPEED_LIMIT * 2)) * 100)}%`, background: col }} />
                 <div className="absolute top-[-3px] h-[12px] w-[2px]" style={{ left: "50%", background: "#fff" }} title="limit" />
               </div>
-              <div className="text-[11px] mt-1.5 opacity-90">Land under <b>{LAND_SPEED_LIMIT.toFixed(1)}</b> · height <b>{tele.alt ?? "22.0"} m</b></div>
+              <div className="text-[11px] mt-1.5 opacity-90">{rising ? "Ease off the engine" : <>Land under <b>{LAND_SPEED_LIMIT.toFixed(1)}</b></>} · height <b>{tele.alt ?? "22.0"} m</b></div>
             </div>
           );
         })()}
@@ -964,7 +985,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           <div className="absolute top-24 right-3 z-10 on-canvas px-3 py-2 text-[11px] pointer-events-none w-56">
             <div className="font-semibold mb-1">Slope of the ground</div>
             {SLOPE_CLASSES.map((c) => <div key={c.label} className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-sm" style={{ background: c.color }} />{c.label}</div>)}
-            <div className="opacity-80 mt-1">From the site&apos;s elevation data; the rover starts to slip past about 15°.</div>
+            <div className="opacity-80 mt-1">From the site&apos;s real elevation data. Wheels start to slip past about 15°; where the slope beats the tyres&apos; grip (roughly 20–35°, depending on the world and the rover) it slides downhill.</div>
           </div>
         )}
         {sensor === "thermal" && (

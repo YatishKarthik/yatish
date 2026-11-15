@@ -74,3 +74,19 @@ export function similarityWord(v: number): { word: string; level: "good" | "warn
 }
 
 export const PCT = (v: number, d = 0) => `${(v * 100).toFixed(d)}%`;
+
+/* Why a group of measurements is left out of the score for a destination: shown wherever "not compared" appears. */
+export function notComparedReason(group: string, body: string): string {
+  const world = body === "moon" ? "the Moon" : body === "mars" ? "Mars" : "this site";
+  if (group === "mineral" || group === "composition")
+    return body === "moon"
+      ? "Not measured for the Moon in our data. Earth's rock and soil come from Sentinel-2 colour bands; the challenge's sources have no Moon map of the same kind (Diviner's mineral map uses thermal infrared, which Sentinel-2 cannot see), so comparing them would not be like for like."
+      : body === "mars"
+        ? "Not measured for Mars in our data. Earth's rock and soil come from Sentinel-2 colour bands; no Mars map in the challenge's sources measures the same thing, so comparing them would not be like for like."
+        : `Not measured for ${world}, so it is left out instead of being filled with a guess.`;
+  if (group === "thermal")
+    return body === "mars"
+      ? "Not measured for Mars in our data. The challenge's sources have no ready global map of Mars surface temperatures that we could read reliably (orbiter data such as TES or THEMIS would fill this). A modelled temperature would be a guess, so it is left out."
+      : `Not measured for ${world}, so it is left out instead of being filled with a guess.`;
+  return `Not measured for ${world}, so it is left out instead of being filled with a guess.`;
+}

@@ -14,6 +14,7 @@ Every function returns the values together with the exact product it read.
 import csv
 import io
 import math
+import time
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -49,6 +50,8 @@ def _window(url: str, lon: float, lat: float, extent_m: float, grid: int, scale:
     """A grid x grid window of extent_m around (lon, lat) from a projected PDS raster, heights in metres.
     sub > 0: for very fine rasters (HiRISE, ~1 m) read sub x sub samples per output cell with nearest sampling and
     average them, so only those rows are downloaded instead of every row of a 2 km window."""
+    if sub:
+        return _window_rows(url, lon, lat, extent_m, grid, scale, unit_m, sub)
     with rasterio.open("/vsicurl/" + url) as ds:
         tr = Transformer.from_crs(ds.crs.geodetic_crs, ds.crs, always_xy=True)
         x, y = tr.transform(lon, lat)
@@ -62,6 +65,36 @@ def _window(url: str, lon: float, lat: float, extent_m: float, grid: int, scale:
         if sub:
             a = np.nanmean(a.reshape(grid, sub, grid, sub), axis=(1, 3))
         return a * scale * unit_m
+
+
+def _window_rows(url: str, lon: float, lat: float, extent_m: float, grid: int, scale: float, unit_m: float, sub: int) -> np.ndarray:
+    """Same result as the nearest-sampled read in _window, but the sampled rows are fetched in parallel. Each row of a
+    PDS raster is a separate HTTP range request, and the HiRISE server answers them slowly one at a time (a 2 km window
+    took over two minutes sequentially; in parallel it takes seconds)."""
+    from concurrent.futures import ThreadPoolExecutor
+    from rasterio.windows import Window
+    src = "/vsicurl/" + url
+    with rasterio.open(src) as ds:
+        tr = Transformer.from_crs(ds.crs.geodetic_crs, ds.crs, always_xy=True)
+        x, y = tr.transform(lon, lat)
+        h = extent_m / 2
+        w = from_bounds(x - h, y - h, x + h, y + h, ds.transform)
+        nodata = ds.nodata
+    n = grid * sub
+    rows = w.row_off + (np.arange(n) + 0.5) * w.height / n
+
+    def read_row(r):
+        with rasterio.open(src) as ds:
+            a = ds.read(1, window=Window(w.col_off, int(r), w.width, 1), out_shape=(1, n), boundless=True,
+                        fill_value=np.nan, resampling=rasterio.enums.Resampling.nearest)
+        return a[0].astype(np.float64)
+
+    with ThreadPoolExecutor(32) as ex:
+        a = np.array(list(ex.map(read_row, rows)))
+    if nodata is not None:
+        a[np.isclose(a, nodata) | (a < -1e30)] = np.nan
+    a = np.nanmean(a.reshape(grid, sub, grid, sub), axis=(1, 3))
+    return a * scale * unit_m
 
 
 # ---------------------------------------------------------------- Moon terrain: LOLA gridded DEMs (PDS)
@@ -159,7 +192,7 @@ def _gc_km(lat1, lon1, lat2, lon2, r_km):
     return r_km * math.acos(max(-1.0, min(1.0, math.sin(a) * math.sin(c) + math.cos(a) * math.cos(c) * math.cos(b - d))))
 
 
-def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: float = 400.0) -> tuple[np.ndarray, dict]:
+def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: float = 400.0, budget_s: float = 90.0) -> tuple[np.ndarray, dict]:
     """The nearest HiRISE DTM: a window on the site if the DTM covers it, otherwise on the DTM's own centre (offset reported)."""
     lon360 = lon % 360.0
     cands = []
@@ -169,14 +202,19 @@ def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: f
         dist = 0.0 if inside else _gc_km(lat, lon360, clat, clon, MARS_R / 1000)
         cands.append((dist, d["res"], d, inside, clat, clon))
     cands.sort(key=lambda c: (c[0], c[1]))
-    for dist, _, d, inside, clat, clon in cands[:6]:
+    t_start = time.time()
+    for dist, _, d, inside, clat, clon in cands[:4]:
         if dist > max_km:
             break
+        if time.time() - t_start > budget_s:
+            raise RuntimeError(f"the HiRISE archive answered too slowly (over {budget_s:.0f} s); try again or pick another point")
         url = f"{HIRISE}/{d['file']}"
         tries = [(lat, lon360)] if inside else []
         # along the strip: centre and two points along its long axis
         tries += [(clat, clon), (d["lat0"] + (d["lat1"] - d["lat0"]) * 0.3, clon), (d["lat0"] + (d["lat1"] - d["lat0"]) * 0.7, clon)]
         for tl, tn in tries:
+            if time.time() - t_start > budget_s:
+                raise RuntimeError(f"the HiRISE archive answered too slowly (over {budget_s:.0f} s); try again or pick another point")
             try:
                 h = _window(url, tn if tn <= 180 else tn - 360, tl, extent_m, grid, sub=3)
             except Exception:

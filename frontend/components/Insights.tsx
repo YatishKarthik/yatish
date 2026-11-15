@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { AlertTriangle, ChevronDown } from "lucide-react";
-import { Status, Bar } from "@/components/ui";
+import { Status, Bar, notComparedReason } from "@/components/ui";
 
 /* ---------- data shapes added by the functional-analogue, explainability and field-readiness work ---------- */
 export type Scenario = "rover" | "landing" | "mining";
@@ -178,7 +178,7 @@ export function ByUseView({ rankings, selectedId, onSelect, best }: {
 }
 
 /* ---------- Why this match ---------- */
-export function WhyThisMatch({ contributions, why, score, nameOf }: { contributions?: Contribution[]; why?: WhyInfo; score: number; nameOf: (feature: string, label: string) => string }) {
+export function WhyThisMatch({ contributions, why, score, nameOf, body = "" }: { contributions?: Contribution[]; why?: WhyInfo; score: number; nameOf: (feature: string, label: string) => string; body?: string }) {
   const [open, setOpen] = useState(true);
   const all = contributions ?? [];
   const rows = all.filter((c) => c.compared !== false && c.similarity !== null);
@@ -221,7 +221,13 @@ export function WhyThisMatch({ contributions, why, score, nameOf }: { contributi
               </div>
             ))}
           </div>
-          {skipped.length > 0 && <p className="text-[11px] muted mt-3"><b>Not compared</b> (no measurement for the target, so left out of the score): {skipped.map((c) => plain(c.label)).join(", ")}.</p>}
+          {skipped.length > 0 && (
+            <div className="text-[11px] muted mt-3 flex flex-col gap-1">
+              {Array.from(new Set(skipped.map((c) => c.pillar))).map((g) => (
+                <p key={g}><b>Not compared: {skipped.filter((c) => c.pillar === g).map((c) => plain(c.label)).join(", ")}.</b> {notComparedReason(g, body)}</p>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

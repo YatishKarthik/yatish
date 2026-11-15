@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Loader2, AlertTriangle, Search, Crosshair, X } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
@@ -8,6 +8,7 @@ import AnalyticsView, { MatchPayload, EarthMatch } from "@/components/AnalyticsV
 import { ArtemisBadge, artemisOrder, type ArtemisInfo } from "@/components/Insights";
 import { ThemeToggle } from "@/components/ui";
 import { Tour, HelpButton, type TourStep } from "@/components/Tutorial";
+import { Splash } from "@/components/Splash";
 
 const PlanetGlobe = dynamic(() => import("@/components/PlanetGlobe"), { ssr: false });
 const DualSimulator = dynamic(() => import("@/components/DualSimulator"), { ssr: false });
@@ -87,10 +88,13 @@ export default function Home() {
     return () => window.clearInterval(id);
   }, [customBusy]);
   const [tour, setTour] = useState(false);
+  const [splash, setSplash] = useState(true);   // the intro plays when the app opens and when returning to the world picker
+  const endSplash = useCallback(() => setSplash(false), []);
   // The walkthrough runs by itself the first time each screen is shown in this visit (Skip closes it); the ? button replays it.
   const screen = !selectedBody ? "picker" : !matchResult ? "globe" : !simMatch ? "results" : "sim";
   useEffect(() => {
     let id = 0;
+    if (splash) return;
     try {
       const key = `celestra-tour-${screen}`;
       if (!sessionStorage.getItem(key)) {
@@ -98,7 +102,7 @@ export default function Home() {
       }
     } catch { /* storage blocked: no automatic tour */ }
     return () => { window.clearTimeout(id); setTour(false); };
-  }, [screen]);
+  }, [screen, splash]);
 
   const loadTargets = () => {
     setBackendError(false);
@@ -141,17 +145,26 @@ export default function Home() {
   const runCustomSearch = async () => {
     if (!customPoint || !selectedBody) return;
     setCustomBusy(true); setCustomError(null); setBusySecs(0);
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(() => ctrl.abort(), 150000);
     try {
-      const res = await fetch(`${API}/api/custom_target?body=${selectedBody}&lat=${customPoint.lat.toFixed(3)}&lon=${customPoint.lon.toFixed(3)}&top_k=200`);
+      const res = await fetch(`${API}/api/custom_target?body=${selectedBody}&lat=${customPoint.lat.toFixed(3)}&lon=${customPoint.lon.toFixed(3)}&top_k=200`, { signal: ctrl.signal });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
-        setCustomError(typeof body?.detail === "string" ? body.detail : `The server could not measure this point (error ${res.status}).`);
+        const detail = typeof body?.detail === "string" ? body.detail : "";
+        // network failures reach us as raw library errors: say what happened in plain words
+        setCustomError(/curl|connect|timed? ?out|resolve/i.test(detail)
+          ? "Couldn't reach NASA's data server from this network. Try again in a minute, or on another network (a phone hotspot works)."
+          : detail || `The server could not measure this point (error ${res.status}).`);
         return;
       }
       setMatchResult(body as MatchPayload);
-    } catch {
-      setCustomError("Could not reach the backend. Check that it is running, then try again.");
+    } catch (e) {
+      setCustomError((e as Error)?.name === "AbortError"
+        ? "NASA's data server took more than 2.5 minutes to answer, so the search was stopped. Try again, or pick a point nearby."
+        : "Could not reach the backend. Check that it is running, then try again.");
     } finally {
+      window.clearTimeout(timer);
       setCustomBusy(false);
     }
   };
@@ -179,15 +192,16 @@ export default function Home() {
     <main className={`min-h-screen relative flex flex-col ${selectedBody ? "app-bg" : "space-page"}`}>
       <header className={`relative z-10 flex items-center justify-between gap-4 px-5 py-3 ${selectedBody ? "border-b line" : ""}`}>
         <div className="flex items-center gap-3" data-tour="brand">
-          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/terramappers-mark.png" alt="TerraMappers" className="h-9 w-auto" />
           <div>
-            <h1 className="text-[15px] font-semibold tracking-tight">Celestra</h1>
+            <h1 className="brand-title">CELESTRA</h1>
             <p className="text-xs muted">Find Earth test sites that behave like a Moon or Mars base site</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {selectedBody && (
-            <button type="button" className="btn btn-sm" onClick={() => { setSelectedBody(null); setSelectedTarget(null); setMatchResult(null); setSimMatch(null); setCustomPoint(null); setCustomError(null); }}>
+            <button type="button" className="btn btn-sm" onClick={() => { setSplash(true); setSelectedBody(null); setSelectedTarget(null); setMatchResult(null); setSimMatch(null); setCustomPoint(null); setCustomError(null); }}>
               <ArrowLeft className="w-3.5 h-3.5" /> Choose another world
             </button>
           )}
@@ -231,7 +245,7 @@ export default function Home() {
             <div className="card p-4 flex-1 flex flex-col">
               <h2 className="text-sm font-semibold mb-1">Candidate sites on {worldName}</h2>
               <p className="text-xs muted mb-3">Click one to see its main engineering problem.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[300px] overflow-y-auto pr-1 mb-4" data-tour="candidates">
+              <div className="relative flex-1 min-h-[260px] mb-4"><div className="absolute inset-0 grid grid-cols-1 sm:grid-cols-2 gap-1.5 content-start overflow-y-auto pr-1" data-tour="candidates">
                 {groups.map((g) => (
                   <React.Fragment key={g.title || "all"}>
                     {g.title && <div className="sm:col-span-2 text-[11px] font-semibold uppercase tracking-wide faint px-1 pt-1">{g.title}</div>}
@@ -245,7 +259,7 @@ export default function Home() {
                   </React.Fragment>
                 ))}
                 {!bodyTargets.length && !backendError && <p className="text-xs muted col-span-2">Loading sites…</p>}
-              </div>
+              </div></div>
 
               {customPoint ? (
                 <div className="mt-auto card-solid p-4" data-tour="custom-point">
@@ -302,6 +316,7 @@ export default function Home() {
       )}
 
       <HelpButton onClick={() => setTour(true)} />
+      {splash && <Splash onDone={endSplash} />}
       <Tour key={screen} steps={TOUR.filter((s) => !s.screens || s.screens.includes(screen))} open={tour} onClose={() => setTour(false)} />
     </main>
   );

@@ -5,7 +5,7 @@ import { AiDiscoveries, type AiDiscoveryData } from "@/components/AiDiscoveries"
 import dynamic from "next/dynamic";
 import { ArrowLeft, Play, Search, FileText } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
-import { Tabs, Status, Bar, Kpi, similarityWord, PCT } from "@/components/ui";
+import { Tabs, Status, Bar, Kpi, similarityWord, PCT, notComparedReason } from "@/components/ui";
 import {
   ArtemisBadge, ByUseView, WhyThisMatch, FieldReadinessCard, SunlightPanel, TEST_HELP,
   type ArtemisInfo, type Illumination, type NightIR, type CustomInfo, type FunctionalRanking, type Contribution, type WhyInfo, type FieldReadiness,
@@ -343,12 +343,19 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 mt-4 border-t line">
               {PILLARS.map((p) => { const v = m.pillar_scores[p.key]; return (
-                <div key={p.key} title={v === null ? `${p.label}: not measured for ${world}, so not compared` : p.what}>
+                <div key={p.key} title={v === null ? `${p.label}: ${notComparedReason(p.key, t.body)}` : p.what}>
                   <div className="flex justify-between text-xs mb-1"><span className={`font-medium ${v === null ? "faint" : ""}`}>{p.label}</span><span className="font-mono muted">{v === null ? "not compared" : Math.round(v * 100)}</span></div>
                   {v === null ? <div className="h-1.5 rounded-full unverified" /> : <Bar value={v} />}
                 </div>
               ); })}
             </div>
+            {PILLARS.some((p) => m.pillar_scores[p.key] === null) && (
+              <div className="mt-3 flex flex-col gap-1">
+                {PILLARS.filter((p) => m.pillar_scores[p.key] === null).map((p) => (
+                  <p key={p.key} className="text-[11px] muted leading-relaxed"><b>{p.label}, not compared:</b> {notComparedReason(p.key, t.body)}</p>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="card p-5 flex-1 flex flex-col">
@@ -388,7 +395,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                       {bad.length ? <ul className="text-xs flex flex-col gap-1">{bad.map((r) => <li key={r.test}>• {ask(r.test)}</li>)}</ul> : <p className="text-xs muted">—</p>}
                     </div>
                   </div>
-                  <WhyThisMatch contributions={m.contributions} why={m.why} score={m.similarity_score} nameOf={nameOf} />
+                  <WhyThisMatch contributions={m.contributions} why={m.why} score={m.similarity_score} nameOf={nameOf} body={t.body} />
                   <FieldReadinessCard fr={m.field_readiness} name={m.name} />
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Kpi label="Gravity" value={`${t.gravity} m/s²`} sub={`Earth is 9.81, so ${(9.81 / t.gravity).toFixed(1)}× stronger`} />
@@ -456,7 +463,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
               {view === "day" && (
                 <div className="flex flex-col gap-3 rise">
-                  <p className="text-xs muted">One full day, hour by hour. Bars show temperature; the shape of the curve is what matters, because the two worlds are on very different absolute scales.</p>
+                  <p className="text-xs muted leading-relaxed">One local day on each world, stretched to the same width: a day on the Moon lasts about 29.5 Earth days, a day on Mars 24 h 40 min, a day on Earth 24 h. So the bars line up by <b>position in each world&apos;s own day</b> (local midnight, noon, midnight), never by clock time. The coldest and warmest values are measured; the curve between them is drawn with a simple day-night model for illustration and is <b>not scored</b>.</p>
                   <div className="flex flex-wrap items-center gap-4 text-xs">
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full" style={{ background: "var(--space)" }} />{t.name}: {t.temp_min_c}°C to {t.temp_max_c}°C</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full" style={{ background: "var(--earth)" }} />{m.name}: {m.parameter_similarities.temp_min_c?.earth_val}°C to {m.parameter_similarities.temp_max_c?.earth_val}°C</span>
@@ -467,11 +474,11 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                         <div key={hr} className="h-full flex items-end justify-center gap-0.5 group relative">
                           <div className="w-full rounded-t-sm" style={{ height: `${Math.max(6, yPct(tt))}%`, background: "var(--space)", opacity: 0.85 }} />
                           <div className="w-full rounded-t-sm" style={{ height: `${Math.max(6, yPct(et))}%`, background: "var(--earth)", opacity: 0.85 }} />
-                          <div className="absolute -top-9 left-1/2 -translate-x-1/2 hidden group-hover:block card-solid px-2 py-1 text-[10px] font-mono whitespace-nowrap z-20">{hr}:00 · {tt}°C vs {et}°C</div>
+                          <div className="absolute -top-9 left-1/2 -translate-x-1/2 hidden group-hover:block card-solid px-2 py-1 text-[10px] font-mono whitespace-nowrap z-20">{Math.round((hr / 24) * 100)}% through the local day · {tt}°C vs {et}°C</div>
                         </div>
                       ); })}
                     </div>
-                    <div className="flex justify-between text-[11px] muted mt-2"><span>midnight</span><span>6 am</span><span>noon</span><span>6 pm</span><span>11 pm</span></div>
+                    <div className="flex justify-between text-[11px] muted mt-2"><span>local midnight</span><span>sunrise</span><span>local noon</span><span>sunset</span><span>midnight</span></div>
                   </div>
                   <p className="text-xs muted leading-relaxed">Why this matters: on Earth, air carries heat away from motors and drills all day long. At {t.pressure_bar} bar there is almost no air, so equipment keeps the heat it makes and can seize. Daily swing here is {m.parameter_similarities.temp_delta_c?.earth_val}°C against {t.temp_max_c - t.temp_min_c}°C there.</p>
                 </div>
@@ -491,7 +498,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                               <div className="shrink-0 text-right"><Status level={w.level}>{w.word}</Status></div>
                             </div>
                             {cmp ? <div className="mt-2"><Bar value={v.similarity as number} colour={w.level === "good" ? "var(--good)" : w.level === "warn" ? "var(--warn)" : "var(--bad)"} /></div>
-                              : <p className="text-[11px] muted mt-2">Not in the score: {world}&apos;s value here is a typical figure, not a measurement, so the two are not compared.</p>}
+                              : <p className="text-[11px] muted mt-2">Not in the score. {notComparedReason(p.key, t.body)}</p>}
                             <div className="flex flex-wrap justify-between text-[11px] font-mono mt-1.5">
                               <span style={{ color: "var(--earth)" }}>Earth {v.earth_val} {v.unit}</span>
                               <span style={{ color: "var(--space)" }}>{world} {v.target_val} {v.unit}</span>

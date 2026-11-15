@@ -261,7 +261,7 @@ export default function SystemPicker({ onPick, full = false }: { onPick: (w: Wor
   const facts = hovered ? FACTS[hovered] : null;
   return (
     <div className={full ? "absolute inset-0" : "relative w-full h-[560px] md:h-[640px]"} data-tour="worlds" style={{ background: full ? "transparent" : "#01030a" }}>
-      <Canvas camera={{ position: [0, 6.8, 15.5], fov: 42 }} dpr={[1, 2]} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}>
+      <Canvas camera={{ position: full ? [0, 9.2, 21] : [0, 6.8, 15.5], fov: 42 }} dpr={[1, 2]} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}>
         <color attach="background" args={["#01030a"]} />
         <React.Suspense fallback={null}>
           <System hovered={hovered} setHovered={setHovered} onPick={onPick} zoomingRef={zoomingRef} nodes={nodes} />
@@ -275,6 +275,7 @@ export default function SystemPicker({ onPick, full = false }: { onPick: (w: Wor
           </div>
         ))}
       </div>
+      {full && <ControlsBox />}
       <div className={full ? "absolute left-1/2 -translate-x-1/2 bottom-8 flex gap-3" : "absolute right-4 bottom-4 flex gap-2"}>
         <button type="button" className={full ? "btn" : "btn btn-sm"} style={{ background: "rgba(8, 20, 34, 0.7)", color: "#e2f4ff", borderColor: "rgba(125, 211, 252, 0.4)" }} onClick={() => { zoomingRef.current = "moon"; }}>Open the Moon</button>
         <button type="button" className={full ? "btn" : "btn btn-sm"} style={{ background: "rgba(8, 20, 34, 0.7)", color: "#e2f4ff", borderColor: "rgba(125, 211, 252, 0.4)" }} onClick={() => { zoomingRef.current = "mars"; }}>Open Mars</button>
@@ -282,6 +283,26 @@ export default function SystemPicker({ onPick, full = false }: { onPick: (w: Wor
       <div className={`pointer-events-none absolute max-w-md on-canvas px-4 py-3 text-[13px] leading-relaxed rise ${full ? "left-5 bottom-8 hidden md:block" : "left-4 top-4"}`} key={hovered ?? "none"}>
         {facts ? (<><b>{facts.title}.</b> {facts.detail}</>) : (<>Crews are going back to the Moon and on to Mars. Before any hardware flies it is tested on Earth, at places where the ground behaves like the destination. <b>Pick the Moon or Mars to start.</b> Drag to look around, scroll to zoom.</>)}
       </div>
+    </div>
+  );
+}
+
+/* how to move around the solar system: open by default, can be collapsed */
+function ControlsBox() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="absolute right-5 top-20 z-10 on-canvas text-[12px] w-[210px]" style={{ color: "#e2f4ff" }}>
+      <button type="button" className="w-full flex items-center justify-between px-3 py-2 font-semibold" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        Controls <span aria-hidden className="opacity-70">{open ? "–" : "+"}</span>
+      </button>
+      {open && (
+        <ul className="px-3 pb-3 flex flex-col gap-1.5" style={{ color: "#c3cbd6" }}>
+          <li><b style={{ color: "#e2f4ff" }}>Left-drag</b> · orbit the view</li>
+          <li><b style={{ color: "#e2f4ff" }}>Scroll</b> · zoom in and out</li>
+          <li><b style={{ color: "#e2f4ff" }}>Hover</b> a body · read about it</li>
+          <li><b style={{ color: "#e2f4ff" }}>Click</b> the Moon or Mars · open it</li>
+        </ul>
+      )}
     </div>
   );
 }

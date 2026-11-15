@@ -209,3 +209,23 @@ html:has(.space-page), body:has(.space-page) { background: #01030a; }
 .tour-pop .btn.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--bg-deep); font-weight: 600; }
 .tour-pop .btn:disabled { opacity: 0.4; }
 .tour-pop .muted { color: var(--muted); }
+
+
+/* ---------- intro splash ---------- */
+.splash { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; cursor: pointer;
+  background: radial-gradient(1200px 700px at 50% 30%, #0b1a33 0%, #04070d 55%, #01030a 100%) #01030a; transition: opacity 0.6s ease; }
+.splash-out { opacity: 0; pointer-events: none; }
+.splash-item { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; transition: opacity 0.6s ease, transform 0.9s cubic-bezier(.2,.7,.2,1), letter-spacing 1.2s ease; }
+.splash-gone { opacity: 0; transform: scale(0.97); }
+.splash-in { opacity: 1; transform: scale(1); animation: splash-rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
+.splash-logo { width: min(340px, 62vw); height: auto; filter: drop-shadow(0 0 28px rgba(125, 211, 252, 0.35)) drop-shadow(0 18px 40px rgba(0, 0, 0, 0.6)); }
+.splash-title { font-family: var(--font-display), "Bebas Neue", Impact, sans-serif; font-weight: 400; color: #f4f7fb; line-height: 0.9;
+  font-size: clamp(64px, 14vw, 168px); letter-spacing: 0.06em; text-shadow: 0 0 40px rgba(56, 189, 248, 0.35); }
+.splash-title-in .splash-title { animation: splash-track 1.6s cubic-bezier(.2,.7,.2,1) both; }
+.splash-sub { margin-top: 10px; color: #9fb3c8; font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase; }
+.splash-skip { position: absolute; right: 20px; bottom: 20px; font-size: 12px; color: #9fb3c8; border: 1px solid rgba(159, 179, 200, 0.3); border-radius: 999px; padding: 6px 12px; background: rgba(8, 20, 34, 0.6); }
+.splash-skip:hover { color: #fff; border-color: rgba(125, 211, 252, 0.6); }
+@keyframes splash-rise { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes splash-track { from { letter-spacing: 0.22em; opacity: 0; } to { letter-spacing: 0.06em; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .splash-in, .splash-title-in .splash-title { animation: none; } }
+.brand-title { font-family: var(--font-display), "Bebas Neue", Impact, sans-serif; font-weight: 400; letter-spacing: 0.08em; font-size: 22px; line-height: 1; }
