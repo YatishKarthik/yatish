@@ -93,7 +93,110 @@ def _window(url: str, lon: float, lat: float, extent_m: float, grid: int, scale:
         return a * scale * unit_m
 
 
+@lru_cache(maxsize=64)
+def _pds_label(url: str) -> dict | None:
+    """Layout of a PDS3 raster with an attached label (HiRISE DTMs): where the image starts and how a row is stored."""
+    import requests
+    r = requests.get(url, headers={"Range": "bytes=0-32767"}, timeout=(15, 60))
+    if r.status_code != 206:
+        return None
+    txt = r.content.decode("latin1")
+    txt = txt[: txt.find("\nEND") if "\nEND" in txt else len(txt)]
+
+    def val(key):
+        m = re.search(r"^\s*" + re.escape(key) + r"\s*=\s*(.+?)\s*$", txt, re.M)
+        return m.group(1).strip().strip('"') if m else None
+    rec, ptr, lines, samples = val("RECORD_BYTES"), val("^IMAGE"), val("LINES"), val("LINE_SAMPLES")
+    if not (rec and ptr and lines and samples) or val("SAMPLE_TYPE") != "PC_REAL" or val("SAMPLE_BITS") != "32":
+        return None
+    m = re.match(r"(\d+)\s*(<BYTES>)?", ptr)
+    offset = int(m.group(1)) - 1 if m.group(2) else (int(m.group(1)) - 1) * int(rec)
+    return {"offset": offset, "lines": int(lines), "samples": int(samples), "row_bytes": int(samples) * 4,
+            "scale": float(val("SCALING_FACTOR") or 1.0), "add": float(val("OFFSET") or 0.0)}
+
+
+def _multirange_rows(url: str, lab: dict, rows: list[int]) -> dict[int, bytes]:
+    """Fetch many raster rows in a few HTTP requests (multipart byte ranges): one round trip per 128 rows instead of
+    one per row, which is what makes HiRISE usable from a slow or distant connection."""
+    import requests
+    from concurrent.futures import ThreadPoolExecutor
+    rb, off = lab["row_bytes"], lab["offset"]
+
+    def fetch(chunk):
+        spec = ",".join(f"{off + r * rb}-{off + (r + 1) * rb - 1}" for r in chunk)
+        with requests.get(url, headers={"Range": "bytes=" + spec}, timeout=(15, 90), stream=True) as resp:
+            if resp.status_code != 206:
+                raise RuntimeError(f"archive did not return byte ranges (HTTP {resp.status_code})")
+            ctype = resp.headers.get("Content-Type", "")
+            body = resp.content
+        parts = {}
+        if "multipart/byteranges" in ctype:
+            boundary = ("--" + ctype.split("boundary=")[1].strip().strip('"')).encode()
+            for seg in body.split(boundary):
+                head, _, data = seg.partition(b"\r\n\r\n")
+                m = re.search(rb"Content-Range:\s*bytes\s+(\d+)-(\d+)", head, re.I)
+                if m:
+                    a0, a1 = int(m.group(1)), int(m.group(2))
+                    parts[a0] = data[: a1 - a0 + 1]
+        else:
+            m = re.search(r"bytes\s+(\d+)-(\d+)", resp.headers.get("Content-Range", ""))
+            if m:
+                parts[int(m.group(1))] = body
+        out = {}
+        starts = sorted(parts)
+        for r in chunk:
+            s = off + r * rb
+            for a0 in reversed(starts):          # the part that contains this row (the server may merge ranges)
+                if a0 <= s and s + rb <= a0 + len(parts[a0]):
+                    out[r] = parts[a0][s - a0: s - a0 + rb]
+                    break
+        if len(out) != len(chunk):
+            raise RuntimeError("incomplete byte-range response")
+        return out
+
+    chunks = [rows[i:i + 128] for i in range(0, len(rows), 128)]
+    res = {}
+    with ThreadPoolExecutor(min(4, len(chunks)) or 1) as ex:
+        for d in ex.map(fetch, chunks):
+            res.update(d)
+    return res
+
+
 def _window_rows(url: str, lon: float, lat: float, extent_m: float, grid: int, scale: float, unit_m: float, sub: int) -> np.ndarray:
+    """Nearest-sampled window, fetched with multipart byte ranges when the archive supports them (a few requests),
+    otherwise row by row in parallel."""
+    try:
+        lab = _pds_label(url)
+    except Exception:
+        lab = None
+    if lab:
+        try:
+            with rasterio.open("/vsicurl/" + url) as ds:
+                tr = Transformer.from_crs(ds.crs.geodetic_crs, ds.crs, always_xy=True)
+                x, y = tr.transform(lon, lat)
+                h = extent_m / 2
+                w = from_bounds(x - h, y - h, x + h, y + h, ds.transform)
+            n = grid * sub
+            ri = np.floor(w.row_off + (np.arange(n) + 0.5) * w.height / n).astype(int)
+            ci = np.floor(w.col_off + (np.arange(n) + 0.5) * w.width / n).astype(int)
+            want = sorted({int(r) for r in ri if 0 <= r < lab["lines"]})
+            got = _multirange_rows(url, lab, want) if want else {}
+            a = np.full((n, n), np.nan)
+            okc = (ci >= 0) & (ci < lab["samples"])
+            for i, r in enumerate(ri):
+                if r in got:
+                    row = np.frombuffer(got[r], dtype="<f4").astype(np.float64)
+                    a[i, okc] = row[ci[okc]]
+            a[a < -1e30] = np.nan
+            a = a * lab["scale"] + lab["add"]
+            a = np.nanmean(a.reshape(grid, sub, grid, sub), axis=(1, 3))
+            return a * scale * unit_m
+        except Exception:
+            pass   # fall back to the row-by-row reader below
+    return _window_rows_parallel(url, lon, lat, extent_m, grid, scale, unit_m, sub)
+
+
+def _window_rows_parallel(url: str, lon: float, lat: float, extent_m: float, grid: int, scale: float, unit_m: float, sub: int) -> np.ndarray:
     """Same result as the nearest-sampled read in _window, but the sampled rows are fetched in parallel. Each row of a
     PDS raster is a separate HTTP range request, and the HiRISE server answers them slowly one at a time (a 2 km window
     took over two minutes sequentially; in parallel it takes seconds)."""
