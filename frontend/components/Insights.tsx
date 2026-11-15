@@ -13,13 +13,13 @@ export interface ArtemisInfo { status: "artemis_iii_2024" | "artemis_iii_2022_on
 export interface Illumination {
   sunlit_fraction: number; tile_sunlit_fraction: number; psr_fraction_tile: number; earth_visible_fraction: number;
   max_sun_elevation_deg: number; modelled_max_temp_c: number; slope_deg_2km: number; method: string;
-  lola?: { points: number; cells_hit: number; cell_m: number };
+  lola?: { product?: string; source?: string; cell_m: number };
 }
 export interface NightIR { night_ir_contrast: number; night_ir_texture: number; mosaic: string; reading: string; status: string }
 export interface CustomInfo { nearest_target: string; nearest_km: number; terrain_offset_km: number }
 export interface FunctionalSite { id: string; name: string; overall_rank: number; use_score: number; status: UseStatus; reason: string }
 export interface FunctionalRanking { test: string; scenario: Scenario; transfers: boolean; uses: PillarKey[]; note: string | null; top: FunctionalSite[] }
-export interface Contribution { feature: string; label: string; pillar: PillarKey; similarity: number; points: number; max_points: number; lost: number }
+export interface Contribution { feature: string; label: string; pillar: PillarKey; similarity: number | null; points: number; max_points: number; lost: number; compared?: boolean }
 export interface WhyInfo { helps: string[]; hurts: string[]; gate_note: string | null }
 export interface FieldReadiness {
   analog_history: string | null; analog_history_status: string; permits: string | null; permits_status: string;
@@ -180,10 +180,12 @@ export function ByUseView({ rankings, selectedId, onSelect, best }: {
 /* ---------- Why this match ---------- */
 export function WhyThisMatch({ contributions, why, score, nameOf }: { contributions?: Contribution[]; why?: WhyInfo; score: number; nameOf: (feature: string, label: string) => string }) {
   const [open, setOpen] = useState(true);
-  const rows = contributions ?? [];
-  if (!rows.length) return null;
+  const all = contributions ?? [];
+  const rows = all.filter((c) => c.compared !== false && c.similarity !== null);
+  const skipped = all.filter((c) => !(c.compared !== false && c.similarity !== null));
+  if (!all.length) return null;
   const maxMax = Math.max(1, ...rows.map((c) => c.max_points));
-  const byLabel = new Map(rows.map((c) => [c.label, nameOf(c.feature, c.label)]));
+  const byLabel = new Map(all.map((c) => [c.label, nameOf(c.feature, c.label)]));
   const plain = (l: string) => byLabel.get(l) ?? l;
   const lostTotal = rows.reduce((a, c) => a + c.lost, 0);
 
@@ -202,13 +204,13 @@ export function WhyThisMatch({ contributions, why, score, nameOf }: { contributi
       {why?.gate_note && <p className="text-xs mt-2" style={{ color: "var(--warn)" }}>{why.gate_note}</p>}
       {open && (
         <>
-          <p className="text-[11px] muted mt-3">The score of {Math.round(score * 100)} is the sum of the points won on 14 measurements. Each grey track is the most that measurement can give; the coloured part is what this site won. {lostTotal > 0.5 ? `${lostTotal.toFixed(0)} points were lost in total.` : ""}</p>
+          <p className="text-[11px] muted mt-3">The score of {Math.round(score * 100)} is the sum of the points won on the {rows.length} measurements that exist for both sites. Each grey track is the most that measurement can give; the coloured part is what this site won. {lostTotal > 0.5 ? `${lostTotal.toFixed(0)} points were lost in total.` : ""}</p>
           <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px] muted">
             {(Object.keys(GROUPS) as PillarKey[]).map((k) => <span key={k} className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: GROUPS[k].colour }} />{GROUPS[k].label}</span>)}
           </div>
           <div className="flex flex-col gap-1.5 mt-3">
             {rows.map((c) => (
-              <div key={c.feature} className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-0.5 text-xs" title={`${plain(c.label)}: ${c.points.toFixed(1)} of ${c.max_points.toFixed(1)} points (similarity ${Math.round(c.similarity * 100)}%)`}>
+              <div key={c.feature} className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-0.5 text-xs" title={c.similarity === null ? `${plain(c.label)}: not compared (no measurement for the target)` : `${plain(c.label)}: ${c.points.toFixed(1)} of ${c.max_points.toFixed(1)} points (similarity ${Math.round(c.similarity * 100)}%)`}>
                 <span className="w-full sm:w-40 shrink-0 truncate">{plain(c.label)}</span>
                 <div className="flex-1 min-w-0">
                   <div className="h-2.5 rounded-full overflow-hidden" style={{ width: `${(c.max_points / maxMax) * 100}%`, background: "var(--line)" }}>
@@ -219,6 +221,7 @@ export function WhyThisMatch({ contributions, why, score, nameOf }: { contributi
               </div>
             ))}
           </div>
+          {skipped.length > 0 && <p className="text-[11px] muted mt-3"><b>Not compared</b> (no measurement for the target, so left out of the score): {skipped.map((c) => plain(c.label)).join(", ")}.</p>}
         </>
       )}
     </div>
@@ -292,7 +295,7 @@ export function SunlightPanel({ body, illumination, nightIr, maxSun }: { body: "
         </div>
         <details className="text-[11px] muted">
           <summary className="cursor-pointer select-none">How this is modelled</summary>
-          <p className="mt-1 leading-relaxed">{il.method}{il.lola ? ` Built from ${il.lola.points.toLocaleString("en-US")} LOLA laser returns on a ${il.lola.cell_m} m grid.` : ""} The 2 km window averages {Math.round(il.tile_sunlit_fraction * 100)}% sunlit. A model, not a measurement: treat it as a planning estimate.</p>
+          <p className="mt-1 leading-relaxed">{il.method}{il.lola ? ` Terrain: ${il.lola.product ?? "LRO LOLA gridded DEM"} (NASA PDS), resampled to a ${il.lola.cell_m} m grid.` : ""} The 2 km window averages {Math.round(il.tile_sunlit_fraction * 100)}% sunlit. A model, not a measurement: treat it as a planning estimate.</p>
         </details>
       </div>
     );

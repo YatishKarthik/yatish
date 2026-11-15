@@ -4,7 +4,7 @@ Sunlight, Earth visibility and modelled peak temperature for the polar Moon site
 Near the lunar poles the Sun never rises more than a few degrees, so whether a spot is lit depends on the
 horizon around it. For each site this script:
 
-  1. grids LOLA altimeter returns (USGS cloud-optimised point clouds on AWS) to a 400 m terrain model reaching
+  1. resamples the LOLA 120 m polar DEM (NASA PDS) onto a 400 m terrain model reaching
      90 km beyond the search area, so distant mountains can block the Sun;
   2. traces the horizon in 72 directions from each candidate point, allowing for the Moon's curvature;
   3. moves the Sun through a full lunar day at 12 points of the 1.54 degree seasonal cycle (864 positions) and
@@ -29,14 +29,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from scipy.ndimage import distance_transform_edt, gaussian_filter, map_coordinates
+from scipy.ndimage import gaussian_filter, map_coordinates
 
 if Path("/root/.ccr/ca-bundle.crt").exists():
     os.environ.setdefault("CURL_CA_BUNDLE", "/root/.ccr/ca-bundle.crt")
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 CONFIG = ROOT / "data" / "config"
-S3 = "https://astrogeo-ard.s3-us-west-2.amazonaws.com/moon/lro/lola/"
 R = 1737400.0
 CELL = 400.0               # terrain model cell, m
 HORIZON_KM = 90.0
@@ -59,52 +59,32 @@ def to_latlon(v):
 
 
 def lola_grid(lat, lon, half_m):
-    """LOLA returns within a square of half-size half_m around (lat, lon), gridded at CELL metres."""
-    import laspy
-    from laspy.copc import Bounds
+    """LOLA heights on a CELL-metre grid in the local tangent plane around (lat, lon), reaching half_m each way.
+    Source: the LOLA 120 m polar stereographic DEM (LDEM_75S/N_120M, NASA PDS Geosciences Node), resampled onto the
+    plane so horizons can be traced along true east/north directions."""
+    import rasterio
+    from rasterio.windows import from_bounds
+    from pyproj import Transformer
+    from sources_listed import LOLA_GDR
+    url = f"{LOLA_GDR}/polar/float_img/ldem_75{'s' if lat < 0 else 'n'}_120m_float.lbl"
     up, east, north = frame(lat, lon)
-    c0 = up * R
-    ring = [c0 + east * sx * half_m + north * sy * half_m for sx in np.linspace(-1, 1, 9) for sy in np.linspace(-1, 1, 9)]
-    pts3 = [p / np.linalg.norm(p) * r for p in ring for r in (R - 12000, R + 12000)]
-    mins, maxs = np.min(pts3, axis=0), np.max(pts3, axis=0)
-    lats = [to_latlon(p)[0] for p in ring]
-    bands = sorted({int(math.floor(min(max(a, -89.999), 89.999) / 15.0) * 15) for a in lats + [lat]})
     n = int(round(2 * half_m / CELL))
-    s, c = np.zeros((n, n)), np.zeros((n, n))
-    used = 0
-    for b in bands:
-        for l in range(0, 360, 15):
-            url = f"{S3}LolaRDR_{b}N{b + 15}N_{l}E{l + 15}E.copc.laz"
-            try:
-                with laspy.CopcReader.open(url) as r:
-                    if np.any(r.header.maxs < mins) or np.any(r.header.mins > maxs):
-                        continue
-                    q = r.query(bounds=Bounds(mins=mins, maxs=maxs), resolution=CELL * 0.6)
-                    if len(q) == 0:
-                        continue
-                    p = np.column_stack([np.asarray(q.x), np.asarray(q.y), np.asarray(q.z)])
-            except Exception as ex:
-                print(f"    {url.rsplit('/', 1)[-1]}: {str(ex)[:70]}", flush=True)
-                continue
-            # gnomonic-style projection onto the tangent plane at the centre; height above the sphere
-            u = p / np.linalg.norm(p, axis=1, keepdims=True)
-            k = 1.0 / (u @ up)
-            e, nn = (u @ east) * k * R, (u @ north) * k * R
-            h = np.linalg.norm(p, axis=1) - R
-            keep = (np.abs(e) < half_m) & (np.abs(nn) < half_m) & (k > 0)
-            col = ((e[keep] + half_m) / CELL).astype(int).clip(0, n - 1)
-            row = ((half_m - nn[keep]) / CELL).astype(int).clip(0, n - 1)
-            np.add.at(s, (row, col), h[keep]); np.add.at(c, (row, col), 1)
-            used += int(keep.sum())
-    grid = np.where(c > 0, s / np.maximum(c, 1), np.nan)
-    hit = float(np.mean(c > 0))
-    bad = ~np.isfinite(grid)
-    if bad.all():
-        raise RuntimeError("no LOLA returns")
-    idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
-    grid = grid[tuple(idx)]
-    grid = gaussian_filter(grid, 0.7)
-    return grid, (up, east, north), {"points": used, "cells_hit": round(hit, 3), "cell_m": CELL}
+    ax = (np.arange(n) + 0.5) * CELL - half_m
+    E, N = np.meshgrid(ax, -ax)                       # row 0 at the north edge
+    P = up * R + E[..., None] * east + N[..., None] * north
+    P /= np.linalg.norm(P, axis=-1, keepdims=True)
+    glat, glon = np.degrees(np.arcsin(P[..., 2])), np.degrees(np.arctan2(P[..., 1], P[..., 0]))
+    with rasterio.open("/vsicurl/" + url) as ds:
+        tr = Transformer.from_crs(ds.crs.geodetic_crs, ds.crs, always_xy=True)
+        X, Y = tr.transform(glon, glat)
+        x0, x1, y0, y1 = X.min() - 500, X.max() + 500, Y.min() - 500, Y.max() + 500
+        m = int(min(2400, max(64, (x1 - x0) / 200)))
+        w = from_bounds(x0, y0, x1, y1, ds.transform)
+        a = ds.read(1, window=w, out_shape=(m, m), resampling=rasterio.enums.Resampling.average).astype(np.float64) * 1000.0
+    rows = (y1 - Y) / (y1 - y0) * m - 0.5
+    cols = (X - x0) / (x1 - x0) * m - 0.5
+    grid = map_coordinates(a, [rows, cols], order=1, mode="nearest")
+    return grid, (up, east, north), {"product": url.rsplit("/", 1)[-1].replace(".lbl", "").upper(), "source": "LRO LOLA GDR, NASA PDS Geosciences Node", "cell_m": CELL}
 
 
 class Terrain:

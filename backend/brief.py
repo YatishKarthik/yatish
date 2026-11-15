@@ -96,6 +96,6 @@ button{{font:inherit;padding:6px 12px;border:1px solid var(--line);background:#f
 {field}
 <h2>Data behind these numbers</h2><ul class="small">{src}</ul>
 {val}
-<p class="small">Limits: Moon and Mars composition are typical values for the rock class; texture comes from 2 km elevation tiles; field-readiness entries marked "not verified" must be checked before planning.</p>
+<p class="small">Limits: only measurements that exist for both sites are scored (Moon and Mars composition, and Mars temperatures, are not measured in our data and are left out); texture comes from 2 km elevation tiles; field-readiness entries marked "not verified" must be checked before planning. Data: NASA PDS (LRO LOLA, LRO Diviner, MRO HiRISE), NASA Worldview (MODIS), ESA Copernicus (DEM, Sentinel-2).</p>
 <script>if(location.hash==='#print')setTimeout(()=>window.print(),400)</script>
 </body></html>"""

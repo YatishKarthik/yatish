@@ -27,7 +27,7 @@ const STATUS_INFO: Record<DataStatus, { word: string; level: "good" | "warn" | "
 };
 function SourceTag({ s }: { s?: DataStatus }) { const k = STATUS_INFO[s ?? "unknown"]; return <span title={k.what}><Status level={k.level}>{k.word}</Status></span>; }
 export interface ParamSim {
-  label: string; unit: string; pillar: string; similarity: number; target_val: number; earth_val: number;
+  label: string; unit: string; pillar: string; similarity: number | null; compared?: boolean; target_val: number; earth_val: number;
   earth_agency?: string; earth_instrument?: string; space_agency?: string; space_instrument?: string;
   earth_status?: DataStatus; space_status?: DataStatus; status?: DataStatus;
 }
@@ -36,7 +36,7 @@ export interface BestPerTestRow { test: string; scenario: "rover" | "landing" | 
 export interface EarthMatch {
   id: string; rank?: number; name: string; type: string; data_source?: string; lat: number; lon: number; elevation_m: number;
   morphology: string; mineral_profile: string; geology: string; similarity_score: number; epistemic_uncertainty: number;
-  conformal_90_interval: [number, number]; pillar_scores: { topo: number; radar: number; mineral: number; thermal: number };
+  conformal_90_interval: [number, number]; pillar_scores: { topo: number | null; radar: number | null; mineral: number | null; thermal: number | null };
   parameter_similarities: Record<string, ParamSim>; representativeness_matrix: MatrixRow[];
   scenarios: Record<string, { status: string; score: number; uncertainty: number; conformal_interval: [number, number]; note: string }>;
   diurnal_sol_curve?: number[]; heightmap_url: string; radar_url: string;
@@ -94,14 +94,13 @@ function DataNote({ m, world, t }: { m: EarthMatch; world: string; t: TargetInfo
   const bits: string[] = [];
   bits.push(terrainE === "measured" && terrainT === "measured" ? "Terrain for both sites is measured" : terrainT !== "measured" ? `Terrain for ${world} is a placeholder shape model` : "Terrain for the Earth site is a placeholder");
   bits.push(comp === "measured" ? "Earth surface composition is measured by Sentinel-2" : "Earth surface composition is a typical value");
-  bits.push(temp === "measured" ? "Earth temperatures are NASA POWER climatology" : "Earth temperatures are typical values");
+  bits.push(temp === "measured" ? "Earth surface temperatures are MODIS land surface temperature from NASA Worldview" : "Earth temperatures are not measured here");
   const body = world === "the Moon" ? "Moon" : "Mars";
-  bits.push(p.temp_max_c?.space_status === "modelled"
-    ? `${body} composition is a typical published value; its peak temperature is modelled from LOLA terrain and sun geometry, the cold end is typical`
-    : `${body} composition and temperatures are typical published values`);
-  if (t.custom) bits.push(`Terrain for your point was fetched live; its composition and temperatures are borrowed from ${t.custom.nearest_target}`);
+  bits.push(p.temp_max_c?.space_status === "measured"
+    ? `${body} temperatures are measured by LRO Diviner (NASA PDS); ${body} composition is not measured in our data, so it is left out of the score`
+    : `${body} composition and temperatures are not measured in our data, so they are left out of the score (only terrain and texture are compared)`);
+  if (t.custom) bits.push("Terrain for your point was fetched live from NASA PDS");
   if (t.illumination) bits.push("Sunlight and Earth view are modelled by Celestra from LRO LOLA terrain");
-  if (t.night_ir) bits.push("Night-time infrared is a relative reading from Mars Odyssey THEMIS");
   return <p className="text-xs muted leading-relaxed border-l-2 pl-3" style={{ borderColor: "var(--accent)" }}><b style={{ color: "var(--text)" }}>Where the data comes from.</b> {bits.join(". ")}. Each value&apos;s source is tagged in the Measurements tab.</p>;
 }
 
@@ -111,7 +110,7 @@ interface Validation {
   negative_controls_without_vegetation_rule?: { median_rank: number; share_in_bottom_half: number; best_rank_seen: number };
   benchmarks: { count: number; median_rank: number; share_in_top_half: number };
   weight_sensitivity: { mean_top5_kept: number; min_top5_kept: number };
-  ensemble_calibration: { coverage_per_scenario: number[]; calibration_sites: number };
+  score_range?: { median_width: number; method: string };
   baseline?: {
     description: string;
     plain: BaselineRow; plain_with_bare_ground_rule: BaselineRow; celestra: BaselineRow;
@@ -167,7 +166,7 @@ function Evidence() {
         <li><b>Unsuitable control sites</b> (rainforest, wetland, farmland, polders): median rank {nc.median_rank} of {v.earth_sites}, {Math.round(nc.share_in_bottom_half * 100)}% in the bottom half{raw ? `. Without the bare-ground rule: median ${raw.median_rank}, ${Math.round(raw.share_in_bottom_half * 100)}% in the bottom half` : ""}. Best rank any control reached: {nc.best_rank_seen}.</li>
         <li><b>Established analog sites</b> used by space agencies: median rank {v.benchmarks.median_rank}, {Math.round(v.benchmarks.share_in_top_half * 100)}% in the top half. Each benchmark is an analog for particular targets, not all of them, so a middling average is expected.</li>
         <li><b>Weight sensitivity</b>: moving any one group weight by ±20% keeps on average {v.weight_sensitivity.mean_top5_kept} of the top 5 (never fewer than {v.weight_sensitivity.min_top5_kept}).</li>
-        <li><b>Uncertainty calibration</b>: on {v.ensemble_calibration.calibration_sites} held-out Earth sites the 90% band contained the true value {v.ensemble_calibration.coverage_per_scenario.map((c) => `${Math.round(c * 100)}%`).join(", ")} of the time for the rover, landing and mining scenarios.</li>
+        {v.score_range && <li><b>Score range</b>: {v.score_range.method} The median range across all pairs is ±{Math.round(v.score_range.median_width * 50)} points.</li>}
       </ul>
       {thr && thr.length > 0 && (() => {
         const meds = thr.map((x) => x.control_median_rank), lo = Math.min(...meds), hi = Math.max(...meds);
@@ -209,7 +208,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
   // plain-language summary pieces
   const sw = similarityWord(m.similarity_score);
-  const pillarsSorted = [...PILLARS].sort((a, b) => m.pillar_scores[b.key] - m.pillar_scores[a.key]);
+  const pillarsSorted = [...PILLARS].filter((p) => m.pillar_scores[p.key] !== null).sort((a, b) => (m.pillar_scores[b.key] ?? 0) - (m.pillar_scores[a.key] ?? 0));
   const best = pillarsSorted[0], worst = pillarsSorted[pillarsSorted.length - 1];
   const good = m.representativeness_matrix.filter((r) => r.status === "REPRESENTATIVE");
   const partial = m.representativeness_matrix.filter((r) => r.status === "PARTIAL");
@@ -264,7 +263,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
             {t.custom && (
               <div className="text-xs leading-relaxed min-w-0">
                 <div><span className="font-semibold">A point you picked</span> at {Math.abs(t.lat).toFixed(2)}°{t.lat >= 0 ? "N" : "S"}, {Math.abs(t.lon).toFixed(2)}°{t.lon >= 0 ? "E" : "W"}.</div>
-                <p className="muted mt-1">Terrain measured live from {customInstrument}; composition and temperatures borrowed from {t.custom.nearest_target} ({Math.round(t.custom.nearest_km)} km away).{t.custom.terrain_offset_km > 0.5 ? ` The nearest elevation data was ${t.custom.terrain_offset_km.toFixed(1)} km from your point.` : ""}</p>
+                <p className="muted mt-1">Terrain measured live from {customInstrument}; {t.body === "moon" ? "temperatures from LRO Diviner; composition is not measured, so it is not scored." : "composition and temperatures are not measured here, so only terrain and texture are scored."}{t.custom.terrain_offset_km > 0.5 ? ` The nearest elevation data was ${t.custom.terrain_offset_km.toFixed(1)} km from your point.` : ""}</p>
               </div>
             )}
             {sunlight}
@@ -291,7 +290,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                 <input value={filterText} onChange={(e) => setFilterText(e.target.value)} placeholder="Filter by name or rock type" className="input" style={{ paddingLeft: 28 }} />
               </div>
             </div>
-            <p className="text-xs muted mb-2">Score out of 100 · the ± is how unsure the model is</p>
+            <p className="text-xs muted mb-2">Score out of 100 · the ± is how far it moves if one measurement is dropped or a weight shifts 20%</p>
             <div className="flex flex-col gap-1 max-h-[340px] overflow-y-auto pr-1">
               {filtered.map((x) => {
                 const rank = x.rank || 1;
@@ -324,14 +323,14 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
               <div className="card-solid p-3 text-right shrink-0" data-tour="score">
                 <div className="text-[11px] muted">Match score</div>
                 <div className="text-3xl font-semibold leading-none mt-1">{Math.round(m.similarity_score * 100)}<span className="text-sm muted font-normal"> / 100</span></div>
-                <div className="text-[11px] muted mt-1">likely between {Math.round(m.conformal_90_interval[0] * 100)} and {Math.round(m.conformal_90_interval[1] * 100)}</div>
+                <div className="text-[11px] muted mt-1" title="Lowest and highest score if any one measurement is left out or a group weight moves by 20%">range {Math.round(m.conformal_90_interval[0] * 100)}–{Math.round(m.conformal_90_interval[1] * 100)}</div>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 mt-4 border-t line">
               {PILLARS.map((p) => { const v = m.pillar_scores[p.key]; return (
-                <div key={p.key} title={p.what}>
-                  <div className="flex justify-between text-xs mb-1"><span className="font-medium">{p.label}</span><span className="font-mono muted">{Math.round(v * 100)}</span></div>
-                  <Bar value={v} />
+                <div key={p.key} title={v === null ? `${p.label}: not measured for ${world}, so not compared` : p.what}>
+                  <div className="flex justify-between text-xs mb-1"><span className={`font-medium ${v === null ? "faint" : ""}`}>{p.label}</span><span className="font-mono muted">{v === null ? "not compared" : Math.round(v * 100)}</span></div>
+                  {v === null ? <div className="h-1.5 rounded-full unverified" /> : <Bar value={v} />}
                 </div>
               ); })}
             </div>
@@ -357,7 +356,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                   )}
                   <p className="text-[15px] leading-relaxed">
                     <b>{m.name}</b> is <Status level={sw.level}>{sw.word}</Status> to {t.name} overall, with a match score of <b>{Math.round(m.similarity_score * 100)} out of 100</b>.
-                    It resembles the destination most in <b>{best.label.toLowerCase()}</b> ({Math.round(m.pillar_scores[best.key] * 100)}) and least in <b>{worst.label.toLowerCase()}</b> ({Math.round(m.pillar_scores[worst.key] * 100)}).
+                    It resembles the destination most in <b>{best.label.toLowerCase()}</b> ({Math.round((m.pillar_scores[best.key] ?? 0) * 100)}) and least in <b>{worst.label.toLowerCase()}</b> ({Math.round((m.pillar_scores[worst.key] ?? 0) * 100)}).
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="card-solid p-3">
@@ -378,12 +377,11 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Kpi label="Gravity" value={`${t.gravity} m/s²`} sub={`Earth is 9.81, so ${(9.81 / t.gravity).toFixed(1)}× stronger`} />
                     <Kpi label="Air pressure" value={`${t.pressure_bar} bar`} sub={t.pressure_bar < 0.05 ? "effectively vacuum: no air cooling, no plume damping" : "thin atmosphere"} />
-                    <Kpi label="Temperatures there" value={`${t.temp_min_c}° to ${t.temp_max_c}°C`} sub={`daily swing ${t.temp_max_c - t.temp_min_c}°C`} />
+                    <Kpi label="Temperatures there" value={`${t.temp_min_c}° to ${t.temp_max_c}°C`} sub={m.parameter_similarities.temp_max_c?.space_status === "measured" ? `daily swing ${Math.round(t.temp_max_c - t.temp_min_c)}°C · LRO Diviner` : "typical range, not measured · not scored"} />
                     <Kpi label="Temperatures here" value={`${m.parameter_similarities.temp_min_c?.earth_val}° to ${m.parameter_similarities.temp_max_c?.earth_val}°C`} sub={`daily swing ${m.parameter_similarities.temp_delta_c?.earth_val}°C`} />
                   </div>
                   <p className="text-xs muted leading-relaxed">
-                    How to read the score: it compares 14 measurements of the ground, split into the four groups above, weighted {PILLARS.map((p) => `${p.label.toLowerCase()} ${Math.round(p.weight * 100)}%`).join(", ")}.
-                    A model trained on the Earth sites adds the ± uncertainty; a wider ± means the site is unlike anything the model has seen. Temperatures are compared by pattern, never by raw value, because Earth is always warmer.
+                    How to read the score: it compares the measurements that exist for both sites (up to 14), grouped as above and weighted terrain shape 30%, surface texture 30%, rock and soil 25%, day-night heat 15%, renormalised over the groups that were compared. Groups marked &quot;not compared&quot; have no measurement for the destination and are left out rather than guessed. The ± is how far the score moves if any one measurement is dropped or a weight shifts by 20%. Temperatures are compared by pattern after standardisation, never by raw value.
                   </p>
                 </div>
               )}
@@ -467,13 +465,14 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                     <div key={p.key}>
                       <div className="flex items-baseline justify-between mb-1.5"><h3 className="text-sm font-semibold">{p.label}</h3><span className="text-[11px] muted">{p.what}</span></div>
                       <div className="flex flex-col gap-1.5">
-                        {byPillar(p.key).map(([key, v]) => { const h = PARAM_HELP[key], w = similarityWord(v.similarity); return (
+                        {byPillar(p.key).map(([key, v]) => { const h = PARAM_HELP[key], cmp = v.similarity !== null && v.compared !== false, w = cmp ? similarityWord(v.similarity as number) : { level: "warn" as const, word: "Not compared" }; return (
                           <div key={key} className="card-solid p-3">
                             <div className="flex items-center justify-between gap-3">
                               <div className="min-w-0"><div className="text-sm font-medium">{h?.name ?? v.label}</div><div className="text-[11px] muted">{h?.what}</div></div>
                               <div className="shrink-0 text-right"><Status level={w.level}>{w.word}</Status></div>
                             </div>
-                            <div className="mt-2"><Bar value={v.similarity} colour={w.level === "good" ? "var(--good)" : w.level === "warn" ? "var(--warn)" : "var(--bad)"} /></div>
+                            {cmp ? <div className="mt-2"><Bar value={v.similarity as number} colour={w.level === "good" ? "var(--good)" : w.level === "warn" ? "var(--warn)" : "var(--bad)"} /></div>
+                              : <p className="text-[11px] muted mt-2">Not in the score: {world}&apos;s value here is a typical figure, not a measurement, so the two are not compared.</p>}
                             <div className="flex flex-wrap justify-between text-[11px] font-mono mt-1.5">
                               <span style={{ color: "var(--earth)" }}>Earth {v.earth_val} {v.unit}</span>
                               <span style={{ color: "var(--space)" }}>{world} {v.target_val} {v.unit}</span>
@@ -492,22 +491,14 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
 
               {view === "expert" && (
                 <div className="flex flex-col gap-4 rise text-xs">
-                  <p className="muted leading-relaxed">How the numbers are made. Each of the 14 measurements is standardised across all Earth sites and targets (z-scores), the two sites are compared per measurement with exp(−0.55·|Δz|), those are averaged within each of the four groups, and the groups are blended with the weights below. That blend is the match score. Separately, a small neural-network ensemble predicts how well each hardware scenario would transfer, and its disagreement gives the uncertainty.</p>
+                  <p className="muted leading-relaxed">How the numbers are made. Only measurements that exist for both sites are compared. Each is standardised across the sites that have it measured (z-scores), the two sites are compared with exp(−0.55·|Δz|), those are averaged within each group, and the groups that were compared are blended with the weights below (renormalised). That blend is the match score. The range shows how far the score moves if any one measurement is left out or any group weight shifts by 20%.</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Kpi label="Similarity" value={m.similarity_score.toFixed(3)} sub="The match score before rounding: weighted mean of the four group means." />
-                    <Kpi label="Epistemic σ" value={m.epistemic_uncertainty.toFixed(3)} sub="How much the 7 ensemble models disagree. Big σ means this site is unlike the training sites." />
-                    <Kpi label="90% interval" value={`${m.conformal_90_interval[0].toFixed(2)}–${m.conformal_90_interval[1].toFixed(2)}`} sub="Conformal band: 9 times in 10 the true value should fall inside it (calibrated on 14 held-out sites)." />
+                    <Kpi label="Groups compared" value={`${(m as EarthMatch & { groups_compared?: string[] }).groups_compared?.length ?? 4} of 4`} sub="Groups with a measurement on both sides. The others are shown but not scored." />
+                    <Kpi label="Score range" value={`${m.conformal_90_interval[0].toFixed(2)}–${m.conformal_90_interval[1].toFixed(2)}`} sub="Lowest and highest score if any one measurement is dropped or any group weight moves ±20%." />
                     <Kpi label="Search time" value={`${data.search_time_ms} ms`} sub={`Time to compare all ${data.earth_sites_scanned} Earth sites on the server.`} />
                   </div>
                   <Evidence />
-                  <div className="card-solid p-3">
-                    <div className="font-semibold mb-1">Scenario model</div>
-                    <p className="muted mb-2">Ensemble predictions of how well a rover, landing or mining test would transfer (0 to 1). They inform the Tests tab and the uncertainty; they do not change the ranking.</p>
-                    <table className="w-full text-xs">
-                      <thead><tr className="muted text-left"><th className="font-normal pb-1">Scenario</th><th className="font-normal">Score</th><th className="font-normal">σ</th><th className="font-normal">90% interval</th><th className="font-normal">Status</th></tr></thead>
-                      <tbody className="font-mono">{Object.entries(m.scenarios).map(([k, s]) => <tr key={k}><td className="py-0.5 font-sans">{k}</td><td>{s.score.toFixed(3)}</td><td>{s.uncertainty.toFixed(3)}</td><td>{s.conformal_interval[0].toFixed(2)}–{s.conformal_interval[1].toFixed(2)}</td><td className="font-sans">{s.status}</td></tr>)}</tbody>
-                    </table>
-                  </div>
                   <div className="card-solid p-3">
                     <div className="font-semibold mb-1">Group weights</div>
                     <p className="muted mb-2">Terrain and surface texture carry the most weight because they decide whether vehicles can move and land at all; temperatures carry the least because Earth can never match them in absolute terms. After weighting, a bare-ground rule multiplies the score: full at Sentinel-2 NDVI 0.20 or less and up to 20% open water, falling to zero at NDVI 0.30 or 50% water, because the Moon and Mars have neither plants nor open water.</p>
@@ -521,7 +512,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                       <tbody>{params.map(([k, v]) => <tr key={k} className="border-t line"><td className="py-1 pr-2">{PARAM_HELP[k]?.name ?? v.label}</td><td className="pr-2">{v.earth_instrument} <SourceTag s={v.earth_status} /></td><td className="pr-2">{v.space_instrument} <SourceTag s={v.space_status} /></td></tr>)}</tbody>
                     </table>
                   </div>
-                  <p className="muted leading-relaxed">Limits worth stating. Terrain is measured for every site that has a product (Copernicus GLO-30 on Earth, LRO LOLA altimetry on the Moon, MRO CTX stereo models on Mars). Surface texture is computed from that terrain, not from radar. Surface composition is measured by Sentinel-2 on Earth but uses typical rock-class values on the Moon and Mars. Earth temperatures are NASA POWER 2 m air climatology; Moon and Mars temperatures are published typical surface ranges, so the two are compared by pattern, not by value. The ensemble is trained on labels that are formulas of the features, so its uncertainty is epistemic only, and the calibration set is 14 sites, so the 90% band is coarse.</p>
+                  <p className="muted leading-relaxed">Limits worth stating. Terrain is measured for every site (Copernicus DEM on Earth, LRO LOLA gridded DEMs on the Moon, MRO HiRISE DTMs on Mars, the latter two from NASA PDS). Surface texture is computed from that terrain, not from radar. Surface composition is measured by Sentinel-2 on Earth; it is not measured for the Moon or Mars in our data, so it is not scored there. Temperatures are measured surface temperatures on Earth (MODIS, NASA Worldview) and the Moon (LRO Diviner); Mars temperatures are not measured here and are not scored. Diviner bins are 0.5° (about 15 km), coarser than the 2 km terrain tiles.</p>
                 </div>
               )}
             </div>

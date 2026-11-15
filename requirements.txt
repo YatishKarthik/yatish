@@ -1,18 +1,16 @@
-# Running the app (backend + ML engine)
+# Running the app (backend + matching engine)
 numpy>=1.26.0,<2.3.0
 pandas>=2.2.0
 pyarrow>=17.0.0
 scipy>=1.13.0
-torch>=2.4.0
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.9.0
 
-# Rebuilding the data from source (data-pipeline/), not needed to run the app
+# Rebuilding the data from source (data-pipeline/) and the live "pick any point" feature
 requests>=2.32.0
 rasterio>=1.3.10
 pyproj>=3.6.0
 mgrs>=1.4.6
-laspy[lazrs]>=2.5.0
 scikit-image>=0.24.0
 Pillow>=10.4.0

@@ -1,11 +1,10 @@
 """
 Rank Earth sites for any point on the Moon or Mars.
 
-The terrain is fetched live with the same code as the data pipeline (LOLA or Kaguya for the Moon, CTX for Mars),
-turned into the same 14 features, and matched against the 60 Earth sites. What cannot be measured for an
-arbitrary point is borrowed from the nearest Celestra target on the same body and labelled as such:
-surface composition (typical for its rock class) and the temperature range. The Moon's peak temperature is
-modelled from latitude by radiative balance.
+The terrain is fetched live with the same code as the data pipeline (LRO LOLA gridded DEMs for the Moon, HiRISE
+DTMs for Mars, both from NASA PDS), turned into the same features, and matched against the 60 Earth sites. On the
+Moon, Diviner gives the measured temperature range. Anything not measured (composition everywhere, temperatures on
+Mars) is left out of the score, not filled in.
 
 Needs the pipeline packages (pip install -r requirements.txt); without them the endpoint says so.
 """
@@ -31,7 +30,7 @@ def _load(name: str, file: str):
 
 def available() -> tuple[bool, str]:
     try:
-        import laspy, rasterio, skimage, pyproj  # noqa: F401
+        import rasterio, skimage, pyproj, PIL  # noqa: F401
         return True, ""
     except Exception as e:
         return False, f"Custom targets need the data-pipeline packages: pip install -r requirements.txt ({e})"
@@ -70,25 +69,22 @@ def build_target(engine, body: str, lat: float, lon: float) -> tuple[dict, dict,
         raise LookupError(real.get("dem", {}).get("error", "no elevation product covers this point"))
     heightmap, relief = hm
     topo = extract.describe_dem(body, real["dem"])
-    if body == "moon" and "Kaguya" in real["dem"].get("dataset", ""):
-        topo = {"agency": "JAXA / USGS", "instrument": f"Kaguya TC stereo DTM {real['dem'].get('product', '')}", "status": "measured"}
 
-    tmin = float(nearest["temp_min_c"])
-    if body == "moon":
-        cos_noon = max(math.cos(math.radians(abs(lat) - 1.54)), 0.02)
-        tmax = ((1 - 0.12) * 1361 * cos_noon / (0.95 * 5.670e-8)) ** 0.25 - 273.15
-        therm = {"agency": "none", "instrument": f"Peak: radiative balance for the noon Sun at this latitude (flat ground); cold end typical, from {nearest['name']}", "status": "modelled"}
+    clim = real.get("climate", {})
+    if body == "moon" and "temp_max_c" in clim:
+        tmin, tmax, delta = clim["temp_min_c"], clim["temp_max_c"], clim["temp_delta_c"]
+        therm = {"agency": "NASA", "instrument": f"LRO Diviner bolometric surface temperature ({clim.get('product', '')}, NASA PDS)", "status": "measured"}
     else:
-        tmax = float(nearest["temp_max_c"])
-        therm = {"agency": "none", "instrument": f"Typical range borrowed from the nearest Celestra target, {nearest['name']} ({near_km:.0f} km away)", "status": "typical"}
+        tmin, tmax, delta = float(nearest["temp_min_c"]), float(nearest["temp_max_c"]), None
+        therm = {"agency": "none", "instrument": "No measured temperature here; not scored", "status": "typical"}
     prov = {"topography": topo,
             "radar": {"agency": topo["agency"], "instrument": "Texture statistics of the slope grid (terrain-roughness proxy, not radar)", "status": "derived"},
-            "mineral": {"agency": "none", "instrument": f"Typical values for {nearest['mineral_profile'].replace('_', ' ')}, the rock class of the nearest target ({nearest['name']}, {near_km:.0f} km away)", "status": "typical"},
+            "mineral": {"agency": "none", "instrument": "Composition not measured here; not scored", "status": "typical"},
             "thermal": therm,
             "curve": {"agency": "none", "instrument": "Sine-based day-night model between the low and high", "status": "modelled"}}
     elev = np.asarray(real["heights_m"], float)
     site["elevation_m"] = float(np.nanmedian(elev))
-    row = extract.compute_features(site, heightmap, relief, 2000.0 / extract.GRID_RES, tmin, tmax, site["frost"], prov)
+    row = extract.compute_features(site, heightmap, relief, 2000.0 / extract.GRID_RES, tmin, tmax, site["frost"], prov, None, delta)
     row["water_fraction"] = 0.0
 
     asset = ROOT / "backend" / "static" / "assets" / f"{sid}_dem.json"
@@ -98,7 +94,7 @@ def build_target(engine, body: str, lat: float, lon: float) -> tuple[dict, dict,
     off = real["dem"].get("offset_km", 0.0)
     meta = {"primary_challenge": (f"A point you picked. Terrain is measured ({topo['instrument']}"
                                   + (f", nearest product {off:.0f} km away" if off and off >= 1 else "") +
-                                  f"); " + ("composition and the cold end of the temperature range" if body == "moon" else "composition and temperatures") + f" are borrowed from {nearest['name']}."),
+                                  f"). " + ("Temperatures are measured by LRO Diviner; composition is not measured, so it is left out of the score." if body == "moon" else "Composition and temperatures are not measured here, so only terrain and surface texture are scored.")),
             "recommended_hardware_test": nearest.get("recommended_hardware_test", "")}
     extras = {"artemis": None, "illumination": None, "night_ir": None, "custom": {"nearest_target": nearest["name"], "nearest_km": round(near_km, 1), "terrain_offset_km": off},
               "max_sun_elevation_deg": round(min(90.0, 90 - abs(lat) + (1.54 if body == "moon" else 25.2)), 1)}

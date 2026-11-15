@@ -28,7 +28,7 @@ function fitClone(scene: THREE.Object3D, size: number, axis: "x" | "y" | "z" | "
     }
   });
   const turn = new THREE.Group(); turn.rotation.y = rotY; turn.add(inner); turn.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(turn), dim = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const box = new THREE.Box3().setFromObject(turn, true), dim = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   const ref = axis === "max" ? Math.max(dim.x, dim.y, dim.z) : dim[axis];
   const s = size / (ref || 1);
   const outer = new THREE.Group();

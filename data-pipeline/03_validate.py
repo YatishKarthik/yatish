@@ -9,10 +9,11 @@ Checks whether the match score means anything, and writes data/processed/validat
    and without it so the rule's effect is visible rather than hidden.
 3. Weight sensitivity. Each pillar weight is moved by +/-20% (others renormalised). If the top 5 barely changes,
    the ranking does not hinge on our particular choice of weights.
-4. Ensemble calibration. Share of Earth sites whose scenario labels fall inside the 90% conformal band.
+4. Score range. For every pair, how far the score moves if any one compared measurement is dropped or a group
+   weight shifts by 20%; the median width is reported.
 5. Baseline. The same checks for a plain, unweighted distance across the 14 standardised features, with and
    without the bare-ground rule, so it is visible how much the weighting and the rule each add.
-6. Bare-ground thresholds. The NDVI limits of the rule are moved (0.15-0.25 full score, 0.25-0.35 zero) to show
+6. Bare-ground thresholds. The NDVI limits of the rule are moved (0.20-0.30 full score, 0.35-0.45 zero) to show
    the control result does not hinge on one cut-off.
 
 Run after 01_fetch_and_extract.py:  python data-pipeline/03_validate.py
@@ -31,11 +32,13 @@ WEIGHTS = {"topo": 0.30, "radar": 0.30, "mineral": 0.25, "thermal": 0.15}
 
 
 def ranked(matches, weights):
-    score = lambda m: sum(weights[k] * m["pillar_scores"][k] for k in weights) * m["vegetation_gate"]
+    def score(m):
+        ps = {k: v for k, v in m["pillar_scores"].items() if v is not None}   # only groups measured on both sides
+        return sum(weights[k] * ps[k] for k in ps) / (sum(weights[k] for k in ps) or 1) * m["vegetation_gate"]
     return [m["id"] for m in sorted(matches, key=score, reverse=True)]
 
 
-def gate(ndvi, water, full=0.20, zero=0.30):
+def gate(ndvi, water, full=0.25, zero=0.40):
     return float(np.clip((zero - ndvi) / (zero - full), 0, 1) * np.clip((0.50 - water) / 0.30, 0, 1))
 
 
@@ -46,8 +49,8 @@ def summary(ctrl, bench, n):
 
 CANNOT_SHOW = [
     "The controls and benchmarks were chosen by us. An independent test would use analog sites ranked by mission teams who did not see our scores.",
-    "The ensemble's training labels are formulas of the same features, so its band shows model disagreement (epistemic uncertainty), not real-world error.",
-    "Moon and Mars composition are typical values for the rock class, so the composition group cannot separate two Moon sites of the same class.",
+    "The score range shows sensitivity to the choice of measurements and weights, not measurement error of the instruments themselves.",
+    "Moon and Mars surface composition, and Mars temperatures, are not measured in our data, so those groups are left out of Moon and Mars scores rather than filled with typical values.",
     "Whether a high-ranked site actually gave transferable results in a past campaign is not tested here; that needs campaign reports matched to flight outcomes.",
     "Texture comes from 2 km elevation tiles, so boulder-scale roughness (what wheels feel) is not seen.",
 ]
@@ -62,11 +65,13 @@ def main():
 
     per_target, ctrl_ranks, bench_ranks, overlaps, ungated_ctrl_ranks = [], [], [], [], []
     base = {"plain": ([], []), "plain_with_rule": ([], [])}
-    thresholds = {(f, z): [] for f in (0.15, 0.20, 0.25) for z in (0.25, 0.30, 0.35) if z > f}
+    thresholds = {(f, z): [] for f in (0.20, 0.25, 0.30) for z in (0.35, 0.40, 0.45) if z > f}
     rhos = []
     earth_idx = eng.df.index[eng.df["body"] == "earth"]
     earth_ids = eng.df.loc[earth_idx, "site_id"].tolist()
     Z = eng.norm_df.loc[earth_idx].values
+    U = eng.usable.loc[earth_idx].values
+    widths = []
     for t in eng.config["targets"]:
         res = eng.match(t["id"], top_k=n_earth)
         order = [m["id"] for m in res["matches"]]
@@ -78,9 +83,13 @@ def main():
         ctrl_ranks += cr
         bench_ranks += br
 
-        # baseline: plain distance in the standardised feature space
-        tz = eng.norm_df.loc[eng.df.index[eng.df["site_id"] == t["id"]][0]].values
-        dist = np.linalg.norm(Z - tz, axis=1)
+        # baseline: plain distance in the standardised feature space, over the features measured on both sides
+        ti = eng.df.index[eng.df["site_id"] == t["id"]][0]
+        tz = eng.norm_df.loc[ti].values
+        tm = eng.usable.loc[ti].values
+        both = U & tm
+        dist = np.sqrt(np.nansum(np.where(both, (Z - tz) ** 2, 0.0), axis=1) / np.maximum(both.sum(axis=1), 1))
+        widths.extend(m["score_range"][1] - m["score_range"][0] for m in res["matches"])
         mm = {m["id"]: m for m in res["matches"]}
         for key, use_rule in (("plain", False), ("plain_with_rule", True)):
             sc = {sid: -d * (1 if not use_rule else 1) for sid, d in zip(earth_ids, dist)}
@@ -115,22 +124,6 @@ def main():
         })
         print(f"{t['name'][:34]:34} controls ranked {cr[0]:2d}-{cr[-1]:2d} of {n_earth} · benchmarks median {np.median(br):4.1f} · top-5 kept {worst}/5")
 
-    # ensemble calibration on the Earth sites (same split as training)
-    earth = eng.df[eng.df["body"] == "earth"]
-    X = eng.norm_df.loc[earth.index].values
-    Y = np.stack([
-        np.clip(earth.bareness_index.values * (1 - earth.slope_p90.values / 50), 0.05, 0.98),
-        np.clip(earth.bareness_index.values * (1 - (earth.slope_p90.values / 45) * 0.65 - (earth.sar_contrast.values / 700) * 0.25), 0.05, 0.98),
-        np.clip(earth.bareness_index.values * (0.5 * earth.iron_oxide_ratio.values + 0.5 * earth.clay_hydroxyl_ratio.values), 0.05, 0.98),
-    ], 1)
-    rng = np.random.default_rng(42)
-    perm = rng.permutation(len(X)); cal = perm[int(len(X) * 0.78):]
-    inside = []
-    for i in cal:
-        _, _, lo, hi = eng.ensemble.predict_with_conformal(X[i])
-        inside.append((Y[i] >= lo) & (Y[i] <= hi))
-    coverage = np.mean(inside, axis=0).round(2).tolist()
-
     out = {
         "earth_sites": n_earth,
         "negative_controls_without_vegetation_rule": {"median_rank": float(np.median(ungated_ctrl_ranks)),
@@ -143,7 +136,8 @@ def main():
                        "share_in_top_half": round(float(np.mean(np.array(bench_ranks) <= n_earth / 2)), 3)},
         "weight_sensitivity": {"perturbation": "each pillar weight x0.8 and x1.2, renormalised",
                                "mean_top5_kept": round(float(np.mean(overlaps)), 2), "min_top5_kept": int(min(overlaps))},
-        "ensemble_calibration": {"target": 0.9, "coverage_per_scenario": coverage, "calibration_sites": int(len(cal))},
+        "score_range": {"median_width": round(float(np.median(widths)), 3),
+                        "method": "For every target-site pair the score is recomputed with each compared measurement left out in turn and with each group weight moved by 20%; the range is the lowest to highest result."},
         "baseline": {
             "description": "Unweighted distance across the 14 standardised features (no groups, no weights)",
             "plain": summary(*base["plain"], n_earth),

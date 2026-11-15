@@ -2,7 +2,7 @@
 Builds the 14 features per site from the real-data cache (data/real, written by 02_fetch_real_data.py).
 
 Every value carries a status:
-  measured      read directly from an instrument product (Copernicus DEM, LOLA, CTX DTM, Sentinel-2, NASA POWER)
+  measured      read directly from an instrument product (Copernicus DEM, Sentinel-2, MODIS LST and NDVI, LRO LOLA, LRO Diviner, MRO HiRISE)
   derived       computed from measured data (slope and texture statistics from the elevation grid)
   modelled      produced by a simple physical model (the 24-hour temperature curve)
   typical       a representative value for the site's rock class or a published temperature range, not measured here
@@ -205,7 +205,7 @@ def compute_features(site: dict, heightmap: np.ndarray, relief_m: float, pixel_m
     # Pillar 3: Surface composition. Measured Sentinel-2 indices where available, else class-typical values
     bareness, iron_ratio, clay_ratio, albedo = surface if surface is not None else mineral_values(site.get("mineral_profile", "mare_basalt"), rng)
 
-    # Pillar 4: Temperatures. NASA POWER for Earth; published typical ranges for the Moon and Mars
+    # Pillar 4: Temperatures. MODIS land surface temperature (Earth), LRO Diviner (Moon); Mars not measured (not scored)
     pressure = float(site.get("pressure_bar", 1.013))
     gravity = float(site.get("gravity_m_s2", 9.81))
     diurnal_curve = generate_diurnal_sol_curve(tmin, tmax, body)
@@ -256,7 +256,13 @@ def to_heightmap(real: dict) -> tuple[np.ndarray, float] | None:
     if not h:
         return None
     elev = np.asarray(h, dtype=np.float64).reshape(GRID_RES, GRID_RES)
-    elev = gaussian_filter(elev, sigma=0.6)   # light smoothing of resampling steps only
+    # no smoothing: only isolated spikes (bad pixels) are replaced by the local median
+    from scipy.ndimage import median_filter
+    med = median_filter(elev, size=3)
+    dev = elev - med
+    mad = np.median(np.abs(dev)) + 1e-6
+    spikes = np.abs(dev) > max(6 * 1.4826 * mad, 3.0)
+    elev = np.where(spikes, med, elev)
     relief = float(max(elev.max() - elev.min(), 1.0))
     return (elev - elev.min()) / relief, relief
 
@@ -265,10 +271,10 @@ def describe_dem(body: str, dem: dict) -> dict:
     if body == "earth":
         return {"agency": "ESA", "instrument": f"Copernicus DEM GLO-30 ({dem.get('product', '')})", "status": "measured"}
     if body == "moon":
-        return {"agency": "NASA", "instrument": f"LRO LOLA altimeter returns, {dem.get('points', 0)} points gridded at ~60 m ({int(100 * dem.get('cells_with_returns', 0))}% of 62.5 m cells hit)", "status": "measured"}
+        return {"agency": "NASA", "instrument": f"LRO LOLA gridded DEM {dem.get('product', '')} ({dem.get('native_res_m', '?')} m, NASA PDS)", "status": "measured"}
     off = dem.get("offset_km", 0)
-    where = "" if off < 1 else f", nearest DTM {off:.0f} km from the nominal site"
-    return {"agency": "NASA / USGS", "instrument": f"MRO CTX stereo DTM {dem.get('product', '')}{where}", "status": "measured"}
+    where = "" if off < 1 else f", nearest HiRISE DTM {off:.0f} km from the nominal site"
+    return {"agency": "NASA", "instrument": f"MRO HiRISE stereo DTM {dem.get('product', '')} (NASA PDS){where}", "status": "measured"}
 
 
 def main():
@@ -280,8 +286,6 @@ def main():
         config = json.load(f)
 
     all_sites = config["targets"] + config["earth_analogs"]
-    ill_path = OUT_PROCESSED / "illumination.json"
-    illumination = json.loads(ill_path.read_text(encoding="utf-8")) if ill_path.exists() else {}
     features_list = []
     pixel_m = 2000.0 / GRID_RES     # every tile is 2 km across
     counts = {"dem": 0, "spectra": 0, "climate": 0}
@@ -316,25 +320,31 @@ def main():
             comp = {"agency": "ESA", "instrument": f"Sentinel-2 L2A {spectra['scene']}: the window is open water, no bare ground", "status": "measured"}
             counts["spectra"] += 1
         else:
-            comp = {"agency": "none", "instrument": f"Typical values for {site.get('mineral_profile', 'basalt').replace('_', ' ')} (not measured here)", "status": "typical"}
+            comp = {"agency": "none", "instrument": f"Typical values for {site.get('mineral_profile', 'basalt').replace('_', ' ')} (not measured here; shown for context, not scored)", "status": "typical"}
 
         if body == "earth" and "temp_max_c" in climate:
             tmin, tmax, delta = climate["temp_min_c"], climate["temp_max_c"], climate["temp_delta_c"]
-            therm = {"agency": "NASA", "instrument": "NASA POWER climatology (MERRA-2 2 m air temperature)", "status": "measured"}
+            therm = {"agency": "NASA", "instrument": f"MODIS Terra monthly land surface temperature {climate.get('year', '')}, NASA Worldview (GIBS): warmest-month day, coldest-month night", "status": "measured"}
             counts["climate"] += 1
-        elif body == "moon" and site_id in illumination:
-            # peak from our radiative-balance model on LOLA terrain (04_polar_illumination.py); cold end typical
-            tmin, tmax = float(site["temp_min_c"]), float(illumination[site_id]["modelled_max_temp_c"])
-            therm = {"agency": "NASA", "instrument": "Peak: Celestra radiative-balance model on LRO LOLA terrain and sun geometry; cold end: published typical value", "status": "modelled"}
+        elif body == "moon" and "temp_max_c" in climate:
+            tmin, tmax, delta = climate["temp_min_c"], climate["temp_max_c"], climate["temp_delta_c"]
+            therm = {"agency": "NASA", "instrument": f"LRO Diviner bolometric surface temperature, daily max and min of the 0.5° bin ({climate.get('product', '')}, NASA PDS)", "status": "measured"}
+            counts["climate"] += 1
         else:
             tmin, tmax = float(site["temp_min_c"]), float(site["temp_max_c"])
-            therm = {"agency": "none", "instrument": "Published typical surface-temperature range for this kind of site (not measured here)" if body != "earth" else "Typical range entered by hand (not measured here)", "status": "typical"}
+            therm = {"agency": "none", "instrument": "Published typical surface-temperature range (not measured here; shown for context, not scored)", "status": "typical"}
 
         provenance = {"topography": topo, "radar": texture, "mineral": comp, "thermal": therm,
                       "curve": {"agency": "none", "instrument": "Sine-based day-night model between the low and high", "status": "modelled"}}
 
         feat = compute_features(site, heightmap, relief_m, pixel_m, tmin, tmax, frost, provenance, surface, delta)
         feat["water_fraction"] = round(water, 3)
+        # vegetation for the bare-ground rule: the greenest month of the year (MODIS NDVI, NASA Worldview), which a
+        # single Sentinel-2 scene can miss; falls back to the Sentinel-2 scene where MODIS has no data
+        nd = real.get("ndvi_seasonal", {})
+        s2_ndvi = spectra.get("ndvi")
+        feat["ndvi_season_max"] = round(float(nd["ndvi_max_month"]), 3) if "ndvi_max_month" in nd else (round(float(s2_ndvi), 3) if s2_ndvi is not None else None)
+        feat["ndvi_source"] = "MODIS Terra monthly NDVI 2023, greenest month (NASA Worldview)" if "ndvi_max_month" in nd else ("Sentinel-2 L2A scene" if s2_ndvi is not None else None)
         features_list.append(feat)
 
         with open(OUT_ASSETS / f"{site_id}_dem.json", "w", encoding="utf-8") as f:
@@ -355,7 +365,7 @@ def main():
     df.to_parquet(OUT_PROCESSED / "tiles.parquet", index=False)
     df.to_csv(OUT_PROCESSED / "tiles.csv", index=False)
     print("=" * 76)
-    print(f"Real elevation: {counts['dem']}/{len(all_sites)} sites · Sentinel-2: {counts['spectra']} Earth sites · NASA POWER: {counts['climate']} Earth sites")
+    print(f"Real elevation: {counts['dem']}/{len(all_sites)} sites · Sentinel-2: {counts['spectra']} Earth sites · measured temperatures (MODIS LST / Diviner): {counts['climate']} sites")
     print(f"Wrote {OUT_PROCESSED / 'tiles.parquet'}")
     print("=" * 76)
 

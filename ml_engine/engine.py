@@ -3,9 +3,6 @@ import time
 from pathlib import Path
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-import torch.optim as optim
 
 ROOT = Path(__file__).resolve().parent.parent
 TILES_PATH = ROOT / "data" / "processed" / "tiles.parquet"
@@ -118,83 +115,14 @@ PILLARS = {
 }
 
 
-class TestbedNet(nn.Module):
-    def __init__(self, in_features=14, hidden=48, out_scenarios=3):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(in_features, hidden),
-            nn.SiLU(),
-            nn.LayerNorm(hidden),
-            nn.Dropout(0.1),
-            nn.Linear(hidden, 24),
-            nn.SiLU(),
-            nn.Linear(24, out_scenarios),
-        )
-
-    def forward(self, x):
-        return self.net(x)
+# A feature is compared only when both sites have it measured (or derived from a measurement). Typical or modelled
+# values are shown for context but never enter a score.
+USABLE = ("measured", "derived")
+NDVI_FULL, NDVI_ZERO = 0.25, 0.40   # bare-ground rule on the greenest-month NDVI
 
 
-class PlanetaryDeepEnsemble:
-    def __init__(self, n_models=7, in_features=14):
-        self.n_models = n_models
-        self.models = []
-        for i in range(n_models):
-            torch.manual_seed(100 + i * 37)
-            hidden = 40 + (i % 3) * 16
-            self.models.append(TestbedNet(in_features, hidden=hidden))
-        self.conformal_q90 = np.array([0.12, 0.12, 0.12])
-
-    def fit_and_calibrate(self, X: np.ndarray, Y: np.ndarray, epochs=140):
-        rng = np.random.default_rng(42)
-        n = len(X)
-        perm = rng.permutation(n)
-        split = int(n * 0.78)
-        train_idx, cal_idx = perm[:split], perm[split:]
-
-        X_tr, Y_tr = X[train_idx], Y[train_idx]
-        X_cal, Y_cal = X[cal_idx], Y[cal_idx]
-
-        for model in self.models:
-            optimizer = optim.AdamW(model.parameters(), lr=0.012, weight_decay=5e-4)
-            criterion = nn.MSELoss()
-
-            b_idx = rng.choice(len(X_tr), size=len(X_tr), replace=True)
-            x_b = torch.tensor(X_tr[b_idx] + rng.normal(0, 0.05, X_tr[b_idx].shape), dtype=torch.float32)
-            y_b = torch.tensor(Y_tr[b_idx], dtype=torch.float32)
-
-            model.train()
-            for _ in range(epochs):
-                optimizer.zero_grad()
-                pred = model(x_b)
-                loss = criterion(pred, y_b)
-                loss.backward()
-                optimizer.step()
-
-        self.eval_mode()
-        with torch.no_grad():
-            x_c = torch.tensor(X_cal, dtype=torch.float32)
-            preds = torch.stack([m(x_c) for m in self.models]).numpy()
-            mean_pred = preds.mean(axis=0)
-            std_pred = np.maximum(preds.std(axis=0), 0.02)
-            nonconformity = np.abs(Y_cal - mean_pred) / std_pred
-            self.conformal_q90 = np.quantile(nonconformity, 0.90, axis=0)
-
-    def eval_mode(self):
-        for m in self.models:
-            m.eval()
-
-    def predict_with_conformal(self, x_vec: np.ndarray):
-        self.eval_mode()
-        with torch.no_grad():
-            t = torch.tensor(x_vec, dtype=torch.float32).reshape(1, -1)
-            preds = torch.stack([m(t) for m in self.models]).squeeze(1).numpy()
-            mean = np.clip(preds.mean(axis=0), 0.0, 1.0)
-            epi_std = np.clip(preds.std(axis=0), 0.015, 0.45)
-            half_width = self.conformal_q90 * epi_std
-            low = np.clip(mean - half_width, 0.0, 1.0)
-            high = np.clip(mean + half_width, 0.0, 1.0)
-            return mean, epi_std, low, high
+def _status(row, group: str) -> str:
+    return _prov(row, group)["status"]
 
 
 class PlanetaryAnalogEngine:
@@ -207,46 +135,30 @@ class PlanetaryAnalogEngine:
         for item in self.config["targets"] + self.config["earth_analogs"]:
             self.meta_by_id[item["id"]] = item
 
-        self.feature_means = self.df[FEATURE_COLS].mean()
-        self.feature_stds = self.df[FEATURE_COLS].std().replace(0, 1.0)
+        # which rows hold a real (measured or derived) value for each feature; standardise over those rows only
+        self.usable = pd.DataFrame({c: [(_status(r, FEATURE_META[c]["group"]) in USABLE) for _, r in self.df.iterrows()] for c in FEATURE_COLS}, index=self.df.index)
+        self.feature_means = pd.Series({c: self.df.loc[self.usable[c], c].mean() for c in FEATURE_COLS})
+        self.feature_stds = pd.Series({c: self.df.loc[self.usable[c], c].std() for c in FEATURE_COLS}).replace(0, 1.0).fillna(1.0)
         self.norm_df = (self.df[FEATURE_COLS] - self.feature_means) / self.feature_stds
 
         processed = ROOT / "data" / "processed"
         self.illumination = _load_json(processed / "illumination.json")
-        self.themis = _load_json(processed / "mars_themis.json")
 
-        self.ensemble = PlanetaryDeepEnsemble(n_models=7, in_features=len(FEATURE_COLS))
-        self._train_ensemble()
-
-    def _train_ensemble(self):
-        earth_df = self.df[self.df["body"] == "earth"].copy()
-        X = self.norm_df.loc[earth_df.index].values
-
-        y_rover = np.clip(earth_df["bareness_index"].values * (1.0 - earth_df["slope_p90"].values / 50.0), 0.05, 0.98)
-        y_landing = np.clip(
-            earth_df["bareness_index"].values * (1.0 - (earth_df["slope_p90"].values / 45.0) * 0.65 - (earth_df["sar_contrast"].values / 700.0) * 0.25),
-            0.05, 0.98
-        )
-        y_mining = np.clip(
-            earth_df["bareness_index"].values * (0.5 * earth_df["iron_oxide_ratio"].values + 0.5 * earth_df["clay_hydroxyl_ratio"].values),
-            0.05, 0.98
-        )
-        Y = np.stack([y_rover, y_landing, y_mining], axis=1)
-        self.ensemble.fit_and_calibrate(X, Y)
 
     def _param_similarities(self, target_row, earth_row, target_norm, earth_norm) -> dict:
         param_sims = {}
         for idx, col in enumerate(FEATURE_COLS):
-            z_diff = abs(float(target_norm[idx]) - float(earth_norm[idx]))
-            sim = float(np.exp(-0.55 * z_diff))
             meta = FEATURE_META[col]
             ep, tp = _prov(earth_row, meta["group"]), _prov(target_row, meta["group"])
+            compared = ep["status"] in USABLE and tp["status"] in USABLE
+            sim = float(np.exp(-0.55 * abs(float(target_norm[idx]) - float(earth_norm[idx])))) if compared else None
 
             param_sims[col] = {
                 "label": meta["label"],
                 "unit": meta["unit"],
                 "pillar": meta["pillar"],
-                "similarity": round(sim, 3),
+                "similarity": round(sim, 3) if compared else None,
+                "compared": compared,
                 "target_val": round(float(target_row[col]), 3),
                 "earth_val": round(float(earth_row[col]), 3),
                 "earth_agency": ep["agency"],
@@ -263,9 +175,31 @@ class PlanetaryAnalogEngine:
     def _pillar_scores(self, param_sims: dict) -> dict:
         scores = {}
         for pillar, cols in PILLARS.items():
-            vals = [param_sims[c]["similarity"] for c in cols]
-            scores[pillar] = round(float(np.mean(vals)), 3)
+            vals = [param_sims[c]["similarity"] for c in cols if param_sims[c]["compared"]]
+            scores[pillar] = round(float(np.mean(vals)), 3) if vals else None   # None: not measured on both sides
         return scores
+
+    @staticmethod
+    def _combine(param_sims: dict, weights: dict, drop: str | None = None) -> float:
+        """Weighted score over the groups that have at least one compared feature; weights renormalised."""
+        num = den = 0.0
+        for pillar, cols in PILLARS.items():
+            vals = [param_sims[c]["similarity"] for c in cols if param_sims[c]["compared"] and c != drop]
+            if vals:
+                num += weights[pillar] * float(np.mean(vals)); den += weights[pillar]
+        return num / den if den else 0.0
+
+    def _score_range(self, param_sims: dict) -> tuple[float, float]:
+        """How far the score moves if any one compared measurement is left out, or any group weight shifts by 20%."""
+        vals = [self._combine(param_sims, PILLAR_WEIGHTS)]
+        for c, p in param_sims.items():
+            if p["compared"]:
+                vals.append(self._combine(param_sims, PILLAR_WEIGHTS, drop=c))
+        for g in PILLAR_WEIGHTS:
+            for f in (0.8, 1.2):
+                w = dict(PILLAR_WEIGHTS); w[g] *= f
+                vals.append(self._combine(param_sims, w))
+        return float(min(vals)), float(max(vals))
 
     def _low_sun_row(self, target_row, earth_row, pillar_scores, sun_max: float) -> dict:
         body = target_row["body"]
@@ -292,15 +226,17 @@ class PlanetaryAnalogEngine:
 
     def _build_representativeness_matrix(self, target_row, earth_row, pillar_scores, epi_std) -> list:
         bareness = float(earth_row["bareness_index"])
-        is_vegetated = bareness < 0.70   # Sentinel-2 NDVI above 0.30
+        seasonal = earth_row.get("ndvi_season_max")
+        is_vegetated = (float(seasonal) >= NDVI_ZERO) if seasonal is not None and np.isfinite(seasonal) else bareness < 0.70
         g_t = float(target_row["gravity_m_s2"])
         p_t = float(target_row["pressure_bar"])
         body_name = target_row["body"].capitalize()
 
-        topo_s = pillar_scores["topo"]
-        radar_s = pillar_scores["radar"]
-        min_s = pillar_scores["mineral"]
-        therm_s = pillar_scores["thermal"]
+        topo_s = pillar_scores["topo"] or 0.0
+        radar_s = pillar_scores["radar"] or 0.0
+        min_measured = pillar_scores["mineral"] is not None
+        min_s = pillar_scores["mineral"] if min_measured else 0.0
+        therm_s = pillar_scores["thermal"] or 0.0
 
         return [
             {
@@ -342,12 +278,13 @@ class PlanetaryAnalogEngine:
             {
                 "test": "Rock / Ice Drill Bit Hardness",
                 "scenario": "mining",
-                "status": "NOT_REPRESENTATIVE" if is_vegetated else ("REPRESENTATIVE" if min_s >= 0.65 else "PARTIAL"),
-                "confidence": round(float(np.clip(min_s - epi_std[2] * 0.4, 0.35, 0.95)), 2),
+                "status": "NOT_REPRESENTATIVE" if is_vegetated else ("PARTIAL" if not min_measured else ("REPRESENTATIVE" if min_s >= 0.65 else "PARTIAL")),
+                "confidence": round(float(np.clip(min_s - epi_std[2] * 0.4, 0.35, 0.95)), 2) if min_measured else 0.4,
                 "reason": (
-                    f"Plants cover much of the ground (Sentinel-2 NDVI {1 - bareness:.2f}): wet, organic soil does not behave like dry regolith."
+                    f"Plants cover much of the ground in the growing season: wet, organic soil does not behave like dry regolith."
                     if is_vegetated
-                    else f"Surface composition ({earth_row['mineral_profile'].replace('_', ' ')}) is close to the target's ({int(min_s*100)}% match)."
+                    else (f"Surface composition ({earth_row['mineral_profile'].replace('_', ' ')}) is close to the target's ({int(min_s*100)}% match)." if min_measured
+                          else f"The ground here is bare (Sentinel-2), but {body_name}'s surface composition is not measured in our data, so how similar the rock is cannot be scored. Check against orbital spectra before relying on drill tests.")
                 ),
             },
             {
@@ -373,15 +310,23 @@ class PlanetaryAnalogEngine:
 
     def _contributions(self, param_sims: dict, gate: float) -> tuple[list, list, list]:
         """Points each feature adds to the 0-100 score: group weight shared equally by the group's features."""
+        # only compared measurements carry points; group weights are shared out over the groups that were compared
+        n_cmp = {g: sum(1 for c in cols if param_sims[c]["compared"]) for g, cols in PILLARS.items()}
+        wsum = sum(PILLAR_WEIGHTS[g] for g in PILLARS if n_cmp[g]) or 1.0
         rows = []
         for col, p in param_sims.items():
-            share = 100.0 * PILLAR_WEIGHTS[p["pillar"]] / len(PILLARS[p["pillar"]])
-            rows.append({"feature": col, "label": p["label"], "pillar": p["pillar"], "similarity": p["similarity"],
+            g = p["pillar"]
+            if not p["compared"]:
+                rows.append({"feature": col, "label": p["label"], "pillar": g, "similarity": None, "points": 0.0, "max_points": 0.0, "lost": 0.0, "compared": False})
+                continue
+            share = 100.0 * (PILLAR_WEIGHTS[g] / wsum) / n_cmp[g]
+            rows.append({"feature": col, "label": p["label"], "pillar": g, "similarity": p["similarity"],
                          "points": round(share * p["similarity"] * gate, 2), "max_points": round(share, 2),
-                         "lost": round(share * (1 - p["similarity"] * gate), 2)})
-        helps = [r["label"] for r in sorted(rows, key=lambda r: -r["points"])[:3]]
-        hurts = [r["label"] for r in sorted(rows, key=lambda r: -r["lost"])[:3]]
-        return sorted(rows, key=lambda r: -r["points"]), helps, hurts
+                         "lost": round(share * (1 - p["similarity"] * gate), 2), "compared": True})
+        cmp_rows = [r for r in rows if r["compared"]]
+        helps = [r["label"] for r in sorted(cmp_rows, key=lambda r: -r["points"])[:3]]
+        hurts = [r["label"] for r in sorted(cmp_rows, key=lambda r: -r["lost"])[:3]]
+        return sorted(rows, key=lambda r: (not r["compared"], -r["points"])), helps, hurts
 
     def _field_readiness(self, earth_row, low_sun_row: dict) -> dict:
         sid = earth_row["site_id"]
@@ -403,7 +348,7 @@ class PlanetaryAnalogEngine:
             "permits": KNOWN_PERMITS.get(sid, "Not verified: check land ownership, protected-area rules and local research permits."),
             "permits_status": "documented" if sid in KNOWN_PERMITS else "not verified",
             "field_season": season,
-            "field_season_basis": f"Rule of thumb from NASA POWER temperatures ({why}: typical low {tmin:.0f} °C, high {tmax:.0f} °C)",
+            "field_season_basis": f"Rule of thumb from MODIS land surface temperatures ({why}: typical low {tmin:.0f} °C, high {tmax:.0f} °C)",
             "low_sun_test_months": low_sun_row["reason"],
             "elevation_m": float(earth_row["elevation_m"]),
             "infrastructure": "Not verified: road access, power and nearest airport should be checked before planning a campaign.",
@@ -417,7 +362,7 @@ class PlanetaryAnalogEngine:
         return {
             "artemis": meta.get("artemis"),
             "illumination": illum,
-            "night_ir": self.themis.get(sid) if body == "mars" else None,
+            "night_ir": None,
             "max_sun_elevation_deg": round(target_max_sun(body, float(target_row["lat"]), illum), 1),
         }
 
@@ -436,50 +381,37 @@ class PlanetaryAnalogEngine:
             param_sims = self._param_similarities(target_row, earth_row, target_norm, earth_norm)
             pillar_scores = self._pillar_scores(param_sims)
 
-            overall_sim = (
-                0.30 * pillar_scores["topo"]
-                + 0.30 * pillar_scores["radar"]
-                + 0.25 * pillar_scores["mineral"]
-                + 0.15 * pillar_scores["thermal"]
-            )
+            overall_sim = self._combine(param_sims, PILLAR_WEIGHTS)
+            lo_r, hi_r = self._score_range(param_sims)
             # Bare-ground rule: the Moon and Mars have no plants and no open water, so a site covered by either cannot
             # be an analog whatever its shape. Full score at Sentinel-2 NDVI <= 0.20, falling to zero at 0.30; likewise
             # full score up to 20% open water in the window, falling to zero at 50%.
-            ndvi = 1.0 - float(earth_row["bareness_index"])
+            # vegetation from the greenest month of the year (MODIS NDVI); full score at <= 0.25, zero at >= 0.40
+            seasonal = earth_row.get("ndvi_season_max")
+            ndvi = float(seasonal) if seasonal is not None and np.isfinite(seasonal) else 1.0 - float(earth_row["bareness_index"])
             water = float(earth_row.get("water_fraction", 0.0) or 0.0)
-            veg_gate = float(np.clip((0.30 - ndvi) / 0.10, 0.0, 1.0) * np.clip((0.50 - water) / 0.30, 0.0, 1.0))
+            veg_gate = float(np.clip((NDVI_ZERO - ndvi) / (NDVI_ZERO - NDVI_FULL), 0.0, 1.0) * np.clip((0.50 - water) / 0.30, 0.0, 1.0))
             ungated_sim = overall_sim
             overall_sim = overall_sim * veg_gate
 
-            pred_mean, epi_std, conf_low, conf_high = self.ensemble.predict_with_conformal(earth_norm)
-            avg_uncertainty = float(np.mean(epi_std))
+            lo_r, hi_r = lo_r * veg_gate, hi_r * veg_gate
+            half = (hi_r - lo_r) / 2
+            epi_std = np.full(3, half)
 
             rep_matrix = self._build_representativeness_matrix(target_row, earth_row, pillar_scores, epi_std)
             rep_matrix.append(self._low_sun_row(target_row, earth_row, pillar_scores, sun_max))
             contributions, helps, hurts = self._contributions(param_sims, veg_gate)
 
+            def _use(keys):
+                v = [pillar_scores[k] for k in keys if pillar_scores[k] is not None]
+                return round(float(np.mean(v)) * veg_gate, 3) if v else None
             scenarios = {
-                "rover": {
-                    "status": "valid" if rep_matrix[0]["status"] == "REPRESENTATIVE" else "partial",
-                    "score": round(float(pred_mean[0]), 3),
-                    "uncertainty": round(float(epi_std[0]), 3),
-                    "conformal_interval": [round(float(conf_low[0]), 3), round(float(conf_high[0]), 3)],
-                    "note": rep_matrix[0]["reason"],
-                },
-                "landing": {
-                    "status": "partial",
-                    "score": round(float(pred_mean[1]), 3),
-                    "uncertainty": round(float(epi_std[1]), 3),
-                    "conformal_interval": [round(float(conf_low[1]), 3), round(float(conf_high[1]), 3)],
-                    "note": rep_matrix[3]["reason"],
-                },
-                "mining": {
-                    "status": "ood",
-                    "score": round(float(pred_mean[2]), 3),
-                    "uncertainty": round(float(epi_std[2]), 3),
-                    "conformal_interval": [round(float(conf_low[2]), 3), round(float(conf_high[2]), 3)],
-                    "note": rep_matrix[5]["reason"],
-                },
+                "rover": {"status": "valid" if rep_matrix[0]["status"] == "REPRESENTATIVE" else "partial", "score": _use(["topo", "radar"]), "uncertainty": round(half, 3),
+                          "conformal_interval": [round(lo_r, 3), round(hi_r, 3)], "note": rep_matrix[0]["reason"]},
+                "landing": {"status": "partial", "score": _use(["topo", "radar"]), "uncertainty": round(half, 3),
+                            "conformal_interval": [round(lo_r, 3), round(hi_r, 3)], "note": rep_matrix[2]["reason"]},
+                "mining": {"status": "partial", "score": _use(["mineral"]), "uncertainty": round(half, 3),
+                           "conformal_interval": [round(lo_r, 3), round(hi_r, 3)], "note": rep_matrix[4]["reason"]},
             }
 
             raw_curve = earth_row.get("diurnal_sol_curve", [])
@@ -500,15 +432,15 @@ class PlanetaryAnalogEngine:
                 "vegetation_gate": round(veg_gate, 3),
                 "ndvi": round(ndvi, 3),
                 "water_fraction": round(water, 3),
-                "epistemic_uncertainty": round(avg_uncertainty, 3),
-                "conformal_90_interval": [
-                    round(float(np.clip(overall_sim - avg_uncertainty * 1.6, 0, 1)), 3),
-                    round(float(np.clip(overall_sim + avg_uncertainty * 1.6, 0, 1)), 3),
-                ],
+                # range of the score if any one compared measurement is dropped or a group weight shifts by 20%
+                "epistemic_uncertainty": round(half, 3),
+                "conformal_90_interval": [round(lo_r, 3), round(hi_r, 3)],
+                "score_range": [round(lo_r, 3), round(hi_r, 3)],
+                "groups_compared": [k for k, v in pillar_scores.items() if v is not None],
                 "pillar_scores": pillar_scores,
                 "contributions": contributions,
                 "why": {"helps": helps, "hurts": hurts,
-                        "gate_note": None if veg_gate >= 0.999 else f"Score multiplied by {veg_gate:.2f}: Sentinel-2 shows plants (NDVI {ndvi:.2f}) or open water ({int(water * 100)}%)."},
+                        "gate_note": None if veg_gate >= 0.999 else f"Score multiplied by {veg_gate:.2f}: the land here is green in its greenest month (MODIS NDVI {ndvi:.2f}) or partly open water ({int(water * 100)}%)."},
                 "field_readiness": self._field_readiness(earth_row, rep_matrix[-1]),
                 "parameter_similarities": param_sims,
                 "representativeness_matrix": rep_matrix,
@@ -546,7 +478,10 @@ class PlanetaryAnalogEngine:
         functional = []
         for t_idx, use in enumerate(USES):
             def use_score(m):
-                base = sum(w * m["pillar_scores"][k] for k, w in use["weights"].items()) * m["vegetation_gate"]
+                avail = {k: w for k, w in use["weights"].items() if m["pillar_scores"][k] is not None}
+                if not avail:
+                    return 0.0
+                base = sum(w * m["pillar_scores"][k] for k, w in avail.items()) / sum(avail.values()) * m["vegetation_gate"]
                 st = m["representativeness_matrix"][t_idx]["status"]
                 return base * (1.0 if st == "REPRESENTATIVE" else 0.85 if st == "PARTIAL" else 0.6)
             ranked = sorted(matches, key=use_score, reverse=True)[:5]

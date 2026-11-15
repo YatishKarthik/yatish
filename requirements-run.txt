@@ -1,10 +1,8 @@
-# Just what the running app needs (the full data-pipeline stack is in requirements.txt)
+# Just what the running app needs (the full stack, including the live "pick any point" feature, is in requirements.txt)
 numpy
 pandas
 pyarrow
+scipy
 fastapi
 uvicorn[standard]
 pydantic
-# torch: install the CPU wheel first if the default one fails:
-#   pip install torch --index-url https://download.pytorch.org/whl/cpu
-torch

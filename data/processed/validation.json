@@ -1,111 +1,112 @@
 {
  "earth_sites": 60,
  "negative_controls_without_vegetation_rule": {
-  "median_rank": 33.0,
-  "share_in_bottom_half": 0.58,
-  "best_rank_seen": 3
+  "median_rank": 24.0,
+  "share_in_bottom_half": 0.335,
+  "best_rank_seen": 1
  },
  "negative_controls": {
   "count": 8,
   "median_rank": 56.5,
-  "share_in_bottom_half": 0.911,
-  "best_rank_seen": 5
+  "share_in_bottom_half": 1.0,
+  "best_rank_seen": 53
  },
  "benchmarks": {
   "count": 12,
-  "median_rank": 22.0,
-  "share_in_top_half": 0.688
+  "median_rank": 25.0,
+  "share_in_top_half": 0.685
  },
  "weight_sensitivity": {
   "perturbation": "each pillar weight x0.8 and x1.2, renormalised",
-  "mean_top5_kept": 4.29,
-  "min_top5_kept": 3
+  "mean_top5_kept": 4.36,
+  "min_top5_kept": 4
  },
- "ensemble_calibration": {
-  "target": 0.9,
-  "coverage_per_scenario": [
-   0.86,
-   0.79,
-   0.86
-  ],
-  "calibration_sites": 14
+ "score_range": {
+  "median_width": 0.049,
+  "method": "For every target-site pair the score is recomputed with each compared measurement left out in turn and with each group weight moved by 20%; the range is the lowest to highest result."
  },
  "baseline": {
   "description": "Unweighted distance across the 14 standardised features (no groups, no weights)",
   "plain": {
-   "control_median_rank": 38.0,
-   "control_share_bottom_half": 0.763,
-   "benchmark_median_rank": 19.0,
-   "benchmark_share_top_half": 0.601
+   "control_median_rank": 19.0,
+   "control_share_bottom_half": 0.281,
+   "benchmark_median_rank": 30.0,
+   "benchmark_share_top_half": 0.509
   },
   "plain_with_bare_ground_rule": {
    "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.879,
-   "benchmark_median_rank": 17.0,
-   "benchmark_share_top_half": 0.699
+   "control_share_bottom_half": 1.0,
+   "benchmark_median_rank": 24.5,
+   "benchmark_share_top_half": 0.652
   },
   "celestra": {
    "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.911,
-   "benchmark_median_rank": 22.0,
-   "benchmark_share_top_half": 0.688
+   "control_share_bottom_half": 1.0,
+   "benchmark_median_rank": 25.0,
+   "benchmark_share_top_half": 0.685
   },
-  "rank_correlation_with_celestra": 0.629
+  "rank_correlation_with_celestra": 0.252
  },
  "bare_ground_threshold_sensitivity": [
   {
-   "ndvi_full_score_at": 0.15,
-   "ndvi_zero_at": 0.25,
+   "ndvi_full_score_at": 0.2,
+   "ndvi_zero_at": 0.35,
    "control_median_rank": 56.5,
    "control_share_bottom_half": 1.0
   },
   {
-   "ndvi_full_score_at": 0.15,
-   "ndvi_zero_at": 0.3,
+   "ndvi_full_score_at": 0.2,
+   "ndvi_zero_at": 0.4,
    "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.969
-  },
-  {
-   "ndvi_full_score_at": 0.15,
-   "ndvi_zero_at": 0.35,
-   "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.946
+   "control_share_bottom_half": 1.0
   },
   {
    "ndvi_full_score_at": 0.2,
-   "ndvi_zero_at": 0.25,
+   "ndvi_zero_at": 0.45,
    "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.911
-  },
-  {
-   "ndvi_full_score_at": 0.2,
-   "ndvi_zero_at": 0.3,
-   "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.911
-  },
-  {
-   "ndvi_full_score_at": 0.2,
-   "ndvi_zero_at": 0.35,
-   "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.911
-  },
-  {
-   "ndvi_full_score_at": 0.25,
-   "ndvi_zero_at": 0.3,
-   "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.915
+   "control_share_bottom_half": 1.0
   },
   {
    "ndvi_full_score_at": 0.25,
    "ndvi_zero_at": 0.35,
    "control_median_rank": 56.5,
-   "control_share_bottom_half": 0.92
+   "control_share_bottom_half": 1.0
+  },
+  {
+   "ndvi_full_score_at": 0.25,
+   "ndvi_zero_at": 0.4,
+   "control_median_rank": 56.5,
+   "control_share_bottom_half": 1.0
+  },
+  {
+   "ndvi_full_score_at": 0.25,
+   "ndvi_zero_at": 0.45,
+   "control_median_rank": 56.5,
+   "control_share_bottom_half": 1.0
+  },
+  {
+   "ndvi_full_score_at": 0.3,
+   "ndvi_zero_at": 0.35,
+   "control_median_rank": 56.5,
+   "control_share_bottom_half": 1.0
+  },
+  {
+   "ndvi_full_score_at": 0.3,
+   "ndvi_zero_at": 0.4,
+   "control_median_rank": 56.5,
+   "control_share_bottom_half": 1.0
+  },
+  {
+   "ndvi_full_score_at": 0.3,
+   "ndvi_zero_at": 0.45,
+   "control_median_rank": 56.5,
+   "control_share_bottom_half": 1.0
   }
  ],
  "cannot_show": [
   "The controls and benchmarks were chosen by us. An independent test would use analog sites ranked by mission teams who did not see our scores.",
-  "The ensemble's training labels are formulas of the same features, so its band shows model disagreement (epistemic uncertainty), not real-world error.",
-  "Moon and Mars composition are typical values for the rock class, so the composition group cannot separate two Moon sites of the same class.",
+  "The score range shows sensitivity to the choice of measurements and weights, not measurement error of the instruments themselves.",
+  "Moon and Mars surface composition, and Mars temperatures, are not measured in our data, so those groups are left out of Moon and Mars scores rather than filled with typical values.",
   "Whether a high-ranked site actually gave transferable results in a past campaign is not tested here; that needs campaign reports matched to flight outcomes.",
   "Texture comes from 2 km elevation tiles, so boulder-scale roughness (what wheels feel) is not seen."
  ],
@@ -115,12 +116,12 @@
    "name": "Artemis III: Peak near Cabeus B",
    "body": "moon",
    "top3": [
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
-    "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Tabernas Arid Badlands (Spain)"
+    "Roter Kamm Impact Crater (Namibia)",
+    "Richat Eye Structure (Mauritania)",
+    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)"
    ],
    "control_ranks": [
-    31,
+    53,
     54,
     55,
     56,
@@ -129,8 +130,8 @@
     59,
     60
    ],
-   "best_control_rank": 31,
-   "benchmark_median_rank": 10.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 24.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -139,11 +140,11 @@
    "body": "moon",
    "top3": [
     "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
-    "Barringer Meteor Crater (Arizona, USA)"
+    "Sossusvlei Ferric Dunes (Namibia)",
+    "Lanzarote Basalt Tubes (Canary Islands, Spain)"
    ],
    "control_ranks": [
-    34,
+    53,
     54,
     55,
     56,
@@ -152,9 +153,9 @@
     59,
     60
    ],
-   "best_control_rank": 34,
-   "benchmark_median_rank": 15.0,
-   "top5_kept_under_weight_changes": 4
+   "best_control_rank": 53,
+   "benchmark_median_rank": 17.5,
+   "top5_kept_under_weight_changes": 5
   },
   {
    "target": "moon_a3_malapert_massif",
@@ -162,11 +163,11 @@
    "body": "moon",
    "top3": [
     "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Nyamulagira Fresh Basalt Flows (DRC)",
-    "Barringer Meteor Crater (Arizona, USA)"
+    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
+    "Sossusvlei Ferric Dunes (Namibia)"
    ],
    "control_ranks": [
-    34,
+    53,
     54,
     55,
     56,
@@ -175,21 +176,21 @@
     59,
     60
    ],
-   "best_control_rank": 34,
-   "benchmark_median_rank": 15.5,
-   "top5_kept_under_weight_changes": 5
+   "best_control_rank": 53,
+   "benchmark_median_rank": 17.5,
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "moon_a3_mons_mouton",
    "name": "Artemis III: Mons Mouton",
    "body": "moon",
    "top3": [
-    "Craters of the Moon Lava Tubes (Idaho, USA)",
-    "Hanksville Clay-Sulfate Badlands (Utah, USA)",
-    "Haughton Impact Crater (Devon Island, Canada)"
+    "Roter Kamm Impact Crater (Namibia)",
+    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)",
+    "Richat Eye Structure (Mauritania)"
    ],
    "control_ranks": [
-    27,
+    53,
     54,
     55,
     56,
@@ -198,8 +199,8 @@
     59,
     60
    ],
-   "best_control_rank": 27,
-   "benchmark_median_rank": 18.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 23.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -207,12 +208,12 @@
    "name": "Artemis III: Mons Mouton Plateau",
    "body": "moon",
    "top3": [
-    "Roter Kamm Impact Crater (Namibia)",
-    "Nyamulagira Fresh Basalt Flows (DRC)",
-    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)"
+    "Sossusvlei Ferric Dunes (Namibia)",
+    "Tabernas Arid Badlands (Spain)",
+    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)"
    ],
    "control_ranks": [
-    28,
+    53,
     54,
     55,
     56,
@@ -221,8 +222,8 @@
     59,
     60
    ],
-   "best_control_rank": 28,
-   "benchmark_median_rank": 19.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 15.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -232,10 +233,10 @@
    "top3": [
     "Atacama Yungay Hyper-Arid Core (Chile)",
     "Lanzarote Basalt Tubes (Canary Islands, Spain)",
-    "Al Wahbah Maar Crater (Saudi Arabia)"
+    "Sossusvlei Ferric Dunes (Namibia)"
    ],
    "control_ranks": [
-    34,
+    53,
     54,
     55,
     56,
@@ -244,8 +245,8 @@
     59,
     60
    ],
-   "best_control_rank": 34,
-   "benchmark_median_rank": 12.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 18.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -253,12 +254,12 @@
    "name": "Artemis III: Nobile Rim 2",
    "body": "moon",
    "top3": [
-    "Pisgah Crater & Lava Field (California, USA)",
-    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
-    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)"
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Sossusvlei Ferric Dunes (Namibia)"
    ],
    "control_ranks": [
-    22,
+    53,
     54,
     55,
     56,
@@ -267,8 +268,8 @@
     59,
     60
    ],
-   "best_control_rank": 22,
-   "benchmark_median_rank": 25.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 21.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -276,12 +277,12 @@
    "name": "Artemis III: de Gerlache Rim 2",
    "body": "moon",
    "top3": [
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
+    "Atacama Yungay Hyper-Arid Core (Chile)",
     "Sossusvlei Ferric Dunes (Namibia)",
-    "Atacama Yungay Hyper-Arid Core (Chile)"
+    "Lanzarote Basalt Tubes (Canary Islands, Spain)"
    ],
    "control_ranks": [
-    29,
+    53,
     54,
     55,
     56,
@@ -290,9 +291,9 @@
     59,
     60
    ],
-   "best_control_rank": 29,
-   "benchmark_median_rank": 10.0,
-   "top5_kept_under_weight_changes": 4
+   "best_control_rank": 53,
+   "benchmark_median_rank": 18.0,
+   "top5_kept_under_weight_changes": 5
   },
   {
    "target": "moon_a3_slater_plain",
@@ -300,11 +301,11 @@
    "body": "moon",
    "top3": [
     "Roter Kamm Impact Crater (Namibia)",
-    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
-    "Richat Eye Structure (Mauritania)"
+    "Richat Eye Structure (Mauritania)",
+    "Chajnantor Cold Plateau (Atacama, Chile)"
    ],
    "control_ranks": [
-    26,
+    53,
     54,
     55,
     56,
@@ -313,8 +314,8 @@
     59,
     60
    ],
-   "best_control_rank": 26,
-   "benchmark_median_rank": 21.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 19.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -322,12 +323,12 @@
    "name": "Shackleton Crater Rim",
    "body": "moon",
    "top3": [
+    "Atacama Yungay Hyper-Arid Core (Chile)",
     "Mauna Kea Volcanic Tephra (Hawaii, USA)",
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
-    "Mount Etna Upper Ash Slopes (Italy)"
+    "Al Wahbah Maar Crater (Saudi Arabia)"
    ],
    "control_ranks": [
-    30,
+    53,
     54,
     55,
     56,
@@ -336,8 +337,8 @@
     59,
     60
    ],
-   "best_control_rank": 30,
-   "benchmark_median_rank": 15.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 22.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -346,11 +347,11 @@
    "body": "moon",
    "top3": [
     "Sossusvlei Ferric Dunes (Namibia)",
-    "Nyamulagira Fresh Basalt Flows (DRC)",
-    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
+    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)"
    ],
    "control_ranks": [
-    27,
+    53,
     54,
     55,
     56,
@@ -359,9 +360,9 @@
     59,
     60
    ],
-   "best_control_rank": 27,
-   "benchmark_median_rank": 13.0,
-   "top5_kept_under_weight_changes": 4
+   "best_control_rank": 53,
+   "benchmark_median_rank": 15.5,
+   "top5_kept_under_weight_changes": 5
   },
   {
    "target": "moon_faustini_rim",
@@ -369,11 +370,11 @@
    "body": "moon",
    "top3": [
     "Haughton Impact Crater (Devon Island, Canada)",
-    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)",
+    "Roter Kamm Impact Crater (Namibia)",
     "Chajnantor Cold Plateau (Atacama, Chile)"
    ],
    "control_ranks": [
-    20,
+    53,
     54,
     55,
     56,
@@ -382,8 +383,8 @@
     59,
     60
    ],
-   "best_control_rank": 20,
-   "benchmark_median_rank": 22.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 26.0,
    "top5_kept_under_weight_changes": 5
   },
   {
@@ -392,11 +393,11 @@
    "body": "moon",
    "top3": [
     "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Nyamulagira Fresh Basalt Flows (DRC)",
-    "Richat Eye Structure (Mauritania)"
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)",
+    "Sossusvlei Ferric Dunes (Namibia)"
    ],
    "control_ranks": [
-    34,
+    53,
     54,
     55,
     56,
@@ -405,21 +406,21 @@
     59,
     60
    ],
-   "best_control_rank": 34,
-   "benchmark_median_rank": 15.0,
-   "top5_kept_under_weight_changes": 3
+   "best_control_rank": 53,
+   "benchmark_median_rank": 16.0,
+   "top5_kept_under_weight_changes": 5
   },
   {
    "target": "moon_aristarchus_plateau",
    "name": "Aristarchus Plateau (Vallis Schr\u00f6teri)",
    "body": "moon",
    "top3": [
-    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
-    "Pisgah Crater & Lava Field (California, USA)",
-    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
+    "Simpson Red Ferric Plains (Australia)",
+    "Qaidam Basin Yardangs (Tibetan Plateau, China)",
+    "Makgadikgadi Salt Pan (Botswana)"
    ],
    "control_ranks": [
-    8,
+    53,
     54,
     55,
     56,
@@ -428,8 +429,8 @@
     59,
     60
    ],
-   "best_control_rank": 8,
-   "benchmark_median_rank": 26.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -438,11 +439,11 @@
    "body": "moon",
    "top3": [
     "Harrat Khaybar Lava Tubes (Saudi Arabia)",
-    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)",
-    "Pisgah Crater & Lava Field (California, USA)"
+    "Makgadikgadi Salt Pan (Botswana)",
+    "Haughton Impact Crater (Devon Island, Canada)"
    ],
    "control_ranks": [
-    12,
+    53,
     54,
     55,
     56,
@@ -451,21 +452,21 @@
     59,
     60
    ],
-   "best_control_rank": 12,
-   "benchmark_median_rank": 25.0,
-   "top5_kept_under_weight_changes": 5
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "moon_schrodinger_basin",
    "name": "Schr\u00f6dinger Peak-Ring Basin",
    "body": "moon",
    "top3": [
-    "Bardenas Reales Clay Badlands (Spain)",
-    "Pisgah Crater & Lava Field (California, USA)",
-    "Dasht-e Lut Hyper-Arid Yardangs (Iran)"
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)"
    ],
    "control_ranks": [
-    13,
+    53,
     54,
     55,
     56,
@@ -474,21 +475,21 @@
     59,
     60
    ],
-   "best_control_rank": 13,
-   "benchmark_median_rank": 26.0,
-   "top5_kept_under_weight_changes": 5
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "moon_peary_rim",
    "name": "Peary Crater North Pole Rim",
    "body": "moon",
    "top3": [
-    "Sossusvlei Ferric Dunes (Namibia)",
-    "Tabernas Arid Badlands (Spain)",
-    "Atacama Yungay Hyper-Arid Core (Chile)"
+    "Roter Kamm Impact Crater (Namibia)",
+    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
+    "Richat Eye Structure (Mauritania)"
    ],
    "control_ranks": [
-    31,
+    53,
     54,
     55,
     56,
@@ -497,21 +498,21 @@
     59,
     60
    ],
-   "best_control_rank": 31,
-   "benchmark_median_rank": 10.0,
-   "top5_kept_under_weight_changes": 4
+   "best_control_rank": 53,
+   "benchmark_median_rank": 22.0,
+   "top5_kept_under_weight_changes": 5
   },
   {
    "target": "moon_von_karman",
    "name": "Von K\u00e1rm\u00e1n Crater (South Pole-Aitken)",
    "body": "moon",
    "top3": [
-    "Dasht-e Lut Hyper-Arid Yardangs (Iran)",
-    "Pisgah Crater & Lava Field (California, USA)",
-    "Harrat Khaybar Lava Tubes (Saudi Arabia)"
+    "Simpson Red Ferric Plains (Australia)",
+    "Qaidam Basin Yardangs (Tibetan Plateau, China)",
+    "Makgadikgadi Salt Pan (Botswana)"
    ],
    "control_ranks": [
-    8,
+    53,
     54,
     55,
     56,
@@ -520,21 +521,21 @@
     59,
     60
    ],
-   "best_control_rank": 8,
-   "benchmark_median_rank": 26.0,
-   "top5_kept_under_weight_changes": 4
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
+   "top5_kept_under_weight_changes": 5
   },
   {
    "target": "mars_jezero_crater",
    "name": "Jezero Crater Delta",
    "body": "mars",
    "top3": [
-    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)",
-    "Bardenas Reales Clay Badlands (Spain)",
-    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)"
    ],
    "control_ranks": [
-    17,
+    53,
     54,
     55,
     56,
@@ -543,8 +544,8 @@
     59,
     60
    ],
-   "best_control_rank": 17,
-   "benchmark_median_rank": 26.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -552,12 +553,12 @@
    "name": "Arcadia Planitia Ice Plains",
    "body": "mars",
    "top3": [
-    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
-    "Aouelloul Impact Crater (Mauritania)",
-    "Bardenas Reales Clay Badlands (Spain)"
+    "Qaidam Basin Yardangs (Tibetan Plateau, China)",
+    "Simpson Red Ferric Plains (Australia)",
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)"
    ],
    "control_ranks": [
-    11,
+    53,
     54,
     55,
     56,
@@ -566,7 +567,7 @@
     59,
     60
    ],
-   "best_control_rank": 11,
+   "best_control_rank": 53,
    "benchmark_median_rank": 25.5,
    "top5_kept_under_weight_changes": 5
   },
@@ -575,12 +576,12 @@
    "name": "Gale Crater (Mount Sharp Slopes)",
    "body": "mars",
    "top3": [
-    "Haughton Impact Crater (Devon Island, Canada)",
-    "Chajnantor Cold Plateau (Atacama, Chile)",
-    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
+    "Richat Eye Structure (Mauritania)",
+    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)",
+    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)"
    ],
    "control_ranks": [
-    15,
+    53,
     54,
     55,
     56,
@@ -589,21 +590,21 @@
     59,
     60
    ],
-   "best_control_rank": 15,
-   "benchmark_median_rank": 25.0,
-   "top5_kept_under_weight_changes": 5
+   "best_control_rank": 53,
+   "benchmark_median_rank": 24.5,
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "mars_oxia_planum",
    "name": "Oxia Planum Clay Basin",
    "body": "mars",
    "top3": [
-    "Haughton Impact Crater (Devon Island, Canada)",
-    "Chajnantor Cold Plateau (Atacama, Chile)",
-    "Makgadikgadi Salt Pan (Botswana)"
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
+    "Chajnantor Cold Plateau (Atacama, Chile)"
    ],
    "control_ranks": [
-    13,
+    53,
     54,
     55,
     56,
@@ -612,8 +613,8 @@
     59,
     60
    ],
-   "best_control_rank": 13,
-   "benchmark_median_rank": 26.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
    "top5_kept_under_weight_changes": 5
   },
   {
@@ -621,12 +622,12 @@
    "name": "Mawrth Vallis Outflow Channel",
    "body": "mars",
    "top3": [
-    "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Roter Kamm Impact Crater (Namibia)",
-    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)"
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
    ],
    "control_ranks": [
-    32,
+    53,
     54,
     55,
     56,
@@ -635,8 +636,8 @@
     59,
     60
    ],
-   "best_control_rank": 32,
-   "benchmark_median_rank": 17.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 26.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -644,12 +645,12 @@
    "name": "Hellas Planitia Deep Basin",
    "body": "mars",
    "top3": [
-    "Pisgah Crater & Lava Field (California, USA)",
     "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
-    "Roter Kamm Impact Crater (Namibia)"
+    "Pisgah Crater & Lava Field (California, USA)",
+    "Aouelloul Impact Crater (Mauritania)"
    ],
    "control_ranks": [
-    25,
+    53,
     54,
     55,
     56,
@@ -658,8 +659,8 @@
     59,
     60
    ],
-   "best_control_rank": 25,
-   "benchmark_median_rank": 23.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -667,12 +668,12 @@
    "name": "Utopia Planitia Scalloped Ice",
    "body": "mars",
    "top3": [
-    "Haughton Impact Crater (Devon Island, Canada)",
-    "Chajnantor Cold Plateau (Atacama, Chile)",
-    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
+    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
+    "Roter Kamm Impact Crater (Namibia)",
+    "Pisgah Crater & Lava Field (California, USA)"
    ],
    "control_ranks": [
-    14,
+    53,
     54,
     55,
     56,
@@ -681,8 +682,8 @@
     59,
     60
    ],
-   "best_control_rank": 14,
-   "benchmark_median_rank": 27.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 28.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -690,12 +691,12 @@
    "name": "Valles Marineris (Melas Chasma)",
    "body": "mars",
    "top3": [
-    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
-    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
-    "Dallol Danakil Salt/Sulfur Flats (Ethiopia)"
+    "Aouelloul Impact Crater (Mauritania)",
+    "Bardenas Reales Clay Badlands (Spain)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
    ],
    "control_ranks": [
-    16,
+    53,
     54,
     55,
     56,
@@ -704,8 +705,8 @@
     59,
     60
    ],
-   "best_control_rank": 16,
-   "benchmark_median_rank": 25.0,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -714,11 +715,11 @@
    "body": "mars",
    "top3": [
     "Haughton Impact Crater (Devon Island, Canada)",
-    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
-    "Makgadikgadi Salt Pan (Botswana)"
+    "Hanksville Clay-Sulfate Badlands (Utah, USA)",
+    "Chajnantor Cold Plateau (Atacama, Chile)"
    ],
    "control_ranks": [
-    5,
+    53,
     54,
     55,
     56,
@@ -727,21 +728,21 @@
     59,
     60
    ],
-   "best_control_rank": 5,
+   "best_control_rank": 53,
    "benchmark_median_rank": 27.5,
-   "top5_kept_under_weight_changes": 5
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "mars_phoenix_polar",
    "name": "Vastitas Borealis (North Polar Plains)",
    "body": "mars",
    "top3": [
-    "McMurdo Dry Valleys (Antarctica)",
-    "Mount Etna Upper Ash Slopes (Italy)",
-    "Atacama Yungay Hyper-Arid Core (Chile)"
+    "Haughton Impact Crater (Devon Island, Canada)",
+    "Chajnantor Cold Plateau (Atacama, Chile)",
+    "Makgadikgadi Salt Pan (Botswana)"
    ],
    "control_ranks": [
-    35,
+    53,
     54,
     55,
     56,
@@ -750,8 +751,8 @@
     59,
     60
    ],
-   "best_control_rank": 35,
-   "benchmark_median_rank": 18.5,
+   "best_control_rank": 53,
+   "benchmark_median_rank": 27.5,
    "top5_kept_under_weight_changes": 5
   }
  ]

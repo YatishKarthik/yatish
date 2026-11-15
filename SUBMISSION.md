@@ -6,15 +6,15 @@ Everything below matches the numbers in `data/processed/validation.json` and the
 Celestra
 
 ## High-level summary (for the project page, ~150 words)
-Before hardware goes to the Moon or Mars it is tested on Earth, but choosing where is mostly expert judgement. Celestra ranks 60 Earth sites against NASA's nine Artemis III candidate regions, nine other Moon sites and ten Mars sites, using measured data: terrain from Copernicus DEM, LRO LOLA, Kaguya and MRO CTX; composition from Sentinel-2; climate from NASA POWER. Because an analog is only useful for a particular test, it ranks the best Earth site for each of seven hardware tests and says plainly when Earth physics cannot stand in. A horizon model on LOLA terrain gives sunlight, Earth visibility and peak temperature at each polar site, and chose our landing point inside each Artemis region. Every score is broken down by measurement, and every value says where it came from. We tested it honestly: unsuitable control sites rank at a median of 56.5 of 60, and a plain distance does as well as our weights. Anyone can also click any point on the Moon or Mars and get a live ranking.
+Before hardware goes to the Moon or Mars it is tested on Earth, but choosing where is mostly expert judgement. Celestra ranks 60 Earth sites against NASA's nine Artemis III candidate regions, nine other Moon sites and ten Mars sites using only the challenge's listed resources: LRO LOLA terrain and Diviner temperatures and MRO HiRISE terrain from NASA PDS; MODIS land-surface temperature and vegetation from NASA Worldview; Copernicus DEM and Sentinel-2 from ESA. A measurement is compared only when it exists for both sites, so nothing typical or invented enters a score. Because an analog is only useful for a particular test, Celestra ranks the best Earth site for each of seven hardware tests and says when Earth physics cannot stand in. It models sunlight at the lunar poles from LOLA, explains every score, and lets you fly the same mission on both worlds. Checked honestly: all eight unsuitable control sites rank in the bottom half for every target.
 
 ## Demo: 7 slides
 1. **The problem.** Hardware is proven on Earth first; analog sites are picked by experience, case by case. Artemis III will land at one of nine south-pole regions. Which Earth site should each rover, lander and drill be tested at?
 2. **What Celestra does.** Pick an Artemis III region (or any point) → ranked Earth sites → best site *per test* → plan the campaign (season, low-sun months, permits) → fly the mission on both worlds. Screenshot: Moon globe with the amber Artemis pins, then the By Use tab.
-3. **Real data, labelled.** The README data table. Measured terrain for all 88 sites, Sentinel-2 and NASA POWER for all 60 Earth sites, THEMIS night IR for Mars. Composition on the Moon and Mars is typical for the rock class, and the app says so on every number.
+3. **Real data, only from the listed resources.** The README data table: PDS LOLA, Diviner and HiRISE; Worldview MODIS LST and NDVI; Copernicus DEM and Sentinel-2. Composition on the Moon and Mars, and Mars temperatures, are not measured in our data, so they are shown but not scored.
 4. **Sunlight at the pole.** Our LOLA horizon model: Sun and Earth visibility, never-lit ground, modelled peak temperature. Check against Malapert's summit (86% sunlit). Table of the nine regions. Our point inside each region is an estimate; NASA's outline was not available.
 5. **How the score works, and why each match.** 14 features → standardised → four groups → bare-ground rule. The "Why this match" bars for one pair. Terrain Twins: the two 2 km patches side by side.
-6. **Does it work? (honest version).** Controls median 56.5/60 (33 without the bare-ground rule). Benchmarks median 22. A plain unweighted distance does as well as our weights, so the strength is the measured features and the rule, not our tuning. Thresholds and weights moved: results hold. What this cannot show yet.
+6. **Does it work? (honest version).** All 8 unsuitable controls rank in the bottom half for every target (median 56.5/60; 24 without the bare-ground rule). Agency benchmarks median 25. A plain unweighted distance performs about the same as our weights, so the strength is the measured data and the bare-ground rule. Thresholds and weights moved: results hold. What this cannot show yet.
 7. **What transfers, and next steps.** By Use: traction and landing transfer; plume and motor cooling never do in 1 bar air; low-sun camera tests only in certain months. Next: Diviner/TES temperatures, M3/CRISM composition, NASA region outlines, validation against campaigns that later flew.
 
 ## Demo: 30-second video (shot list)
@@ -30,26 +30,24 @@ Before hardware goes to the Moon or Mars it is tested on Earth, but choosing whe
 Record at 1920×1080 in dark mode; the app's walkthrough can stay off for the recording.
 
 ## NASA data used
-* LRO LOLA altimeter returns (RDR), via USGS Astrogeology cloud-optimised point clouds: Moon terrain.
-* MRO CTX stereo DTMs (NASA/JPL/MSSS, USGS): Mars terrain.
-* NASA POWER climatology (MERRA-2): Earth temperatures.
-* Mars Odyssey THEMIS night-IR controlled mosaics (NASA/JPL/ASU, USGS): Mars night-time surface character.
+* LRO LOLA gridded DEMs (LRO-L-LOLA-4-GDR), NASA PDS Geosciences Node: Moon terrain and the polar sunlight model.
+* LRO Diviner Global Cumulative Products, NASA PDS Geosciences Node: Moon surface temperatures.
+* MRO HiRISE stereo DTMs, NASA PDS: Mars terrain.
+* MODIS Terra monthly land surface temperature and NDVI, NASA Worldview (GIBS): Earth surface temperatures and vegetation.
 * NASA Artemis III candidate landing regions (October 2024 update): Moon targets.
 
 ## Space agency partner data used
-* ESA Copernicus DEM GLO-30: Earth terrain.
-* ESA Copernicus Sentinel-2 L2A: Earth surface composition, vegetation and water.
-* JAXA SELENE (Kaguya) Terrain Camera DTMs, via USGS: Moon terrain at Marius Hills, Aristarchus and Von Kármán.
+* ESA Copernicus DEM GLO-30 (the Copernicus Data Space Ecosystem product, read from its public mirror): Earth terrain.
+* ESA Copernicus Sentinel-2 L2A (same note): Earth surface composition and open water.
 
 ## Use of AI (paste into the form)
 We used Anthropic's Claude (through Claude Code) extensively to write and refactor code: the data-fetching pipeline, sunlight model, feature extraction, validation script, web frontend, 3D simulator and documentation. Team members chose the approach, site registry and scoring design, reviewed the outputs and verified results by running the pipeline. No AI-generated images, video or audio are used; all terrain and measurements come from the instrument products listed. No NASA or agency logos appear in the project.
 
 ## References
-* Copernicus DEM GLO-30, ESA/Airbus, via AWS Open Data (copernicus-dem-30m).
-* Sentinel-2 L2A COGs, Element 84 / AWS Open Data (sentinel-cogs).
-* NASA POWER API, power.larc.nasa.gov.
-* USGS Astrogeology analysis-ready data on AWS (astrogeo-ard): LOLA RDR COPC, CTX DTMs, Kaguya TC DTMs.
-* Smith et al., LOLA instrument papers; Malin et al., CTX; Haruyama et al., Kaguya TC (cite in slide 3 footer).
+* NASA PDS Geosciences Node: LRO LOLA GDR (Smith et al., LOLA team, NASA GSFC) and LRO Diviner derived products (Paige et al.; Williams et al. global cumulative products).
+* NASA PDS / HiRISE team, University of Arizona: HiRISE DTMs (McEwen et al.).
+* NASA Worldview / GIBS: MODIS Terra L3 monthly land surface temperature and NDVI layers, with their published colour maps.
+* Copernicus DEM GLO-30 and Copernicus Sentinel-2 L2A (ESA / Copernicus Data Space Ecosystem).
 * NASA (Oct 2024), "NASA Provides Update on Artemis III Moon Landing Regions"; NASA (Aug 2022), "NASA Identifies Candidate Regions for Landing Next Americans on Moon".
 * Foucher, F. et al. (2021), Definition and use of functional analogues in planetary exploration, Planetary and Space Science 197, 105162.
 * Mazarico, E. et al. (2011), Illumination conditions of the lunar polar regions using LOLA topography, Icarus 211 (for comparison with our simpler model).

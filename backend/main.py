@@ -66,7 +66,7 @@ def match_target_site(target_id: str, top_k: int = 60):
 
 @app.get("/api/validation")
 def get_validation():
-    """Results of data-pipeline/03_validate.py: controls, benchmarks, weight sensitivity, ensemble calibration."""
+    """Results of data-pipeline/03_validate.py: controls, benchmarks, baseline, sensitivity, score range."""
     import json
     path = ROOT / "data" / "processed" / "validation.json"
     if not path.exists():
@@ -90,7 +90,7 @@ def field_brief(target_id: str):
 
 @app.get("/api/custom_target")
 def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
-    """Rank Earth sites for any Moon or Mars point: terrain fetched live (LOLA / Kaguya / CTX), 10-90 s."""
+    """Rank Earth sites for any Moon or Mars point: terrain fetched live from NASA PDS (LOLA / HiRISE), 10-90 s."""
     from backend import custom_target as ct
     ok, why = ct.available()
     if not ok:

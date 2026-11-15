@@ -1,19 +1,21 @@
 """
 Fetches the real measurements Celestra is built on and caches them in data/real/<site_id>.json.
+Only sources from the challenge's resource list are used:
 
-  Earth  elevation  : Copernicus DEM GLO-30 (ESA)            copernicus-dem-30m on AWS Open Data
-  Earth  spectra    : Sentinel-2 L2A surface reflectance (ESA) sentinel-cogs on AWS Open Data
-  Earth  climate    : NASA POWER climatology (MERRA-2 2 m air temperature)  power.larc.nasa.gov
-  Moon   elevation  : NASA LRO LOLA altimeter returns (RDR), gridded here    astrogeo-ard on AWS (USGS)
-  Moon   elevation  : USGS Kaguya TC stereo DTMs (JAXA SELENE) where one covers a low-latitude site
-  Mars   elevation  : USGS CTX stereo DTMs (NASA MRO)          astrogeo-ard on AWS (USGS)
+  Earth  elevation   : Copernicus DEM GLO-30 (ESA Copernicus; the same product as on the Copernicus Data Space
+                       Ecosystem, read from its public cloud-optimised mirror because CDSE downloads need a login)
+  Earth  spectra     : Copernicus Sentinel-2 L2A surface reflectance (ESA Copernicus; same note as above)
+  Earth  temperature : MODIS Terra monthly land surface temperature, NASA Worldview / GIBS
+  Moon   elevation   : LRO LOLA gridded DEMs, NASA PDS Geosciences Node
+  Moon   temperature : LRO Diviner global cumulative products, NASA PDS Geosciences Node
+  Mars   elevation   : MRO HiRISE stereo DTMs, NASA PDS
 
-Each cache file records exactly which product it came from and, where the nearest available product does
-not sit on the nominal site, how far away it is. Nothing here invents a value: a site with no usable product
-is written with "status": "missing" and the extractor keeps it out of the real-data claims.
+Each cache file records exactly which product it came from and, where the nearest product does not sit on the
+nominal site, how far away it is. Nothing here invents a value: a site with no usable product is written with
+"status": "missing".
 
-Run once (about 15-25 minutes, mostly network):  python data-pipeline/02_fetch_real_data.py
-Then rebuild features:                         python data-pipeline/01_fetch_and_extract.py
+Run (about 20-30 minutes, mostly network):  python data-pipeline/02_fetch_real_data.py
+Then rebuild features:                      python data-pipeline/01_fetch_and_extract.py
 """
 import json
 import math
@@ -29,7 +31,7 @@ import requests
 from scipy.interpolate import griddata
 
 os.environ.setdefault("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
-os.environ.setdefault("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", ".tif")
+os.environ.setdefault("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", ".tif,.img,.IMG,.lbl,.LBL")
 os.environ.setdefault("GDAL_HTTP_MAX_RETRY", "3")
 if Path("/root/.ccr/ca-bundle.crt").exists():
     os.environ.setdefault("CURL_CA_BUNDLE", "/root/.ccr/ca-bundle.crt")
@@ -37,6 +39,8 @@ if Path("/root/.ccr/ca-bundle.crt").exists():
 import rasterio  # noqa: E402
 from rasterio.warp import transform as warp_transform  # noqa: E402
 from rasterio.windows import from_bounds  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sources_listed import lola_terrain, diviner_temps, hirise_terrain, modis_lst  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = json.loads((ROOT / "data" / "config" / "sites.json").read_text(encoding="utf-8"))
@@ -45,7 +49,6 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 GRID = 128
 EXTENT_M = 2000.0           # every tile covers 2 km x 2 km around the site
-S3_ARD = "https://astrogeo-ard.s3-us-west-2.amazonaws.com/"
 S3_S2 = "https://sentinel-cogs.s3.us-west-2.amazonaws.com/"
 MOON_R = 1737400.0
 MARS_R = 3396190.0
@@ -202,31 +205,20 @@ def sentinel2(lat: float, lon: float) -> dict:
     raise RuntimeError("no Sentinel-2 scene with a clear, full window")
 
 
-def nasa_power(lat: float, lon: float) -> dict:
-    """Typical temperatures from NASA POWER climatology. In this product T2M_MAX/T2M_MIN are record extremes,
-    so typical daily highs and lows are taken as the monthly mean plus or minus half the mean daily range."""
-    url = ("https://power.larc.nasa.gov/api/temporal/climatology/point"
-           f"?parameters=T2M,T2M_RANGE&community=RE&longitude={lon:.4f}&latitude={lat:.4f}&format=JSON")
-    p = requests.get(url, timeout=60).json()["properties"]["parameter"]
-    t, rg = p["T2M"], p["T2M_RANGE"]
-    months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    highs = {m: t[m] + rg[m] / 2 for m in months}
-    lows = {m: t[m] - rg[m] / 2 for m in months}
-    return {
-        "dataset": "NASA POWER climatology (MERRA-2), 2 m air temperature",
-        "temp_max_c": round(max(highs.values()), 1),   # typical daily high in the warmest month
-        "temp_min_c": round(min(lows.values()), 1),    # typical daily low in the coldest month
-        "temp_delta_c": round(float(rg["ANN"]), 1),    # annual mean day-night range
-        "annual_mean_c": round(float(t["ANN"]), 1),
-    }
-
-
 def fetch_earth(site: dict) -> None:
     sid = site["id"]
     f = OUT / f"{sid}.json"
     if f.exists():
         rec = json.loads(f.read_text())
         if rec.get("spectra", {}).get("scl_rule") == 2:
+            if "MODIS" not in rec.get("climate", {}).get("source", ""):
+                try:
+                    rec["climate"] = modis_lst(float(site["lat"]), float(site["lon"]))
+                except Exception as e:
+                    rec["climate"] = {"status": "missing", "error": str(e)[:200]}
+                save(sid, rec)
+                c = rec["climate"]
+                print(f"earth {sid}: MODIS LST {c.get('temp_min_c')}..{c.get('temp_max_c')} C" if "temp_max_c" in c else f"earth {sid}: LST missing ({c.get('error')})", flush=True)
             return
         try:   # older cache: redo only the spectra, now with cloud and water masking
             rec["spectra"] = {"dataset": "Sentinel-2 L2A", **sentinel2(float(site["lat"]), float(site["lon"]))}
@@ -251,111 +243,56 @@ def fetch_earth(site: dict) -> None:
     except Exception as e:
         rec["spectra"] = {"status": "missing", "error": str(e)[:200]}
     try:
-        rec["climate"] = nasa_power(lat, lon)
+        rec["climate"] = modis_lst(lat, lon)
     except Exception as e:
         rec["climate"] = {"status": "missing", "error": str(e)[:200]}
     save(sid, rec)
     print(f"earth {sid}: dem={'ok' if 'heights_m' in rec else 'MISSING'} s2={'ok' if 'ndvi' in rec['spectra'] else 'MISSING'} power={'ok' if 'temp_max_c' in rec['climate'] else 'MISSING'}", flush=True)
 
 
-# ---------------------------------------------------------------- Moon: LOLA altimeter returns gridded to 128 x 128
-def lola_tiles(lat: float, lon: float) -> list[str]:
-    lon360 = lon % 360.0
-    band_lo = int(math.floor(lat / 15.0) * 15)
-    band = f"{band_lo}N{band_lo + 15}N"
-    if abs(lat) > 88.5:     # near the pole the 2 km window spans many longitudes
-        lons = range(0, 360, 15)
-    else:
-        span = math.degrees(EXTENT_M / (MOON_R * max(math.cos(math.radians(lat)), 0.02)))
-        lons = sorted({int(math.floor(((lon360 + d) % 360) / 15.0) * 15) for d in (-span, 0, span)})
-    return [f"{S3_ARD}moon/lro/lola/LolaRDR_{band}_{l}E{l + 15}E.copc.laz" for l in lons]
+# ---------------------------------------------------------------- Moon (LOLA GDR + Diviner) and Mars (HiRISE), all NASA PDS
+def _finish_dem(rec: dict, h: np.ndarray, meta: dict) -> None:
+    reject_spikes(h)
+    holes = fill_holes(h)
+    rec["heights_m"] = np.round(h, 1).ravel().tolist()
+    rec["dem"] = {**meta, "hole_fraction": round(holes, 3)}
 
 
 def fetch_moon(site: dict) -> None:
-    import laspy
-    from laspy.copc import Bounds
     sid = site["id"]
-    if (OUT / f"{sid}.json").exists():
+    f = OUT / f"{sid}.json"
+    if f.exists() and "PDS" in json.loads(f.read_text()).get("dem", {}).get("dataset", ""):
         return
     lat, lon = float(site["lat"]), float(site["lon"])
-    la, lo = math.radians(lat), math.radians(lon)
-    up = np.array([math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)])
-    east = np.array([-math.sin(lo), math.cos(lo), 0.0])
-    north = np.cross(up, east)
-    c0 = up * MOON_R
-    half = EXTENT_M / 2
-    corners = [c0 + east * sx * half + north * sy * half for sx in (-1, 1) for sy in (-1, 1)]
-    corners = [p * f for p in corners for f in ((MOON_R - 12000) / MOON_R, (MOON_R + 12000) / MOON_R)]
-    mins, maxs = np.min(corners, axis=0), np.max(corners, axis=0)
-    xs, ys, hs, used = [], [], [], []
-    for url in lola_tiles(lat, lon):
-        try:
-            with laspy.CopcReader.open(url) as r:
-                hm, hx = r.header.mins, r.header.maxs
-                if np.any(hx < mins) or np.any(hm > maxs):
-                    continue
-                pts = r.query(bounds=Bounds(mins=mins, maxs=maxs))
-                if len(pts) == 0:
-                    continue
-                p = np.column_stack([np.asarray(pts.x), np.asarray(pts.y), np.asarray(pts.z)])
-                d = p - c0
-                e, n = d @ east, d @ north
-                keep = (np.abs(e) <= half) & (np.abs(n) <= half)
-                xs.append(e[keep]); ys.append(n[keep]); hs.append(np.linalg.norm(p[keep], axis=1) - MOON_R)
-                used.append(url.rsplit("/", 1)[-1])
-        except Exception as ex:
-            print(f"  {sid}: {url.rsplit('/', 1)[-1]} {str(ex)[:80]}", flush=True)
     rec = {"id": sid, "body": "moon", "lat": lat, "lon": lon, "extent_m": EXTENT_M, "grid": GRID}
-    if not xs or sum(len(a) for a in xs) < 300:
-        rec["dem"] = {"status": "missing", "error": "too few LOLA returns in the window"}
-        save(sid, rec); print(f"moon {sid}: MISSING", flush=True); return
-    e, n, hgt = np.concatenate(xs), np.concatenate(ys), np.concatenate(hs)
-    med = np.median(hgt); mad = np.median(np.abs(hgt - med)) + 1e-6
-    ok = np.abs(hgt - med) < max(1500.0, 15 * mad)
-    e, n, hgt = e[ok], n[ok], hgt[ok]
-    # LOLA spots lie along ground tracks a few hundred metres apart, and neighbouring tracks can disagree by metres
-    # to tens of metres. Gridding them straight at 15.6 m left chains of false pits along the tracks, which inflated
-    # slope and texture. So: median per 62.5 m cell (32 x 32), which damps single-track offsets,
-    # interpolate between tracks, then resample smoothly to the common 128 x 128 grid. True resolution is ~60 m.
-    from scipy.ndimage import zoom
-    LG = 32
-    col = np.clip(((e + half) / EXTENT_M * LG).astype(int), 0, LG - 1)
-    row = np.clip(((half - n) / EXTENT_M * LG).astype(int), 0, LG - 1)
-    cell = row * LG + col
-    order = np.argsort(cell, kind="stable")
-    cs, hs = cell[order], hgt[order]
-    starts = np.r_[0, np.nonzero(np.diff(cs))[0] + 1]
-    coarse = np.full(LG * LG, np.nan)
-    for a, b in zip(starts, np.r_[starts[1:], len(cs)]):
-        coarse[cs[a]] = np.median(hs[a:b])
-    coarse = coarse.reshape(LG, LG)
-    hit = float(np.isfinite(coarse).mean())
-    fill_holes(coarse)
-    grid = zoom(coarse, GRID / LG, order=3)
-    filled = 1 - hit
-    rec["heights_m"] = np.round(grid, 1).ravel().tolist()
-    rec["dem"] = {"dataset": "LRO LOLA altimeter returns (RDR), gridded", "products": used, "points": int(len(hgt)),
-                  "cells_with_returns": round(1 - filled, 3), "native_res_m": "~60 m (median of ~25 m spots per 62.5 m cell, between-track gaps interpolated)", "offset_km": 0.0}
+    try:
+        h, meta = lola_terrain(lat, lon, EXTENT_M, GRID)
+        _finish_dem(rec, h, meta)
+    except Exception as e:
+        rec["dem"] = {"status": "missing", "error": str(e)[:200]}
+    try:
+        rec["climate"] = diviner_temps(lat, lon)
+    except Exception as e:
+        rec["climate"] = {"status": "missing", "error": str(e)[:200]}
     save(sid, rec)
-    print(f"moon {sid}: {len(hgt)} LOLA returns, {100 * (1 - filled):.0f}% of cells measured", flush=True)
+    c = rec["climate"]
+    print(f"moon {sid}: {rec['dem'].get('product', 'DEM MISSING')} · Diviner {c.get('temp_min_c')}..{c.get('temp_max_c')} C", flush=True)
 
 
-# ---------------------------------------------------------------- Mars (CTX) and low-latitude Moon (Kaguya TC): stereo DTMs
-def list_prefixes(prefix: str, cache_name: str) -> list[str]:
-    path = OUT.parent / "raw" / cache_name
-    if not path.exists():
-        lines, token = [], ""
-        while True:
-            q = f"{S3_ARD}?list-type=2&delimiter=/&prefix={prefix}&max-keys=1000" + (f"&continuation-token={requests.utils.quote(token)}" if token else "")
-            r = requests.get(q, timeout=60).text
-            lines += re.findall(r"<Prefix>([^<]+/)</Prefix>", r)
-            m = re.search(r"<NextContinuationToken>([^<]+)</NextContinuationToken>", r)
-            if not m:
-                break
-            token = m.group(1)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("\n".join(lines))
-    return [p for p in path.read_text().split() if "__" in p]
+def fetch_mars(site: dict) -> None:
+    sid = site["id"]
+    f = OUT / f"{sid}.json"
+    if f.exists() and "HiRISE" in json.loads(f.read_text()).get("dem", {}).get("dataset", ""):
+        return
+    lat, lon = float(site["lat"]), float(site["lon"])
+    rec = {"id": sid, "body": "mars", "lat": lat, "lon": lon, "extent_m": EXTENT_M, "grid": GRID}
+    try:
+        h, meta = hirise_terrain(lat, lon, EXTENT_M, GRID)
+        _finish_dem(rec, h, meta)
+    except Exception as e:
+        rec["dem"] = {"status": "missing", "error": str(e)[:200]}
+    save(sid, rec)
+    print(f"mars {sid}: {rec['dem'].get('product', 'MISSING')} ({rec['dem'].get('offset_km', '?')} km from the nominal site)", flush=True)
 
 
 def great_circle_km(lat1, lon1, lat2, lon2, r_km):
@@ -363,151 +300,7 @@ def great_circle_km(lat1, lon1, lat2, lon2, r_km):
     return r_km * math.acos(max(-1.0, min(1.0, a)))
 
 
-def ctx_candidates(lat: float, lon: float) -> list[tuple[float, str]]:
-    out = []
-    for p in list_prefixes("mars/mro/ctx/controlled/usgs/", "ctx_dirs.txt"):
-        m = re.search(r"_(\d{2})([NS])(\d{3})([EW])", p)
-        if m:
-            plat = int(m.group(1)) * (1 if m.group(2) == "N" else -1)
-            plon = int(m.group(3)) * (1 if m.group(4) == "E" else -1)
-            out.append((great_circle_km(lat, lon, plat, plon, MARS_R / 1000), p))
-    return sorted(out)[:40]
-
-
-def tc_candidates(lat: float, lon: float) -> list[tuple[float, str]]:
-    out = []
-    for p in list_prefixes("moon/kaguya/terrain_camera/usgs_dtms/", "tc_dirs.txt"):
-        # TC1W2B0_01_02633N677E0608: orbit 02633, latitude 67.7 N, longitude 060.8 E
-        m = re.search(r"_\d{5}([NS])(\d{3})E(\d{4})", p)
-        if m:
-            plat = int(m.group(2)) / 10 * (1 if m.group(1) == "N" else -1)
-            plon = int(m.group(3)) / 10
-            plon = plon - 360 if plon > 180 else plon
-            out.append((great_circle_km(lat, lon, plat, plon, MOON_R / 1000), p))
-    return sorted(out)[:40]
-
-
-def dtm_urls(prefix: str) -> list[str]:
-    name = prefix.rstrip("/").split("/")[-1]
-    # three naming schemes are in use across the CTX and Kaguya archives
-    return [f"{S3_ARD}{prefix}{name}{suffix}" for suffix in ("_dtm.tif", "-DEM-geoid-adj.tif", "-DEM.tif", "_ba-aligned-DEM.tif")]
-
-
-def window_from_dtm(url: str, lat: float, lon: float) -> tuple | None:
-    """A clean 2 km window from an equirectangular sphere DTM. If the site itself is off the strip or on its
-    ragged edge, the window moves to the nearest place where the strip is fully covered, and says how far."""
-    from pyproj import CRS
-    from scipy.ndimage import distance_transform_edt
-    with rasterio.open(url) as ds:
-        crs = CRS.from_wkt(ds.crs.to_wkt())
-        if "polar" in crs.name.lower() or "stereographic" in crs.to_wkt().lower():
-            return None
-        R = crs.ellipsoid.semi_major_metre
-        half = EXTENT_M / 2
-        kx = half / math.cos(math.radians(lat))
-        cx, cy = R * math.radians(lon), R * math.radians(lat)
-        b = ds.bounds
-        turn = 2 * math.pi * R
-        cx -= turn * round((cx - (b.left + b.right) / 2) / turn)   # the copy of the site's longitude nearest the strip
-        if b.right - b.left < 2 * kx or b.top - b.bottom < 2 * half:
-            return None
-
-        def read(nx, ny):
-            w = from_bounds(nx - kx, ny - half, nx + kx, ny + half, ds.transform)
-            h = ds.read(1, window=w, out_shape=(GRID, GRID), resampling=rasterio.enums.Resampling.bilinear, boundless=True, fill_value=np.nan).astype(np.float64)
-            if ds.nodata is not None:
-                h[h == ds.nodata] = np.nan
-            h[h < -2e4] = np.nan
-            reject_spikes(h)
-            return h
-
-        h = read(cx, cy) if (b.left + kx <= cx <= b.right - kx and b.bottom + half <= cy <= b.top - half) else None
-        nx, ny = cx, cy
-        if h is None or np.mean(~np.isfinite(h)) > 0.15:
-            # coarse validity mask of the whole strip, shrunk by the window size, then the nearest good cell
-            f = max(1, int(max(ds.width, ds.height) / 900))
-            cw, ch = max(8, ds.width // f), max(8, ds.height // f)
-            ov = ds.read(1, out_shape=(ch, cw), resampling=rasterio.enums.Resampling.nearest).astype(np.float64)
-            ok = np.isfinite(ov) & (ov > -2e4)
-            if ds.nodata is not None:
-                ok &= ov != ds.nodata
-            px = (b.right - b.left) / cw
-            rad = int(math.ceil(kx * 1.15 / px))
-            ok = distance_transform_edt(np.pad(ok, 1))[1:-1, 1:-1] > rad * 1.42   # far enough inside the strip
-            del ov
-            if not ok.any():
-                return None
-            rows, cols = np.nonzero(ok)
-            xs = b.left + (cols + 0.5) * px
-            ys = b.top - (rows + 0.5) * (b.top - b.bottom) / ch
-            i = int(np.argmin(((xs - cx) * math.cos(math.radians(lat))) ** 2 + (ys - cy) ** 2))
-            nx, ny = float(xs[i]), float(ys[i])
-            h = read(nx, ny)
-            if np.mean(~np.isfinite(h)) > 0.15:
-                return None
-        off_km = math.hypot((nx - cx) * math.cos(math.radians(lat)), ny - cy) / 1000
-        return off_km, h, float(ds.res[0]), (round(math.degrees(ny / R), 3), round(((math.degrees(nx / R) + 540) % 360) - 180, 3))
-
-
-def best_dtm(candidates: list[tuple[float, str]], lat: float, lon: float) -> tuple | None:
-    best = None
-    for _, prefix in candidates:
-        for url in dtm_urls(prefix):
-            try:
-                got = window_from_dtm(url, lat, lon)
-            except Exception:
-                continue
-            if got is None:
-                break       # the file opened but does not give a clean window
-            if not best or got[0] < best[0]:
-                best = (got[0], prefix.rstrip("/").split("/")[-1], got[1], got[2], got[3])
-            break
-        if best and best[0] < 0.5:
-            break
-    return best
-
-
-def fetch_mars(site: dict) -> None:
-    sid = site["id"]
-    if (OUT / f"{sid}.json").exists() and "heights_m" in json.loads((OUT / f"{sid}.json").read_text()):
-        return
-    lat, lon = float(site["lat"]), float(site["lon"])
-    best = best_dtm(ctx_candidates(lat, lon), lat, lon)
-    rec = {"id": sid, "body": "mars", "lat": lat, "lon": lon, "extent_m": EXTENT_M, "grid": GRID}
-    if not best:
-        rec["dem"] = {"status": "missing", "error": "no CTX DTM gives a clean 2 km window near the site"}
-        save(sid, rec); print(f"mars {sid}: MISSING", flush=True); return
-    off, name, h, res, centre = best
-    holes = fill_holes(h)
-    rec["heights_m"] = np.round(h, 1).ravel().tolist()
-    rec["dem"] = {"dataset": "USGS CTX stereo DTM (NASA MRO)", "product": name, "native_res_m": round(res, 1),
-                  "offset_km": round(off, 1), "window_centre": {"lat": centre[0], "lon": centre[1]}, "hole_fraction": round(holes, 3)}
-    save(sid, rec)
-    print(f"mars {sid}: {name} ({off:.1f} km from the nominal site)", flush=True)
-
-
-def fetch_moon_any(site: dict) -> None:
-    """Kaguya stereo DTM where one exists (better than sparse LOLA tracks away from the poles); LOLA otherwise."""
-    sid = site["id"]
-    if (OUT / f"{sid}.json").exists():
-        rec = json.loads((OUT / f"{sid}.json").read_text())
-        if rec.get("dem", {}).get("dataset", "").startswith("USGS Kaguya") or rec.get("dem", {}).get("cells_with_returns", 0) >= 0.25:
-            return
-    lat, lon = float(site["lat"]), float(site["lon"])
-    if abs(lat) < 76:
-        best = best_dtm(tc_candidates(lat, lon), lat, lon)
-        if best and best[0] <= 30:
-            off, name, h, res, centre = best
-            holes = fill_holes(h)
-            rec = {"id": sid, "body": "moon", "lat": lat, "lon": lon, "extent_m": EXTENT_M, "grid": GRID,
-                   "heights_m": np.round(h, 1).ravel().tolist(),
-                   "dem": {"dataset": "USGS Kaguya TC stereo DTM (JAXA SELENE)", "product": name, "native_res_m": round(res, 1),
-                           "offset_km": round(off, 1), "window_centre": {"lat": centre[0], "lon": centre[1]}, "hole_fraction": round(holes, 3)}}
-            save(sid, rec)
-            print(f"moon {sid}: Kaguya {name} ({off:.1f} km from the nominal site)", flush=True)
-            return
-    (OUT / f"{sid}.json").unlink(missing_ok=True)
-    fetch_moon(site)
+fetch_moon_any = fetch_moon   # kept for the live custom-target endpoint
 
 
 def main() -> None:
@@ -519,10 +312,10 @@ def main() -> None:
     mars = pick([t for t in CONFIG["targets"] if t["body"] == "mars"])
     with ThreadPoolExecutor(max_workers=6) as ex:
         list(ex.map(fetch_earth, earth))
-    with ThreadPoolExecutor(max_workers=2) as ex:
+    with ThreadPoolExecutor(max_workers=3) as ex:
         list(ex.map(fetch_mars, mars))
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        list(ex.map(fetch_moon_any, moon))
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        list(ex.map(fetch_moon, moon))
     print(f"done in {time.time() - t0:.0f} s; cache in {OUT}")
 
 

@@ -33,7 +33,6 @@ const ROVERS: RoverSpec[] = [
 ];
 
 const WORLD_SIZE = 96;
-const SCALE = WORLD_SIZE / 60;   // the play area was enlarged; heights scale with it so slopes stay the same
 const MASS_KG = 650;
 const WAYPOINTS = 5;
 const ROCKS = 6;
@@ -64,14 +63,16 @@ function rawHeight(grid: number[], wx: number, wz: number): number {
   return (h00 * (1 - tx) + h10 * tx) * (1 - ty) + (h01 * (1 - tx) + h11 * tx) * ty;
 }
 /* height and slope of the surface as drawn (including the flattened pad), so physics and picture agree */
-function sample(grid: number[], relief: number, wx: number, wz: number): { h: number; slopeDeg: number } {
+function sample(grid: number[], relief: number, wx: number, wz: number, ve = 1): { h: number; slopeDeg: number } {
   if (!grid || grid.length !== 128 * 128 || Math.abs(wx) > WORLD_SIZE / 2 || Math.abs(wz) > WORLD_SIZE / 2) return { h: 0, slopeDeg: 0 };
   const H = (x: number, z: number) => shapeEdges(grid, x, z, rawHeight(grid, x, z)) * relief;
   const d = WORLD_SIZE / 127;
   const h = H(wx, wz);
   const grad = Math.hypot(H(wx + d, wz) - H(wx - d, wz), H(wx, wz + d) - H(wx, wz - d)) / (2 * d);
-  return { h, slopeDeg: THREE.MathUtils.radToDeg(Math.atan(grad)) };
+  return { h, slopeDeg: THREE.MathUtils.radToDeg(Math.atan(grad / ve)) };   // slope of the real ground, whatever the drawing exaggeration
 }
+const LANDER_FOOT = 0.6;   // lander origin above its footpads
+const LANDER_FEET: [number, number][] = [[0, -1.0], [-0.87, 0.5], [0.87, 0.5]];   // the three footpads of the model, in metres from its centre
 
 /* ---------- procedural textures ---------- */
 function noiseCanvas(seed: number, base: string, grain: string, speck: string, size = 512): HTMLCanvasElement {
@@ -123,9 +124,9 @@ function slopeColor(deg: number, out: THREE.Color) {
    Vacuum: radiative balance, T = Tmax·cos(i)^¼ in kelvin, shadows fall to the night temperature (huge contrast).
    Air: convection evens it out (smaller contrast, shadows stay milder). */
 export interface ThermalState { temps: Float32Array | null; lo: number; hi: number }
-export interface SunState { dir: THREE.Vector3; t: number }
-function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermalRef, tminC, tmaxC, airy }: { siteId: string; grid: number[] | null; reliefM: number; body: Body; mineral: string; sensor: Sensor; sunRef: React.MutableRefObject<SunState>; thermalRef: React.MutableRefObject<ThermalState>; tminC: number; tmaxC: number; airy: number }) {
-  const relief = Math.max(0.8, reliefM / 36) * SCALE;
+export interface SunState { dir: THREE.Vector3; t: number; exhaust: { x: number; z: number; p: number } }
+function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermalRef, tminC, tmaxC, airy, ve }: { siteId: string; grid: number[] | null; reliefM: number; body: Body; mineral: string; sensor: Sensor; sunRef: React.MutableRefObject<SunState>; thermalRef: React.MutableRefObject<ThermalState>; tminC: number; tmaxC: number; airy: number; ve: number }) {
+  const relief = (reliefM / 2000) * WORLD_SIZE * ve;   // the 2 km tile drawn at true proportions, times the chosen vertical exaggeration
   const pal = useMemo(() => groundPalette(body, mineral), [body, mineral]);
   const map = useMemo(() => tex(noiseCanvas(hashString(siteId), pal.base, pal.grain, pal.speck), 22), [siteId, pal]);
   const thermalMat = useMemo(() => makeTerrainThermalMaterial(), []);
@@ -140,14 +141,15 @@ function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermal
       const steep = THREE.MathUtils.clamp((1 - n.getY(i)) * 4.5, 0, 1);
       tmp.copy(low).lerp(mid, grid[i] || 0).lerp(rock, steep * 0.85).multiplyScalar(1.35);
       colors.set([tmp.r, tmp.g, tmp.b], i * 3);
-      slopeColor(THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(n.getY(i), -1, 1))), tmp);
+      const drawn = Math.acos(THREE.MathUtils.clamp(n.getY(i), -1, 1));
+      slopeColor(THREE.MathUtils.radToDeg(Math.atan(Math.tan(drawn) / ve)), tmp);   // true slope, not the exaggerated one
       slopeColors.set([tmp.r, tmp.g, tmp.b], i * 3);
     }
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     geo.userData.camera = colors; geo.userData.slope = slopeColors;
     geo.setAttribute("temp", new THREE.BufferAttribute(new Float32Array(pos.count), 1));
     return geo;
-  }, [grid, relief, pal]);
+  }, [grid, relief, pal, ve]);
 
   // which colours the Camera / Slope views show
   useEffect(() => {
@@ -157,7 +159,7 @@ function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermal
 
   // thermal model state for this terrain
   const th = useRef<{ T: Float32Array | null; eq: Float32Array | null; lit: Uint8Array | null; sunKey: number; last: number; shadowAt: number }>({ T: null, eq: null, lit: null, sunKey: -999, last: -1, shadowAt: -99 });
-  const surfMaxC = tmaxC + (airy > 0.5 ? 18 : 0);   // sunlit ground runs hotter than the air temperature
+  const surfMaxC = tmaxC;   // both ends are measured surface temperatures (MODIS on Earth, Diviner on the Moon)
   const nightC = tminC + (tmaxC - tminC) * 0.12 * airy;
   useEffect(() => {
     th.current = { T: null, eq: null, lit: null, sunKey: -999, last: -1, shadowAt: -99 };
@@ -182,14 +184,18 @@ function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermal
         st.lit![i] = lit;
       }
     }
-    const tnK = nightC + 273.15, tmK = surfMaxC + 273.15, tau = airy > 0.5 ? 45 : 18, a = dt > 0 ? 1 - Math.exp(-dt / tau) : 0;
-    const lo = tminC - 5, hi = surfMaxC + 5, arr = tA.array as Float32Array;
+    const tnK = nightC + 273.15, tmK = surfMaxC + 273.15, tau = airy > 0.5 ? 28 : 10, a = dt > 0 ? 1 - Math.exp(-dt / tau) : 0;
+    const lo = tminC - 5, hi = surfMaxC + 5, arr = tA.array as Float32Array, ex = sun.exhaust, exhaustC = surfMaxC + (airy > 0.5 ? 120 : 220);
     for (let i = 0; i < N; i++) {
       const inc = Math.max(0, nrm.getX(i) * sun.dir.x + nrm.getY(i) * sun.dir.y + nrm.getZ(i) * sun.dir.z) * st.lit![i];
       const vac = Math.max(tnK, tmK * Math.pow(inc, 0.25)) - 273.15;
       const air = nightC + (surfMaxC - nightC) * (0.18 + 0.82 * inc) * (st.lit![i] ? 1 : 0.55);
       st.eq![i] = vac + (air - vac) * Math.pow(airy, 0.35);
       st.T[i] += (st.eq![i] - st.T[i]) * a;
+      if (ex.p > 0) {   // exhaust blast: hot gas scours the ground under the engine
+        const d2 = (pos.getX(i) - ex.x) ** 2 + (pos.getZ(i) - ex.z) ** 2;
+        if (d2 < 49) st.T[i] += (exhaustC - st.T[i]) * Math.min(1, dt * 3) * ex.p * Math.exp(-d2 / 6);
+      }
       arr[i] = (st.T[i] - lo) / (hi - lo);
     }
     tA.needsUpdate = true;
@@ -211,16 +217,10 @@ function Terrain({ siteId, grid, reliefM, body, mineral, sensor, sunRef, thermal
 }
 
 /* ---------- vehicles: the user's 3D models (see simModels.tsx for credits) ---------- */
-function Rover({ groupRef, armRef }: { groupRef: React.RefObject<THREE.Group | null>; armRef: React.RefObject<THREE.Group | null> }) {
+function Rover({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
   return (
     <group ref={groupRef}>
       <RoverModel />
-      {/* sample arm with a claw at the front; it swings down to grab */}
-      <group ref={armRef} position={[0.3, 0.28, -0.9]}>
-        <mesh position={[0, 0, -0.3]} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[0.025, 0.03, 0.6, 10]} /><meshStandardMaterial color="#cbd5e1" metalness={0.7} roughness={0.3} /></mesh>
-        <mesh position={[0, 0, -0.62]}><sphereGeometry args={[0.045, 10, 10]} /><meshStandardMaterial color="#6b7280" metalness={0.8} /></mesh>
-        {[-1, 1].map((k) => <mesh key={k} position={[k * 0.06, -0.07, -0.67]} rotation={[0.3, 0, k * 0.35]}><boxGeometry args={[0.022, 0.17, 0.045]} /><meshStandardMaterial color="#f59e0b" metalness={0.7} /></mesh>)}
-      </group>
     </group>
   );
 }
@@ -269,14 +269,17 @@ function Waypoint({ x, y, z, state }: { x: number; y: number; z: number; state: 
 }
 
 /* a flagged sample rock: one of the rocks from the model, with a small light above it that brightens as you approach */
-function SampleRock({ x, y, z, taken, near, seed, geo, material }: { x: number; y: number; z: number; taken: boolean; near: boolean; seed: number; geo: THREE.BufferGeometry; material: THREE.Material }) {
-  const lamp = useRef<THREE.MeshStandardMaterial>(null);
-  useFrame(({ clock }) => { if (lamp.current) lamp.current.emissiveIntensity = near ? 2.2 + Math.sin(clock.elapsedTime * 6) * 0.8 : 0.9; });
+function SampleRock({ x, y, z, taken, near, lifting, seed, geo, material }: { x: number; y: number; z: number; taken: boolean; near: boolean; lifting: boolean; seed: number; geo: THREE.BufferGeometry; material: THREE.Material }) {
+  const lamp = useRef<THREE.MeshStandardMaterial>(null), stone = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }, dt) => {
+    if (lamp.current) lamp.current.emissiveIntensity = near ? 2.2 + Math.sin(clock.elapsedTime * 6) * 0.8 : 0.9;
+    if (stone.current) { const goal = lifting ? 0.35 + Math.sin(clock.elapsedTime * 9) * 0.03 : 0; stone.current.position.y += (goal - stone.current.position.y) * Math.min(1, dt * 8); }   // the arm lifts it while you hold E
+  });
   if (taken) return null;
   const size = 0.5 + (seed % 5) * 0.06;
   return (
     <group position={[x, y - 0.04, z]}>
-      <mesh geometry={geo} material={material} scale={size} rotation={[0, (seed % 7) * 0.9, 0]} castShadow receiveShadow />
+      <mesh ref={stone} geometry={geo} material={material} scale={size} rotation={[0, (seed % 7) * 0.9, 0]} castShadow receiveShadow />
       <mesh position={[0, size * 0.9 + 0.45, 0]}><octahedronGeometry args={[0.07, 0]} /><meshStandardMaterial ref={lamp} color="#67e8f9" emissive="#67e8f9" emissiveIntensity={0.9} /></mesh>
     </group>
   );
@@ -298,12 +301,12 @@ function SimScene(p: {
   siteId: string; body: Body; gravity: number; pressure: number; mineral: string; iron: number; clay: number; bareness: number; ambientC: number; roughness: number;
   grid: number[] | null; reliefM: number; sensor: Sensor; rover: RoverSpec; keysRef: React.MutableRefObject<Record<string, boolean>>;
   lookRef: React.MutableRefObject<{ yaw: number; pitch: number }>; thirdPerson: boolean; runId: number; phase: Phase; paused: boolean; docked: boolean;
-  waypointIdx: number; tminC: number; tmaxC: number; sunElevMax: number; onTelemetry: (t: Telemetry) => void; onLanded: (ok: boolean, headline: string, reason: string, numbers: { label: string; value: string }[], bonus: number) => void; onDrive: (e: DriveEvent) => void;
+  waypointIdx: number; tminC: number; tmaxC: number; sunElevMax: number; ve: number; cursorRef: React.MutableRefObject<number>; onTelemetry: (t: Telemetry) => void; onLanded: (ok: boolean, headline: string, reason: string, numbers: { label: string; value: string }[], bonus: number) => void; onDrive: (e: DriveEvent) => void;
 }) {
-  const { siteId, body, gravity, pressure, mineral, iron, clay, bareness, ambientC, roughness, grid, reliefM, sensor, rover, keysRef, lookRef, thirdPerson, runId, phase, paused, docked, waypointIdx, tminC, tmaxC, sunElevMax, onTelemetry, onLanded, onDrive } = p;
+  const { siteId, body, gravity, pressure, mineral, iron, clay, bareness, ambientC, roughness, grid, reliefM, sensor, rover, keysRef, lookRef, thirdPerson, runId, phase, paused, docked, waypointIdx, tminC, tmaxC, sunElevMax, ve, cursorRef, onTelemetry, onLanded, onDrive } = p;
   const getState = useThree((st) => st.get);
   const controls = useRef<{ target: THREE.Vector3; update: () => void } | null>(null);
-  const relief = Math.max(0.8, reliefM / 36) * SCALE;
+  const relief = (reliefM / 2000) * WORLD_SIZE * ve;
   const airy = THREE.MathUtils.clamp(pressure / 1.013, 0, 1);
   const heightAt = useCallback((x: number, z: number) => (grid ? sample(grid, relief, x, z).h : 0), [grid, relief]);
   const rockParts = useRockParts();
@@ -333,7 +336,7 @@ function SimScene(p: {
   const routePoints = useMemo(() => [{ x: 0, z: 0 }, ...layout.route.map((w) => ({ x: w.x, z: w.z }))], [layout]);
 
   // the sun moves through the mission; the light, the shadows and the Heat view all follow it
-  const sunRef = useRef<SunState>({ dir: new THREE.Vector3(0.5, 0.6, 0.4).normalize(), t: 0 });
+  const sunRef = useRef<SunState>({ dir: new THREE.Vector3(0.5, 0.6, 0.4).normalize(), t: 0, exhaust: { x: 0, z: 0, p: 0 } });
   const thermalRef = useRef<ThermalState>({ temps: null, lo: 0, hi: 1 });
   const lightRef = useRef<THREE.DirectionalLight>(null);
   const [thermalMats] = useState(() => ({ rover: makeObjectThermalMaterial(), lander: makeObjectThermalMaterial(), station: makeObjectThermalMaterial(), rock: makeObjectThermalMaterial(), beacon: makeObjectThermalMaterial() }));
@@ -346,7 +349,8 @@ function SimScene(p: {
     return th.temps[r * 128 + c];
   }, [ambientC]);
 
-  const roverRef = useRef<THREE.Group>(null), armRef = useRef<THREE.Group>(null), landerRef = useRef<THREE.Group>(null);
+  const roverRef = useRef<THREE.Group>(null), landerRef = useRef<THREE.Group>(null);
+  const [grabIdx, setGrabIdx] = useState(-1);
   const thermalOn = sensor === "thermal";
   useMaterialSwap(roverRef, thermalOn, thermalMats.rover, phase);
   useMaterialSwap(landerRef, thermalOn, thermalMats.lander, phase);
@@ -396,7 +400,7 @@ function SimScene(p: {
 
     // sun: low in the morning and climbing through the mission; at the lunar poles it skims the horizon
     {
-      const prog = THREE.MathUtils.clamp(st.t / 240, 0, 1), polar = sunElevMax < 15;
+      const prog = THREE.MathUtils.clamp(st.t / 150, 0, 1), polar = sunElevMax < 15;
       const el = THREE.MathUtils.degToRad(polar ? Math.max(7, sunElevMax) * (0.85 + 0.15 * Math.sin(prog * Math.PI)) : THREE.MathUtils.lerp(Math.max(8, sunElevMax * 0.3), sunElevMax, Math.sin((prog * Math.PI) / 2)));
       const az = THREE.MathUtils.degToRad(polar ? 200 + prog * 50 : 115 + prog * 65);
       sunRef.current.dir.set(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)).normalize();
@@ -434,9 +438,13 @@ function SimScene(p: {
       st.vy += (-g + power - st.vy * drag) * dt;
       st.vx = THREE.MathUtils.lerp(st.vx, (f.x * fi + r.x * ri) * 5, dt * 3); st.vz = THREE.MathUtils.lerp(st.vz, (f.z * fi + r.z * ri) * 5, dt * 3);
       st.lx = THREE.MathUtils.clamp(st.lx + st.vx * dt, -30, 30); st.lz = THREE.MathUtils.clamp(st.lz + st.vz * dt, -30, 30); st.ly += st.vy * dt;
-      const { h: gh, slopeDeg } = sample(grid, relief, st.lx, st.lz), alt = Math.max(0, st.ly - gh), padDist = Math.hypot(st.lx, st.lz);
-      if (landerRef.current) landerRef.current.position.set(st.lx, Math.max(gh + 0.55, st.ly), st.lz);
+      const { slopeDeg } = sample(grid, relief, st.lx, st.lz, ve), padDist = Math.hypot(st.lx, st.lz);
+      const feetH = LANDER_FEET.map(([fx, fz]) => sample(grid, relief, st.lx + fx, st.lz + fz).h);
+      const gh = Math.max(sample(grid, relief, st.lx, st.lz).h, ...feetH);   // the first thing the lander can touch
+      const alt = Math.max(0, st.ly - LANDER_FOOT - gh);
+      if (landerRef.current) landerRef.current.position.set(st.lx, Math.max(gh + LANDER_FOOT, st.ly), st.lz);
       const firing = Boolean(thrust && st.fuel > 0);
+      sunRef.current.exhaust = { x: st.lx, z: st.lz, p: firing ? THREE.MathUtils.clamp(1 - alt / 14, 0, 1) : 0 };
       if (firing && alt < 9 && pressure < 0.05) st.blindUntil = st.t + 3.2;   // the warning stays readable after a short burn
       if (flameRef.current) { flameRef.current.visible = firing; if (firing) flameRef.current.scale.set(1, 0.85 + Math.sin(clock.elapsedTime * 45) * 0.25, 1); }
       const want = firing && alt < 11 ? 1 - alt / 11 : 0;
@@ -447,13 +455,21 @@ function SimScene(p: {
       if (predictRef.current) predictRef.current.position.set(px, sample(grid, relief, px, pz).h + 0.1, pz);
       if (dropRef.current) { dropRef.current.position.set(st.lx, gh + alt / 2, st.lz); dropRef.current.scale.set(1, Math.max(0.01, alt), 1); }
       if (controls.current) {
-        const focus = new THREE.Vector3(st.lx, Math.max(gh + 0.55, st.ly), st.lz);
+        const focus = new THREE.Vector3(st.lx, Math.max(gh + LANDER_FOOT, st.ly), st.lz);
         camera.position.add(focus.clone().sub(prevFocus.current));
         camera.position.y = Math.max(camera.position.y, sample(grid, relief, camera.position.x, camera.position.z).h + 1.2);
         controls.current.target.copy(focus); prevFocus.current.copy(focus); controls.current.update();
       }
-      if (alt <= 0.18) {
+      if (alt <= 0.02) {
         st.landed = true;
+        // settle on all three pads: tilt to the plane through them
+        if (landerRef.current) {
+          const P = LANDER_FEET.map(([fx, fz], i) => new THREE.Vector3(st.lx + fx, feetH[i], st.lz + fz));
+          const nrm = new THREE.Vector3().crossVectors(P[1].clone().sub(P[0]), P[2].clone().sub(P[0])).normalize();
+          if (nrm.y < 0) nrm.negate();
+          landerRef.current.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), nrm);
+          landerRef.current.position.set(st.lx, (feetH[0] + feetH[1] + feetH[2]) / 3 + LANDER_FOOT, st.lz);
+        }
         const v = Math.abs(st.vy), soft = v <= LAND_SPEED_LIMIT, onPad = padDist <= PAD_RADIUS, level = slopeDeg <= 20, ok = soft && onPad && level;
         if (flameRef.current) flameRef.current.visible = false;
         const bonus = ok ? (v < 1.5 ? 6 : v < 2.2 ? 3 : 0) + (padDist < 2 ? 4 : padDist < 3.5 ? 2 : 0) : 0;
@@ -467,7 +483,7 @@ function SimScene(p: {
         st.done = phase === "land" && !ok;   // a failed landing ends the run; a good one continues (parent flips the phase)
         if (ok) st.done = false;
       }
-      if (st.t - st.emit > 0.1) { st.emit = st.t; setGuide(makeGuide(st.lx, Math.max(gh + 0.55, st.ly), st.lz, st.pad)); onTelemetry({ time: st.t.toFixed(1), alt: alt.toFixed(1), vspeed: st.vy.toFixed(1), fuel: st.fuel.toFixed(0), pad: padDist.toFixed(1), blind: st.t < st.blindUntil, ground: groundTempAt(st.lx, st.lz).toFixed(0) }); }
+      if (st.t - st.emit > 0.1) { st.emit = st.t; setGuide(makeGuide(st.lx, Math.max(gh + LANDER_FOOT, st.ly), st.lz, st.pad)); onTelemetry({ time: st.t.toFixed(1), alt: alt.toFixed(1), vspeed: st.vy.toFixed(1), fuel: st.fuel.toFixed(0), pad: padDist.toFixed(1), blind: st.t < st.blindUntil, ground: groundTempAt(st.lx, st.lz).toFixed(0) }); }
       return;
     }
 
@@ -505,10 +521,10 @@ function SimScene(p: {
     const fwd = (k["KeyW"] || k["ArrowUp"] ? 1 : 0) - (k["KeyS"] || k["ArrowDown"] ? 1 : 0);
     const steer = (k["KeyA"] || k["ArrowLeft"] ? 1 : 0) - (k["KeyD"] || k["ArrowRight"] ? 1 : 0);
     st.t += dt;
-    const { slopeDeg } = sample(grid, relief, st.rx, st.rz), slopeRad = THREE.MathUtils.degToRad(slopeDeg);
+    const { slopeDeg } = sample(grid, relief, st.rx, st.rz, ve), slopeRad = THREE.MathUtils.degToRad(slopeDeg);
     // uphill component: positive when the rover points up the slope it stands on
     const ahead = sample(grid, relief, st.rx - Math.sin(st.yaw) * 1.2, st.rz - Math.cos(st.yaw) * 1.2).h - sample(grid, relief, st.rx, st.rz).h;
-    const climb = THREE.MathUtils.clamp(ahead / 1.2, -1, 1);
+    const climb = THREE.MathUtils.clamp(ahead / ve / 1.2, -1, 1);
     const normalN = MASS_KG * gravity * Math.cos(slopeRad);
     const mu = (body === "earth" ? 0.75 : body === "mars" ? 0.6 : 0.5) * rover.grip;
     const gripN = mu * normalN;
@@ -564,8 +580,10 @@ function SimScene(p: {
       }
     }
     st.ePrev = eNow;
-    if (st.armT > 0) { st.armT -= dt; if (armRef.current) armRef.current.rotation.x = Math.sin((1 - Math.max(0, st.armT) / 1.2) * Math.PI) * 0.9; }
-    else if (armRef.current) armRef.current.rotation.x = st.grabbing ? 0.35 + Math.sin(st.grabT * 3.0) * 0.1 : 0;
+    if (st.armT > 0) st.armT -= dt;
+    cursorRef.current = st.grabbing ? Math.sin(st.grabT * 3.0) : 0;
+    const gi = st.grabbing ? st.grabRock : -1;
+    if (gi !== grabIdx) setGrabIdx(gi);
 
     // stations: press F inside the ring to dock and drill
     let nearStation = -1;
@@ -611,10 +629,13 @@ function SimScene(p: {
       <color attach="background" args={[bg]} />
       {body !== "moon" && plainView && <fog attach="fog" args={[body === "mars" ? "#8a4a2e" : "#9cc6e0", 48, 170]} />}
       {body === "moon" && plainView && <Stars radius={110} depth={30} count={1800} factor={3} fade />}
-      <hemisphereLight args={[body === "earth" ? "#dbeafe" : body === "moon" ? "#e5e7eb" : "#f5e6d8", body === "earth" ? "#4a5a3a" : body === "moon" ? "#3f444c" : "#3b2a22", body === "moon" ? 0.75 : 0.65]} />
+      <hemisphereLight args={[body === "earth" ? "#dbeafe" : body === "moon" ? "#e5e7eb" : "#f5e6d8", body === "earth" ? "#6b7a5a" : body === "moon" ? "#6b7079" : "#6b4a3a", body === "moon" ? 1.15 : 0.95]} />
+      <ambientLight intensity={body === "moon" ? 0.45 : 0.3} />
+      {/* a soft fill from the camera side so slopes facing away from a low sun never go black */}
+      <directionalLight position={[-20, 30, -25]} intensity={body === "moon" ? 0.55 : 0.4} />
       <directionalLight ref={lightRef} position={[18, 26, 12]} intensity={body === "moon" ? 2.9 : 1.8} castShadow shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-28} shadow-camera-right={28} shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={140} shadow-bias={-0.0006} />
-      <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} sunRef={sunRef} thermalRef={thermalRef} tminC={tminC} tmaxC={tmaxC} airy={airy} />
+      <Terrain siteId={siteId} grid={grid} reliefM={reliefM} body={body} mineral={mineral} sensor={sensor} sunRef={sunRef} thermalRef={thermalRef} tminC={tminC} tmaxC={tmaxC} airy={airy} ve={ve} />
       {(thirdPerson || phase !== "drive" || docked) && <OrbitControls ref={controls as never} makeDefault enablePan={false} minDistance={2.2} maxDistance={70} maxPolarAngle={Math.PI * 0.49} />}
 
       {/* the pad: markings that lie on the ground */}
@@ -634,10 +655,10 @@ function SimScene(p: {
 
       {(phase === "drive" || phase === "brief-drive" || phase === "done") && (
         <>
-          <Rover groupRef={roverRef} armRef={armRef} />
+          <Rover groupRef={roverRef} />
           {routePoints.length > 1 && <RouteRibbon points={routePoints} height={heightAt} leg={waypointIdx} />}
           <group ref={beaconsRef}>{layout.route.map((w, i) => <Waypoint key={i} x={w.x} y={w.y} z={w.z} state={i < waypointIdx ? "done" : i === waypointIdx ? "next" : "later"} />)}</group>
-          <group ref={rocksRef}>{layout.rocks.map((rk, i) => <SampleRock key={i} x={rk.x} y={rk.y} z={rk.z} taken={taken[i]} near={nearRock === i} seed={hashString(siteId) + i * 7} geo={rockParts.geos[i % rockParts.geos.length]} material={rockParts.material} />)}</group>
+          <group ref={rocksRef}>{layout.rocks.map((rk, i) => <SampleRock key={i} x={rk.x} y={rk.y} z={rk.z} taken={taken[i]} near={nearRock === i} lifting={grabIdx === i} seed={hashString(siteId) + i * 7} geo={rockParts.geos[i % rockParts.geos.length]} material={rockParts.material} />)}</group>
           {layout.stations.map((stn, i) => { const state = docked && dockIdx === i ? "active" : stationState[i]; const col = state === "done" ? "#22c55e" : state === "lost" ? "#ef4444" : state === "active" ? "#fbbf24" : "#38bdf8"; return <GroundRing key={i} cx={stn.x} cz={stn.z} r0={3.0} r1={3.25} color={col} opacity={0.4} height={heightAt} />; })}
           <group ref={stationsRef}>{layout.stations.map((stn, i) => <StationRig key={i} x={stn.x} y={stn.y} z={stn.z} state={docked && dockIdx === i ? "active" : stationState[i]} carriageRef={(el) => { carriages.current[i] = el; }} bitMat={(el) => { bits.current[i] = el; }} />)}</group>
         </>
@@ -683,6 +704,8 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const [runs, setRuns] = useState<Record<WorldSide, RunRecord | null>>({ earth: null, space: null });
 
   const keysRef = useRef<Record<string, boolean>>({});
+  const [ve, setVe] = useState(2);   // vertical exaggeration of the drawn terrain; physics always uses true slopes
+  const cursorRef = useRef(0), cursorEl = useRef<HTMLDivElement>(null);
   const lookRef = useRef({ yaw: 0, pitch: 0 });
   const drag = useRef(false), last = useRef({ x: 0, y: 0 });
   const toastTimer = useRef<number | null>(null);
@@ -717,6 +740,8 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
   const clay = side === "earth" ? ps?.clay_hydroxyl_ratio?.earth_val ?? 0.4 : ps?.clay_hydroxyl_ratio?.target_val ?? 0.3;
   const bare = side === "earth" ? ps?.bareness_index?.earth_val ?? 0.98 : ps?.bareness_index?.target_val ?? 1;
   const rover = ROVERS.find((r) => r.id === roverId) || ROVERS[1];
+  const tempMeasured = side === "earth" ? ps?.temp_max_c?.earth_status === "measured" : ps?.temp_max_c?.space_status === "measured";
+  const tempNote = side === "earth" ? (tempMeasured ? "Range: MODIS land surface temperature (NASA Worldview)." : "") : tempMeasured ? "Range: LRO Diviner (NASA PDS)." : "Range: typical values, not measured here.";
   const tminC = side === "earth" ? ps?.temp_min_c?.earth_val ?? 5 : t.temp_min_c;
   const tmaxC = side === "earth" ? ps?.temp_max_c?.earth_val ?? 30 : t.temp_max_c;
   const sunElevMax = side === "earth" ? Math.min(78, 90 - Math.abs(selectedMatch.lat) + 18) : ((t as unknown as { max_sun_elevation_deg?: number }).max_sun_elevation_deg ?? Math.min(90, 90 - Math.abs(t.lat) + (t.body === "moon" ? 1.5 : 25)));
@@ -749,6 +774,16 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
     }
   }, [finish, say, tele.time, tele.wp, tele.wheel, tally, pressure]);
 
+  // the claw cursor is moved every animation frame straight from the scene, not through React state, so it glides
+  const grabbing = Boolean(tele.grabbing);
+  useEffect(() => {
+    if (!grabbing) return;
+    let id = 0;
+    const tick = () => { if (cursorEl.current) cursorEl.current.style.left = `calc(${((cursorRef.current + 1) / 2) * 100}% - 2px)`; id = requestAnimationFrame(tick); };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [grabbing]);
+
   const brief = phase === "brief-land" ? BRIEF.land : phase === "brief-drive" ? BRIEF.drive : null;
   const BriefIcon = brief?.icon ?? Rocket;
   const paused = phase === "brief-land" || phase === "brief-drive" || phase === "done";
@@ -766,6 +801,9 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         </div>
         <div className="text-xs muted" data-tour="sim-test">{phase === "land" ? "Part 1 of 2 · Landing" : phase === "drive" ? (docked ? "Part 2 of 2 · Drilling a core" : "Part 2 of 2 · Drive and sample") : "Mission: land, drive, sample"}</div>
         <div className="flex items-center gap-2">
+          <div className="seg" title="Terrain heights are drawn exaggerated so real relief is visible; the rover and lander physics always use the true slopes">
+            {[1, 2, 3].map((v) => <button key={v} type="button" aria-pressed={ve === v} disabled={phase !== "brief-land" && phase !== "done"} title={phase !== "brief-land" && phase !== "done" ? "Set this before starting a mission (it rebuilds the terrain)" : undefined} onClick={() => { setVe(v); if (phase === "done") restart(); }}>{v === 1 ? "True height" : `Heights ×${v}`}</button>)}
+          </div>
           <div className="seg" title="How the ground is shown">
             {([["optical", "Camera"], ["sar", "Slope"], ["thermal", "Heat"]] as [Sensor, string][]).map(([m, l]) => <button key={m} type="button" aria-pressed={sensor === m} onClick={() => setSensor(m)}>{l}</button>)}
           </div>
@@ -821,7 +859,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-3 text-xs w-72">
             <div className="mb-1.5">Release <b>E</b> in the green</div>
             <div className="relative h-3 rounded-full" style={{ background: "linear-gradient(90deg, #ef4444 0%, #ef4444 35%, #22c55e 35%, #22c55e 65%, #ef4444 65%, #ef4444 100%)" }}>
-              <div className="absolute top-[-3px] h-[18px] w-1 rounded bg-white" style={{ left: `calc(${((Number(tele.cursor ?? 0) + 1) / 2) * 100}% - 2px)` }} />
+              <div ref={cursorEl} className="absolute top-[-3px] h-[18px] w-1 rounded bg-white" style={{ left: "calc(50% - 2px)", willChange: "left" }} />
             </div>
           </div>
         )}
@@ -842,7 +880,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         )}
         {toast && <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-1.5 text-sm font-semibold rise">{toast}</div>}
         {phase === "drive" && tele.hot && !result && <div className="absolute top-32 left-1/2 -translate-x-1/2 z-10 on-canvas px-4 py-1.5 text-xs" style={{ borderColor: "#f87171" }}>Motor over {rover.maxTempC}°C: crawling until it cools. Ease off, or pick a rover with more heat tolerance.</div>}
-        {phase === "land" && tele.blind && <div className="absolute inset-0 z-10 pointer-events-none flex items-start justify-center pt-20" style={{ background: "rgba(120, 70, 30, 0.35)", backdropFilter: "blur(3px)" }}><div className="on-canvas px-5 py-3 text-sm max-w-md text-center rise"><b>Dust blind-out.</b> With no air to slow it, the engine blast throws regolith hundreds of metres. Cameras and lidar lose the ground: this is why vacuum landings fly the last metres on inertial guidance.</div></div>}
+        {phase === "land" && tele.blind && <div className="absolute inset-0 z-10 pointer-events-none flex items-start justify-center pt-20" style={{ background: "radial-gradient(ellipse at 50% 70%, rgba(190, 170, 140, 0.22), rgba(190, 170, 140, 0.06) 70%)" }}><div className="px-5 py-3 text-sm max-w-md text-center rise rounded-xl" style={{ background: "rgba(127, 29, 29, 0.82)", border: "1px solid #f87171", color: "#fee2e2" }}><b>Dust blind-out.</b> With no air to slow it, the engine blast throws regolith hundreds of metres. Cameras and lidar lose the ground: this is why vacuum landings fly the last metres on inertial guidance.</div></div>}
 
         {/* what the Slope and Heat views mean */}
         {sensor === "sar" && (
@@ -856,8 +894,8 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           <div className="absolute top-24 right-3 z-10 on-canvas px-3 py-2 text-[11px] pointer-events-none w-64">
             <div className="flex justify-between font-semibold"><span>Surface temperature</span>{tele.ground !== undefined && <span>here {String(tele.ground)}°C</span>}</div>
             <div className="h-2.5 rounded-full mt-1.5" style={{ background: INFERNO_CSS }} />
-            <div className="flex justify-between mt-0.5 font-mono"><span>{Math.round(tminC - 5)}°C</span><span>{Math.round(tmaxC + (pressure > 0.5 ? 18 : 0) + 5)}°C</span></div>
-            <div className="opacity-80 mt-1">{pressure < 0.05 ? "No air: sunlit slopes heat fast, shadows stay near the night low." : pressure < 0.5 ? "Thin air: big swings between sun and shade." : "Air evens it out: smaller contrast."} The ground warms as the sun climbs; motors and the drill bit glow.</div>
+            <div className="flex justify-between mt-0.5 font-mono"><span>{Math.round(tminC - 5)}°C</span><span>{Math.round(tmaxC + 5)}°C</span></div>
+            <div className="opacity-80 mt-1">{pressure < 0.05 ? "No air: sunlit slopes heat fast, shadows stay near the night low." : pressure < 0.5 ? "Thin air: big swings between sun and shade." : "Air evens it out: smaller contrast."} The ground warms as the sun climbs; motors and the drill bit glow. {tempNote}</div>
           </div>
         )}
 
@@ -940,8 +978,8 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           <Canvas shadows camera={{ fov: 58, near: 0.1, far: 260 }} dpr={[1, 1.75]}>
             <Suspense fallback={null}>
             <SimScene key={`${runId}-${side}`} siteId={side === "earth" ? selectedMatch.id : t.id} body={body} gravity={gravity} pressure={pressure} mineral={mineral} iron={iron} clay={clay} bareness={bare} ambientC={ambient}
-              roughness={selectedMatch.pillar_scores.radar} grid={grid} reliefM={reliefM} sensor={sensor} rover={rover} keysRef={keysRef} lookRef={lookRef} thirdPerson={thirdPerson}
-              runId={runId} phase={phase} paused={paused} docked={docked} waypointIdx={Number(tele.wp ?? 0)} tminC={tminC} tmaxC={tmaxC} sunElevMax={sunElevMax} onTelemetry={setTele} onLanded={onLanded} onDrive={onDrive} />
+              roughness={selectedMatch.pillar_scores.radar ?? 0.5} grid={grid} reliefM={reliefM} sensor={sensor} rover={rover} keysRef={keysRef} lookRef={lookRef} thirdPerson={thirdPerson}
+              runId={runId} phase={phase} paused={paused} docked={docked} waypointIdx={Number(tele.wp ?? 0)} tminC={tminC} tmaxC={tmaxC} sunElevMax={sunElevMax} ve={ve} cursorRef={cursorRef} onTelemetry={setTele} onLanded={onLanded} onDrive={onDrive} />
             </Suspense>
           </Canvas>
         </div>
