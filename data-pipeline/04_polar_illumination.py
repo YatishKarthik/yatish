@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 from scipy.ndimage import gaussian_filter, map_coordinates
 
-if Path("/root/.ccr/ca-bundle.crt").exists():
+if os.path.isfile("/root/.ccr/ca-bundle.crt"):   # dev sandbox proxy only; isfile() never raises, Path.exists() does when /root is unreadable
     os.environ.setdefault("CURL_CA_BUNDLE", "/root/.ccr/ca-bundle.crt")
 
 ROOT = Path(__file__).resolve().parent.parent

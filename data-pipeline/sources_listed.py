@@ -31,7 +31,7 @@ os.environ.setdefault("GDAL_HTTP_RETRY_DELAY", "2")
 # every HTTP request gives up instead of hanging: without these a stalled range request waits forever
 os.environ.setdefault("GDAL_HTTP_TIMEOUT", "30")
 os.environ.setdefault("GDAL_HTTP_CONNECTTIMEOUT", "15")
-if Path("/root/.ccr/ca-bundle.crt").exists():
+if os.path.isfile("/root/.ccr/ca-bundle.crt"):   # dev sandbox proxy only; isfile() never raises, Path.exists() does when /root is unreadable
     os.environ.setdefault("CURL_CA_BUNDLE", "/root/.ccr/ca-bundle.crt")
 
 import rasterio  # noqa: E402

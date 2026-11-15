@@ -8,7 +8,8 @@ COPY frontend/ ./
 ENV CELESTRA_EXPORT=1 NEXT_PUBLIC_API_URL="" NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM python:3.12-slim
+# The full (not slim) image: rasterio's bundled GDAL needs system libraries such as libexpat, which slim leaves out
+FROM python:3.12
 RUN useradd -m -u 1000 user
 WORKDIR /app
 COPY requirements-deploy.txt .
