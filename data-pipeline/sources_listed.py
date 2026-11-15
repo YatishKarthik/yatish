@@ -243,8 +243,11 @@ def lola_product(lat: float, lon: float) -> tuple[str, float, float, float]:
     lon360 = lon % 360.0
     lo = int(lon360 // 30) * 30
     b0 = int(math.floor(lat / 15.0) * 15)
+    south = b0 < 0
+
     def tag(v: int) -> str:
-        return f"{abs(v):02d}{'s' if v < 0 else 'n'}"
+        # the equator is "00s" in the southern band's name (ldem_1024_15s_00s_...) and "00n" in the northern one
+        return f"{abs(v):02d}{'s' if (v < 0 or (v == 0 and south)) else 'n'}"
     return f"{LOLA_GDR}/cylindrical/img/ldem_1024_{tag(b0)}_{tag(b0 + 15)}_{lo:03d}_{lo + 30:03d}.lbl", 29.6, 0.5, 1.0
 
 

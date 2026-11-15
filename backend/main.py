@@ -122,6 +122,12 @@ def ai_discoveries(target_id: str):
     }
 
 
+# Live points are measured one at a time: each needs up to ~300 MB while its terrain is processed, so on a 512 MB
+# server two at once could run out of memory. Others wait their turn (the page shows a timer).
+import threading  # noqa: E402
+_CUSTOM_LOCK = threading.Lock()
+
+
 @app.get("/api/custom_target")
 def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
     """Rank Earth sites for any Moon or Mars point: terrain fetched live from NASA PDS (LOLA / HiRISE), 10-90 s."""
@@ -129,6 +135,8 @@ def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
     ok, why = ct.available()
     if not ok:
         raise HTTPException(status_code=501, detail=why)
+    if not _CUSTOM_LOCK.acquire(timeout=170):
+        raise HTTPException(status_code=503, detail="Other visitors are measuring points right now. Please try again in a minute.")
     try:
         return ct.match_custom(ml_engine, body, lat, lon, top_k)
     except ValueError as e:
@@ -141,6 +149,8 @@ def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
         raise HTTPException(status_code=404, detail=f"No elevation data near this point: {msg}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)[:300])
+    finally:
+        _CUSTOM_LOCK.release()
 
 
 @app.post("/api/simulate")
