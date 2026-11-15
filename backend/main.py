@@ -88,6 +88,36 @@ def field_brief(target_id: str):
     return render(res, val)
 
 
+_discoveries = {"mtime": None, "data": None}
+
+
+@app.get("/api/discoveries/{target_id}")
+def ai_discoveries(target_id: str):
+    """AI-discovered candidate analog sites (data-pipeline/06_ai_discovery.py): deep-ensemble estimate with a
+    split-conformal 90% interval, and the exact Celestra score of each candidate."""
+    import json
+    path = ROOT / "data" / "processed" / "discoveries.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="No AI discoveries yet: run data-pipeline/06_ai_discovery.py.")
+    mt = path.stat().st_mtime
+    if _discoveries["mtime"] != mt:
+        _discoveries["data"], _discoveries["mtime"] = json.loads(path.read_text(encoding="utf-8")), mt
+    d = _discoveries["data"]
+    tids = list(d["targets"].keys())
+    if target_id not in d["targets"]:
+        raise HTTPException(status_code=404, detail="No AI discoveries for this target.")
+    k = tids.index(target_id)
+    met = d["metrics"]
+    return {
+        "method": d["method"], "inputs": d["inputs"], "cells_searched": d["cells_searched"], "cell_deg": d["cell_deg"],
+        "model": {"n_train": met["n_train"], "n_calibration": met["n_calibration"], "n_test": met["n_test"],
+                  "coverage": met["coverage_per_target"][k], "r2": met["r2_per_target"][k], "mae": met["mae_per_target"][k],
+                  "coverage_mean": round(sum(met["coverage_per_target"]) / len(tids), 3), "r2_mean": round(sum(met["r2_per_target"]) / len(tids), 3)},
+        "verification": d.get("verification"),
+        "candidates": d["targets"][target_id],
+    }
+
+
 @app.get("/api/custom_target")
 def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
     """Rank Earth sites for any Moon or Mars point: terrain fetched live from NASA PDS (LOLA / HiRISE), 10-90 s."""

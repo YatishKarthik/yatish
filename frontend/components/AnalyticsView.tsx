@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { AiDiscoveries, aiPinId, fmtLatLon, type AiDiscoveryData } from "@/components/AiDiscoveries";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Play, Search, FileText } from "lucide-react";
 import type { GlobePin } from "@/components/PlanetGlobe";
@@ -187,12 +188,26 @@ function Evidence() {
   );
 }
 
-type View = "use" | "summary" | "twins" | "tests" | "day" | "measure" | "expert";
+type View = "use" | "ai" | "summary" | "twins" | "tests" | "day" | "measure" | "expert";
 
 export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }: { data: MatchPayload; onBackToGlobe: () => void; onLaunchSimulator: (selectedMatch: EarthMatch) => void }) {
   const [selectedId, setSelectedId] = useState<string>(data.matches[0]?.id || "");
   const [filterText, setFilterText] = useState("");
   const [view, setView] = useState<View>("use");
+  const [ai, setAi] = useState<{ id: string; data: AiDiscoveryData | null; error: string | null } | null>(null);
+  const [aiSel, setAiSel] = useState<string | null>(null);
+  const [showAi, setShowAi] = useState(true);
+  const targetId = data.target.id;
+  useEffect(() => {
+    if (targetId.startsWith("custom_")) return;
+    let live = true;
+    fetch(`http://127.0.0.1:8000/api/discoveries/${targetId}`)
+      .then(async (r) => { const j = await r.json().catch(() => null); if (!live) return; if (r.ok) setAi({ id: targetId, data: j as AiDiscoveryData, error: null }); else setAi({ id: targetId, data: null, error: j?.detail ?? "AI search not available." }); })
+      .catch(() => { if (live) setAi({ id: targetId, data: null, error: "AI search not available (backend not reachable)." }); });
+    return () => { live = false; };
+  }, [targetId]);
+  const aiData = ai && ai.id === targetId ? ai.data : null;
+  const aiError = ai && ai.id === targetId ? ai.error : null;
 
   const m = useMemo(() => data.matches.find((x) => x.id === selectedId) || data.matches[0], [data.matches, selectedId]);
   const t = data.target;
@@ -204,7 +219,12 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
     return data.matches.filter((x) => x.name.toLowerCase().includes(q) || x.mineral_profile.toLowerCase().includes(q) || x.type.toLowerCase().includes(q));
   }, [data.matches, filterText]);
 
-  const pins: GlobePin[] = useMemo(() => data.matches.map((x, i) => ({ id: x.id, rank: x.rank || i + 1, name: x.name, lat: x.lat, lon: x.lon, subtitle: `${PCT(x.similarity_score)} match` })), [data.matches]);
+  const pins: GlobePin[] = useMemo(() => {
+    const named: GlobePin[] = data.matches.map((x, i) => ({ id: x.id, rank: x.rank || i + 1, name: x.name, lat: x.lat, lon: x.lon, subtitle: `${PCT(x.similarity_score)} match` }));
+    if (!showAi || !aiData) return named;
+    return [...named, ...aiData.candidates.map((c, i) => ({ id: aiPinId(c), name: `AI find #${i + 1} · ${fmtLatLon(c.lat, c.lon)}`, lat: c.lat, lon: c.lon, tone: "ai" as const,
+      subtitle: c.exact_score != null ? `exact ${PCT(c.exact_score)} · AI ${PCT(c.ai_score)} (${PCT(c.ai_low)}–${PCT(c.ai_high)})` : `AI ${PCT(c.ai_score)}`, badge: c.confident ? "AI: confident" : "AI: less certain" }))];
+  }, [data.matches, showAi, aiData]);
 
   // plain-language summary pieces
   const sw = similarityWord(m.similarity_score);
@@ -279,7 +299,8 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
               <div className="text-xs font-semibold">Earth · {data.matches.length} candidate test sites</div>
               <div className="text-[11px] opacity-80">Best three are labelled · select a site and the globe turns to it</div>
             </div>
-            <PlanetGlobe body="earth" pins={pins} selectedPinId={m.id} onSelectPin={(id) => setSelectedId(id)} />
+            <PlanetGlobe body="earth" pins={pins} selectedPinId={aiSel && view === "ai" ? aiSel : m.id} onSelectPin={(id) => { if (id.startsWith("ai:")) { setAiSel(id); setView("ai"); } else setSelectedId(id); }} />
+            {aiData && <button type="button" className="absolute bottom-3 left-3 z-10 btn btn-sm" onClick={() => setShowAi((v) => !v)} aria-pressed={showAi}><span className="w-2 h-2 rounded-full" style={{ background: "#c084fc" }} /> {showAi ? "Hide" : "Show"} AI finds ({aiData.candidates.length})</button>}
           </div>
 
           <div className="card p-4 flex-1 flex flex-col" data-tour="ranked">
@@ -339,6 +360,7 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
           <div className="card p-5 flex-1 flex flex-col">
             <Tabs<View> value={view} onChange={setView} tour="view-tabs" items={[
               { id: "use", label: "By Use", hint: "best site for each test" },
+              ...(t.id.startsWith("custom_") ? [] : [{ id: "ai" as View, label: "AI Discoveries", hint: "new places, whole Earth" }]),
               { id: "summary", label: "Summary", hint: "why this site matches" },
               { id: "twins", label: "Terrain Twins", hint: "both grounds side by side" },
               { id: "tests", label: "Tests", hint: "what you can test here" },
@@ -402,6 +424,9 @@ export default function AnalyticsView({ data, onBackToGlobe, onLaunchSimulator }
                 </div>
               )}
 
+              {view === "ai" && (
+                <AiDiscoveries data={aiData} error={aiError} world={t.name} selected={aiSel} onSelect={setAiSel} topNamedScore={data.matches[0]?.similarity_score} />
+              )}
               {view === "use" && rankings.length > 0 && (
                 <ByUseView rankings={rankings} selectedId={m.id} onSelect={setSelectedId}
                   best={data.matches[0] ? { id: data.matches[0].id, name: data.matches[0].name, score: Math.round(data.matches[0].similarity_score * 100), total: data.matches.length } : undefined} />

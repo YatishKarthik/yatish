@@ -19,7 +19,7 @@ export interface GlobePin {
   subtitle?: string;
   miniMatrix?: MiniMatrixItem[];
   /** "artemis": on NASA's 2024 Artemis III list; "artemis-old": a 2022 candidate dropped in 2024; "custom": a point the user picked */
-  tone?: "artemis" | "artemis-old" | "custom";
+  tone?: "artemis" | "artemis-old" | "custom" | "ai";
   badge?: string;
 }
 
@@ -119,7 +119,7 @@ function PinMarker({
   });
 
   const isTop = body !== "earth" || (pin.rank !== undefined && pin.rank <= 5);
-  const base = pin.tone === "custom" ? "#f8fafc" : pin.tone === "artemis" ? "#fbbf24" : body === "earth" ? (isTop ? "#6ee7b7" : "#94a3b8") : body === "mars" ? "#fda4af" : "#bae6fd";
+  const base = pin.tone === "custom" ? "#f8fafc" : pin.tone === "ai" ? "#c084fc" : pin.tone === "artemis" ? "#fbbf24" : body === "earth" ? (isTop ? "#6ee7b7" : "#94a3b8") : body === "mars" ? "#fda4af" : "#bae6fd";
   const colour = isSelected ? (pin.tone === "custom" ? "#fef08a" : "#67e8f9") : isHovered ? "#fde68a" : base;
   const dot = isSelected ? 0.05 : isTop ? 0.036 : 0.026;
   const foot = body === "earth" ? 0.14 : 0.2;

@@ -1,0 +1,5775 @@
+{
+ "method": "Deep ensemble (7 networks) trained to emulate the exact Celestra score from coarse global inputs, swept over bare land, with split-conformal 90% intervals; top candidates re-scored with the exact pipeline.",
+ "inputs": [
+  "terrain std (GLO-90, ~360 m)",
+  "mean slope",
+  "90th-pct slope",
+  "relief",
+  "mean absolute deviation",
+  "the same four for the ~5 km around the centre",
+  "MODIS warmest-month day LST",
+  "MODIS coldest-month night LST",
+  "MODIS mean day-night LST swing",
+  "MODIS greenest-month NDVI",
+  "|latitude|"
+ ],
+ "cells_searched": 48455,
+ "cell_deg": 0.25,
+ "metrics": {
+  "n_train": 2383,
+  "n_calibration": 794,
+  "n_test": 795,
+  "coverage_per_target": [
+   0.927,
+   0.927,
+   0.928,
+   0.922,
+   0.914,
+   0.927,
+   0.899,
+   0.927,
+   0.926,
+   0.914,
+   0.919,
+   0.923,
+   0.906,
+   0.921,
+   0.933,
+   0.932,
+   0.925,
+   0.897,
+   0.926,
+   0.892,
+   0.898,
+   0.925,
+   0.93,
+   0.896,
+   0.917,
+   0.903,
+   0.928,
+   0.943
+  ],
+  "mae_per_target": [
+   0.06700000166893005,
+   0.057999998331069946,
+   0.057999998331069946,
+   0.06599999964237213,
+   0.06700000166893005,
+   0.057999998331069946,
+   0.06800000369548798,
+   0.057999998331069946,
+   0.06700000166893005,
+   0.04699999839067459,
+   0.06199999898672104,
+   0.07000000029802322,
+   0.05400000140070915,
+   0.05299999937415123,
+   0.0689999982714653,
+   0.07800000160932541,
+   0.07100000232458115,
+   0.05999999865889549,
+   0.08299999684095383,
+   0.07900000363588333,
+   0.07500000298023224,
+   0.08799999952316284,
+   0.08100000023841858,
+   0.09300000220537186,
+   0.09200000017881393,
+   0.10100000351667404,
+   0.08299999684095383,
+   0.08399999886751175
+  ],
+  "r2_per_target": [
+   0.5730000138282776,
+   0.5550000071525574,
+   0.5490000247955322,
+   0.5839999914169312,
+   0.5490000247955322,
+   0.5490000247955322,
+   0.5630000233650208,
+   0.5550000071525574,
+   0.5740000009536743,
+   0.5870000123977661,
+   0.5490000247955322,
+   0.593999981880188,
+   0.5680000185966492,
+   0.5569999814033508,
+   0.6290000081062317,
+   0.5910000205039978,
+   0.5669999718666077,
+   0.6359999775886536,
+   0.652999997138977,
+   0.5839999914169312,
+   0.49399998784065247,
+   0.6470000147819519,
+   0.6159999966621399,
+   0.5619999766349792,
+   0.5950000286102295,
+   0.5839999914169312,
+   0.6549999713897705,
+   0.6499999761581421
+  ]
+ },
+ "targets": {
+  "moon_a3_peak_near_cabeus_b": [
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.831,
+    "ai_low": 0.76,
+    "ai_high": 0.903,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.772,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 34.875,
+    "lon": 90.875,
+    "ai_score": 0.772,
+    "ai_low": 0.709,
+    "ai_high": 0.836,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.767,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.181,
+     "slope_p90": 11.747,
+     "tri_ruggedness": 56.458,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 73.625,
+    "lon": -86.875,
+    "ai_score": 0.744,
+    "ai_low": 0.68,
+    "ai_high": 0.808,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.757,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.703,
+     "slope_p90": 14.847,
+     "tri_ruggedness": 40.953,
+     "temp_min_c": -39.2,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.193
+    }
+   },
+   {
+    "lat": 72.625,
+    "lon": -81.375,
+    "ai_score": 0.783,
+    "ai_low": 0.684,
+    "ai_high": 0.881,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.738,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 5.565,
+     "slope_p90": 10.035,
+     "tri_ruggedness": 28.722,
+     "temp_min_c": -39.2,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 75.375,
+    "lon": -87.375,
+    "ai_score": 0.79,
+    "ai_low": 0.692,
+    "ai_high": 0.888,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.736,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 7.476,
+     "slope_p90": 14.291,
+     "tri_ruggedness": 44.641,
+     "temp_min_c": -39.2,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 84.875,
+    "ai_score": 0.753,
+    "ai_low": 0.689,
+    "ai_high": 0.816,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.725,
+    "inside_interval": true,
+    "would_rank_among_named": 8,
+    "measured": {
+     "slope_mean": 4.967,
+     "slope_p90": 8.779,
+     "tri_ruggedness": 40.385,
+     "temp_min_c": -23.6,
+     "temp_max_c": 26.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 76.875,
+    "lon": -95.125,
+    "ai_score": 0.794,
+    "ai_low": 0.689,
+    "ai_high": 0.899,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.722,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 5.215,
+     "slope_p90": 8.37,
+     "tri_ruggedness": 38.574,
+     "temp_min_c": -38.0,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 80.375,
+    "lon": -60.625,
+    "ai_score": 0.799,
+    "ai_low": 0.701,
+    "ai_high": 0.897,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.715,
+    "inside_interval": true,
+    "would_rank_among_named": 12,
+    "measured": {
+     "slope_mean": 5.292,
+     "slope_p90": 10.953,
+     "tri_ruggedness": 38.192,
+     "temp_min_c": -36.8,
+     "temp_max_c": 11.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 81.625,
+    "lon": -30.625,
+    "ai_score": 0.831,
+    "ai_low": 0.695,
+    "ai_high": 0.967,
+    "ai_sigma": 0.021,
+    "confident": false,
+    "exact_score": 0.71,
+    "inside_interval": true,
+    "would_rank_among_named": 12,
+    "measured": {
+     "slope_mean": 2.928,
+     "slope_p90": 5.829,
+     "tri_ruggedness": 21.625,
+     "temp_min_c": -35.6,
+     "temp_max_c": 9.4,
+     "ndvi_season_max": 0.088
+    }
+   },
+   {
+    "lat": 35.375,
+    "lon": 87.625,
+    "ai_score": 0.77,
+    "ai_low": 0.696,
+    "ai_high": 0.844,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.683,
+    "inside_interval": false,
+    "would_rank_among_named": 14,
+    "measured": {
+     "slope_mean": 8.569,
+     "slope_p90": 15.305,
+     "tri_ruggedness": 69.098,
+     "temp_min_c": -25.4,
+     "temp_max_c": 17.8,
+     "ndvi_season_max": 0.173
+    }
+   }
+  ],
+  "moon_a3_haworth": [
+   {
+    "lat": 33.875,
+    "lon": 87.375,
+    "ai_score": 0.747,
+    "ai_low": 0.665,
+    "ai_high": 0.829,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.802,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 10.635,
+     "slope_p90": 20.605,
+     "tri_ruggedness": 62.054,
+     "temp_min_c": -25.4,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.188
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 90.625,
+    "ai_score": 0.779,
+    "ai_low": 0.664,
+    "ai_high": 0.894,
+    "ai_sigma": 0.023,
+    "confident": false,
+    "exact_score": 0.77,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.115,
+     "slope_p90": 25.741,
+     "tri_ruggedness": 59.499,
+     "temp_min_c": -26.6,
+     "temp_max_c": 13.0,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 80.375,
+    "lon": -60.875,
+    "ai_score": 0.722,
+    "ai_low": 0.672,
+    "ai_high": 0.773,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.767,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 6.944,
+     "slope_p90": 12.639,
+     "tri_ruggedness": 53.214,
+     "temp_min_c": -37.4,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 36.625,
+    "lon": 88.125,
+    "ai_score": 0.757,
+    "ai_low": 0.665,
+    "ai_high": 0.849,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.767,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.231,
+     "slope_p90": 24.902,
+     "tri_ruggedness": 51.139,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": 77.125,
+    "lon": -82.875,
+    "ai_score": 0.761,
+    "ai_low": 0.664,
+    "ai_high": 0.858,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.739,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 8.584,
+     "slope_p90": 14.878,
+     "tri_ruggedness": 63.321,
+     "temp_min_c": -36.8,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.77,
+    "ai_low": 0.677,
+    "ai_high": 0.863,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.725,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 83.375,
+    "ai_score": 0.751,
+    "ai_low": 0.677,
+    "ai_high": 0.826,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.712,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 12.63,
+     "slope_p90": 17.697,
+     "tri_ruggedness": 98.051,
+     "temp_min_c": -24.8,
+     "temp_max_c": 18.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 35.875,
+    "lon": 91.125,
+    "ai_score": 0.721,
+    "ai_low": 0.671,
+    "ai_high": 0.771,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.712,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.141,
+     "slope_p90": 21.531,
+     "tri_ruggedness": 57.692,
+     "temp_min_c": -24.2,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 81.125,
+    "lon": -27.375,
+    "ai_score": 0.78,
+    "ai_low": 0.673,
+    "ai_high": 0.886,
+    "ai_sigma": 0.021,
+    "confident": false,
+    "exact_score": 0.661,
+    "inside_interval": false,
+    "would_rank_among_named": 7,
+    "measured": {
+     "slope_mean": 6.799,
+     "slope_p90": 14.288,
+     "tri_ruggedness": 45.155,
+     "temp_min_c": -34.4,
+     "temp_max_c": 8.1,
+     "ndvi_season_max": 0.078
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -58.625,
+    "ai_score": 0.762,
+    "ai_low": 0.665,
+    "ai_high": 0.859,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.649,
+    "inside_interval": false,
+    "would_rank_among_named": 8,
+    "measured": {
+     "slope_mean": 5.481,
+     "slope_p90": 8.911,
+     "tri_ruggedness": 30.169,
+     "temp_min_c": -35.6,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.128
+    }
+   }
+  ],
+  "moon_a3_malapert_massif": [
+   {
+    "lat": 81.875,
+    "lon": -34.375,
+    "ai_score": 0.775,
+    "ai_low": 0.686,
+    "ai_high": 0.865,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.832,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 10.218,
+     "slope_p90": 23.488,
+     "tri_ruggedness": 69.734,
+     "temp_min_c": -36.2,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.088
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 90.625,
+    "ai_score": 0.789,
+    "ai_low": 0.692,
+    "ai_high": 0.887,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.767,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.115,
+     "slope_p90": 25.741,
+     "tri_ruggedness": 59.499,
+     "temp_min_c": -26.6,
+     "temp_max_c": 13.0,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 36.625,
+    "lon": 88.125,
+    "ai_score": 0.768,
+    "ai_low": 0.675,
+    "ai_high": 0.86,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.756,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.231,
+     "slope_p90": 24.902,
+     "tri_ruggedness": 51.139,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": 34.625,
+    "lon": 86.125,
+    "ai_score": 0.745,
+    "ai_low": 0.675,
+    "ai_high": 0.815,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.749,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 12.016,
+     "slope_p90": 20.965,
+     "tri_ruggedness": 49.002,
+     "temp_min_c": -23.6,
+     "temp_max_c": 16.0,
+     "ndvi_season_max": 0.188
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 83.375,
+    "ai_score": 0.762,
+    "ai_low": 0.689,
+    "ai_high": 0.835,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.741,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 12.63,
+     "slope_p90": 17.697,
+     "tri_ruggedness": 98.051,
+     "temp_min_c": -24.8,
+     "temp_max_c": 18.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 75.375,
+    "lon": -85.125,
+    "ai_score": 0.751,
+    "ai_low": 0.685,
+    "ai_high": 0.817,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.731,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 11.182,
+     "slope_p90": 19.582,
+     "tri_ruggedness": 49.283,
+     "temp_min_c": -39.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.778,
+    "ai_low": 0.709,
+    "ai_high": 0.846,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.728,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 76.875,
+    "lon": -95.625,
+    "ai_score": 0.753,
+    "ai_low": 0.68,
+    "ai_high": 0.826,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.727,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.699,
+     "slope_p90": 12.951,
+     "tri_ruggedness": 36.647,
+     "temp_min_c": -37.4,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 35.875,
+    "lon": 91.125,
+    "ai_score": 0.731,
+    "ai_low": 0.682,
+    "ai_high": 0.781,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.716,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 16.141,
+     "slope_p90": 21.531,
+     "tri_ruggedness": 57.692,
+     "temp_min_c": -24.2,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 80.625,
+    "lon": -63.875,
+    "ai_score": 0.778,
+    "ai_low": 0.681,
+    "ai_high": 0.874,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.701,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 13.375,
+     "slope_p90": 25.164,
+     "tri_ruggedness": 97.288,
+     "temp_min_c": -36.8,
+     "temp_max_c": 2.1,
+     "ndvi_season_max": 0.133
+    }
+   }
+  ],
+  "moon_a3_mons_mouton": [
+   {
+    "lat": 80.375,
+    "lon": -64.375,
+    "ai_score": 0.811,
+    "ai_low": 0.707,
+    "ai_high": 0.915,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.785,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 8.049,
+     "slope_p90": 14.678,
+     "tri_ruggedness": 45.243,
+     "temp_min_c": -33.8,
+     "temp_max_c": 8.1,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": 26.375,
+    "lon": 44.625,
+    "ai_score": 0.743,
+    "ai_low": 0.677,
+    "ai_high": 0.809,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.762,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.32,
+     "slope_p90": 14.84,
+     "tri_ruggedness": 30.445,
+     "temp_min_c": 9.4,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 76.875,
+    "lon": -81.375,
+    "ai_score": 0.784,
+    "ai_low": 0.706,
+    "ai_high": 0.862,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.759,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 5.776,
+     "slope_p90": 10.462,
+     "tri_ruggedness": 34.095,
+     "temp_min_c": -38.6,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 34.875,
+    "lon": 90.875,
+    "ai_score": 0.757,
+    "ai_low": 0.682,
+    "ai_high": 0.833,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.759,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.181,
+     "slope_p90": 11.747,
+     "tri_ruggedness": 56.458,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 72.875,
+    "lon": -82.875,
+    "ai_score": 0.77,
+    "ai_low": 0.685,
+    "ai_high": 0.856,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.748,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.345,
+     "slope_p90": 6.448,
+     "tri_ruggedness": 38.288,
+     "temp_min_c": -39.2,
+     "temp_max_c": 8.1,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 21.375,
+    "lon": 55.375,
+    "ai_score": 0.742,
+    "ai_low": 0.682,
+    "ai_high": 0.802,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.743,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.347,
+     "slope_p90": 19.184,
+     "tri_ruggedness": 26.646,
+     "temp_min_c": 17.1,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.813,
+    "ai_low": 0.702,
+    "ai_high": 0.923,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.739,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 81.375,
+    "lon": -71.375,
+    "ai_score": 0.771,
+    "ai_low": 0.7,
+    "ai_high": 0.841,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.727,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 6.388,
+     "slope_p90": 16.709,
+     "tri_ruggedness": 29.868,
+     "temp_min_c": -36.8,
+     "temp_max_c": 13.0,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 81.125,
+    "lon": -27.375,
+    "ai_score": 0.82,
+    "ai_low": 0.721,
+    "ai_high": 0.92,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.717,
+    "inside_interval": false,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 6.799,
+     "slope_p90": 14.288,
+     "tri_ruggedness": 45.155,
+     "temp_min_c": -34.4,
+     "temp_max_c": 8.1,
+     "ndvi_season_max": 0.078
+    }
+   },
+   {
+    "lat": 35.375,
+    "lon": 87.625,
+    "ai_score": 0.754,
+    "ai_low": 0.677,
+    "ai_high": 0.83,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.717,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 8.569,
+     "slope_p90": 15.305,
+     "tri_ruggedness": 69.098,
+     "temp_min_c": -25.4,
+     "temp_max_c": 17.8,
+     "ndvi_season_max": 0.173
+    }
+   }
+  ],
+  "moon_a3_mons_mouton_plateau": [
+   {
+    "lat": 24.375,
+    "lon": -5.125,
+    "ai_score": 0.702,
+    "ai_low": 0.641,
+    "ai_high": 0.763,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.759,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.057,
+     "slope_p90": 13.815,
+     "tri_ruggedness": 29.269,
+     "temp_min_c": 11.1,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 27.875,
+    "lon": 7.125,
+    "ai_score": 0.706,
+    "ai_low": 0.645,
+    "ai_high": 0.767,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.745,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 6.321,
+     "slope_p90": 12.037,
+     "tri_ruggedness": 26.298,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 80.375,
+    "lon": -61.875,
+    "ai_score": 0.719,
+    "ai_low": 0.641,
+    "ai_high": 0.797,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.734,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 6.238,
+     "slope_p90": 11.059,
+     "tri_ruggedness": 52.793,
+     "temp_min_c": -36.2,
+     "temp_max_c": 12.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 29.125,
+    "lon": -2.375,
+    "ai_score": 0.716,
+    "ai_low": 0.655,
+    "ai_high": 0.777,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.715,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 7.204,
+     "slope_p90": 15.776,
+     "tri_ruggedness": 39.666,
+     "temp_min_c": 5.8,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.762,
+    "ai_low": 0.642,
+    "ai_high": 0.882,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.699,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 37.875,
+    "lon": 97.625,
+    "ai_score": 0.722,
+    "ai_low": 0.652,
+    "ai_high": 0.793,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.698,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 8.891,
+     "slope_p90": 18.012,
+     "tri_ruggedness": 74.067,
+     "temp_min_c": -26.6,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.218
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": 12.125,
+    "ai_score": 0.713,
+    "ai_low": 0.644,
+    "ai_high": 0.782,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.688,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 7.215,
+     "slope_p90": 15.5,
+     "tri_ruggedness": 25.902,
+     "temp_min_c": 5.8,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 26.375,
+    "lon": 44.625,
+    "ai_score": 0.72,
+    "ai_low": 0.654,
+    "ai_high": 0.786,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.684,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 7.32,
+     "slope_p90": 14.84,
+     "tri_ruggedness": 30.445,
+     "temp_min_c": 9.4,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 22.125,
+    "lon": 58.625,
+    "ai_score": 0.709,
+    "ai_low": 0.641,
+    "ai_high": 0.778,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.681,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 5.275,
+     "slope_p90": 10.01,
+     "tri_ruggedness": 23.371,
+     "temp_min_c": 17.1,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": 10.375,
+    "ai_score": 0.722,
+    "ai_low": 0.661,
+    "ai_high": 0.784,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.65,
+    "inside_interval": false,
+    "would_rank_among_named": 12,
+    "measured": {
+     "slope_mean": 6.894,
+     "slope_p90": 12.472,
+     "tri_ruggedness": 32.545,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.128
+    }
+   }
+  ],
+  "moon_a3_nobile_rim_1": [
+   {
+    "lat": 81.875,
+    "lon": -34.375,
+    "ai_score": 0.757,
+    "ai_low": 0.669,
+    "ai_high": 0.844,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.803,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 10.218,
+     "slope_p90": 23.488,
+     "tri_ruggedness": 69.734,
+     "temp_min_c": -36.2,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.088
+    }
+   },
+   {
+    "lat": 34.625,
+    "lon": 86.125,
+    "ai_score": 0.727,
+    "ai_low": 0.663,
+    "ai_high": 0.792,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.755,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 12.016,
+     "slope_p90": 20.965,
+     "tri_ruggedness": 49.002,
+     "temp_min_c": -23.6,
+     "temp_max_c": 16.0,
+     "ndvi_season_max": 0.188
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 90.625,
+    "ai_score": 0.774,
+    "ai_low": 0.675,
+    "ai_high": 0.873,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.751,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.115,
+     "slope_p90": 25.741,
+     "tri_ruggedness": 59.499,
+     "temp_min_c": -26.6,
+     "temp_max_c": 13.0,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 36.625,
+    "lon": 88.125,
+    "ai_score": 0.749,
+    "ai_low": 0.65,
+    "ai_high": 0.847,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.735,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.231,
+     "slope_p90": 24.902,
+     "tri_ruggedness": 51.139,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 83.375,
+    "ai_score": 0.745,
+    "ai_low": 0.674,
+    "ai_high": 0.816,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.725,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 12.63,
+     "slope_p90": 17.697,
+     "tri_ruggedness": 98.051,
+     "temp_min_c": -24.8,
+     "temp_max_c": 18.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.757,
+    "ai_low": 0.68,
+    "ai_high": 0.834,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.709,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 80.625,
+    "lon": -63.875,
+    "ai_score": 0.76,
+    "ai_low": 0.67,
+    "ai_high": 0.85,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.703,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 13.375,
+     "slope_p90": 25.164,
+     "tri_ruggedness": 97.288,
+     "temp_min_c": -36.8,
+     "temp_max_c": 2.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 75.375,
+    "lon": -85.125,
+    "ai_score": 0.729,
+    "ai_low": 0.65,
+    "ai_high": 0.808,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.699,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 11.182,
+     "slope_p90": 19.582,
+     "tri_ruggedness": 49.283,
+     "temp_min_c": -39.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 77.125,
+    "lon": -82.875,
+    "ai_score": 0.746,
+    "ai_low": 0.65,
+    "ai_high": 0.842,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.699,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 8.584,
+     "slope_p90": 14.878,
+     "tri_ruggedness": 63.321,
+     "temp_min_c": -36.8,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 35.875,
+    "lon": 91.125,
+    "ai_score": 0.713,
+    "ai_low": 0.665,
+    "ai_high": 0.761,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.689,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 16.141,
+     "slope_p90": 21.531,
+     "tri_ruggedness": 57.692,
+     "temp_min_c": -24.2,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.128
+    }
+   }
+  ],
+  "moon_a3_nobile_rim_2": [
+   {
+    "lat": 31.125,
+    "lon": 2.625,
+    "ai_score": 0.686,
+    "ai_low": 0.618,
+    "ai_high": 0.754,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.773,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 5.46,
+     "slope_p90": 9.993,
+     "tri_ruggedness": 22.57,
+     "temp_min_c": 2.8,
+     "temp_max_c": 49.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 27.875,
+    "lon": 7.125,
+    "ai_score": 0.687,
+    "ai_low": 0.619,
+    "ai_high": 0.755,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.761,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 6.321,
+     "slope_p90": 12.037,
+     "tri_ruggedness": 26.298,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 27.625,
+    "lon": 9.375,
+    "ai_score": 0.692,
+    "ai_low": 0.624,
+    "ai_high": 0.76,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.715,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 8.101,
+     "slope_p90": 15.56,
+     "tri_ruggedness": 28.42,
+     "temp_min_c": 6.4,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 25.875,
+    "lon": 44.375,
+    "ai_score": 0.695,
+    "ai_low": 0.623,
+    "ai_high": 0.767,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.714,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 8.102,
+     "slope_p90": 16.896,
+     "tri_ruggedness": 27.745,
+     "temp_min_c": 10.6,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 18.125,
+    "lon": 48.375,
+    "ai_score": 0.689,
+    "ai_low": 0.621,
+    "ai_high": 0.757,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.68,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 4.65,
+     "slope_p90": 8.339,
+     "tri_ruggedness": 21.131,
+     "temp_min_c": 16.0,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 27.125,
+    "lon": 12.125,
+    "ai_score": 0.69,
+    "ai_low": 0.622,
+    "ai_high": 0.758,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.675,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 7.588,
+     "slope_p90": 13.969,
+     "tri_ruggedness": 25.333,
+     "temp_min_c": 5.8,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 28.375,
+    "lon": 41.375,
+    "ai_score": 0.691,
+    "ai_low": 0.618,
+    "ai_high": 0.763,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.664,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 7.304,
+     "slope_p90": 14.93,
+     "tri_ruggedness": 25.897,
+     "temp_min_c": 6.4,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 32.375,
+    "lon": 8.625,
+    "ai_score": 0.685,
+    "ai_low": 0.617,
+    "ai_high": 0.753,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.663,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 4.828,
+     "slope_p90": 9.031,
+     "tri_ruggedness": 22.888,
+     "temp_min_c": 3.4,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": 18.875,
+    "lon": 49.875,
+    "ai_score": 0.687,
+    "ai_low": 0.619,
+    "ai_high": 0.755,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.633,
+    "inside_interval": true,
+    "would_rank_among_named": 14,
+    "measured": {
+     "slope_mean": 3.995,
+     "slope_p90": 8.517,
+     "tri_ruggedness": 23.235,
+     "temp_min_c": 16.6,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 28.875,
+    "lon": 39.875,
+    "ai_score": 0.691,
+    "ai_low": 0.623,
+    "ai_high": 0.759,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.628,
+    "inside_interval": true,
+    "would_rank_among_named": 14,
+    "measured": {
+     "slope_mean": 5.104,
+     "slope_p90": 9.187,
+     "tri_ruggedness": 16.683,
+     "temp_min_c": 5.8,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.143
+    }
+   }
+  ],
+  "moon_a3_de_gerlache_rim_2": [
+   {
+    "lat": 80.375,
+    "lon": -60.875,
+    "ai_score": 0.69,
+    "ai_low": 0.64,
+    "ai_high": 0.741,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.722,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 6.944,
+     "slope_p90": 12.639,
+     "tri_ruggedness": 53.214,
+     "temp_min_c": -37.4,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 90.625,
+    "ai_score": 0.751,
+    "ai_low": 0.636,
+    "ai_high": 0.866,
+    "ai_sigma": 0.023,
+    "confident": false,
+    "exact_score": 0.719,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 16.115,
+     "slope_p90": 25.741,
+     "tri_ruggedness": 59.499,
+     "temp_min_c": -26.6,
+     "temp_max_c": 13.0,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 37.875,
+    "lon": 97.625,
+    "ai_score": 0.711,
+    "ai_low": 0.648,
+    "ai_high": 0.774,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.711,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 8.891,
+     "slope_p90": 18.012,
+     "tri_ruggedness": 74.067,
+     "temp_min_c": -26.6,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.218
+    }
+   },
+   {
+    "lat": 76.875,
+    "lon": -95.625,
+    "ai_score": 0.716,
+    "ai_low": 0.625,
+    "ai_high": 0.807,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.687,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.699,
+     "slope_p90": 12.951,
+     "tri_ruggedness": 36.647,
+     "temp_min_c": -37.4,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.738,
+    "ai_low": 0.637,
+    "ai_high": 0.84,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.682,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 35.875,
+    "lon": 91.125,
+    "ai_score": 0.693,
+    "ai_low": 0.637,
+    "ai_high": 0.749,
+    "ai_sigma": 0.011,
+    "confident": true,
+    "exact_score": 0.678,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 16.141,
+     "slope_p90": 21.531,
+     "tri_ruggedness": 57.692,
+     "temp_min_c": -24.2,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 83.375,
+    "ai_score": 0.724,
+    "ai_low": 0.64,
+    "ai_high": 0.808,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.673,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 12.63,
+     "slope_p90": 17.697,
+     "tri_ruggedness": 98.051,
+     "temp_min_c": -24.8,
+     "temp_max_c": 18.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 72.875,
+    "lon": -82.625,
+    "ai_score": 0.735,
+    "ai_low": 0.636,
+    "ai_high": 0.835,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.643,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 8.975,
+     "slope_p90": 16.24,
+     "tri_ruggedness": 63.467,
+     "temp_min_c": -38.0,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.273
+    }
+   },
+   {
+    "lat": 81.125,
+    "lon": -27.375,
+    "ai_score": 0.746,
+    "ai_low": 0.652,
+    "ai_high": 0.84,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.621,
+    "inside_interval": false,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 6.799,
+     "slope_p90": 14.288,
+     "tri_ruggedness": 45.155,
+     "temp_min_c": -34.4,
+     "temp_max_c": 8.1,
+     "ndvi_season_max": 0.078
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": 10.375,
+    "ai_score": 0.675,
+    "ai_low": 0.624,
+    "ai_high": 0.725,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.616,
+    "inside_interval": false,
+    "would_rank_among_named": 11,
+    "measured": {
+     "slope_mean": 6.894,
+     "slope_p90": 12.472,
+     "tri_ruggedness": 32.545,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.128
+    }
+   }
+  ],
+  "moon_a3_slater_plain": [
+   {
+    "lat": 34.875,
+    "lon": 90.875,
+    "ai_score": 0.731,
+    "ai_low": 0.653,
+    "ai_high": 0.81,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.77,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.181,
+     "slope_p90": 11.747,
+     "tri_ruggedness": 56.458,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 35.125,
+    "lon": 87.125,
+    "ai_score": 0.722,
+    "ai_low": 0.654,
+    "ai_high": 0.79,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.755,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 6.39,
+     "slope_p90": 11.493,
+     "tri_ruggedness": 52.9,
+     "temp_min_c": -25.4,
+     "temp_max_c": 20.1,
+     "ndvi_season_max": 0.168
+    }
+   },
+   {
+    "lat": 18.875,
+    "lon": 53.625,
+    "ai_score": 0.715,
+    "ai_low": 0.648,
+    "ai_high": 0.782,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.746,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 5.364,
+     "slope_p90": 11.546,
+     "tri_ruggedness": 19.212,
+     "temp_min_c": 17.1,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": 12.125,
+    "ai_score": 0.712,
+    "ai_low": 0.645,
+    "ai_high": 0.779,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.746,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.215,
+     "slope_p90": 15.5,
+     "tri_ruggedness": 25.902,
+     "temp_min_c": 5.8,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 21.375,
+    "lon": 55.375,
+    "ai_score": 0.716,
+    "ai_low": 0.65,
+    "ai_high": 0.783,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.733,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.347,
+     "slope_p90": 19.184,
+     "tri_ruggedness": 26.646,
+     "temp_min_c": 17.1,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 26.375,
+    "lon": 44.625,
+    "ai_score": 0.717,
+    "ai_low": 0.65,
+    "ai_high": 0.784,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.732,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.32,
+     "slope_p90": 14.84,
+     "tri_ruggedness": 30.445,
+     "temp_min_c": 9.4,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.79,
+    "ai_low": 0.655,
+    "ai_high": 0.926,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.715,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 80.375,
+    "lon": -62.875,
+    "ai_score": 0.762,
+    "ai_low": 0.672,
+    "ai_high": 0.851,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.696,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 5.065,
+     "slope_p90": 7.945,
+     "tri_ruggedness": 22.562,
+     "temp_min_c": -36.8,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 18.625,
+    "lon": 50.375,
+    "ai_score": 0.717,
+    "ai_low": 0.649,
+    "ai_high": 0.784,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.683,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 4.681,
+     "slope_p90": 9.314,
+     "tri_ruggedness": 17.18,
+     "temp_min_c": 17.1,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 27.625,
+    "lon": 9.375,
+    "ai_score": 0.715,
+    "ai_low": 0.648,
+    "ai_high": 0.782,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.664,
+    "inside_interval": true,
+    "would_rank_among_named": 12,
+    "measured": {
+     "slope_mean": 8.101,
+     "slope_p90": 15.56,
+     "tri_ruggedness": 28.42,
+     "temp_min_c": 6.4,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.143
+    }
+   }
+  ],
+  "moon_shackleton_rim": [
+   {
+    "lat": 75.375,
+    "lon": 110.375,
+    "ai_score": 0.707,
+    "ai_low": 0.652,
+    "ai_high": 0.762,
+    "ai_sigma": 0.014,
+    "confident": true,
+    "exact_score": 0.734,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 13.979,
+     "slope_p90": 27.298,
+     "tri_ruggedness": 64.429,
+     "temp_min_c": -33.2,
+     "temp_max_c": 11.1,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 79.125,
+    "lon": -80.875,
+    "ai_score": 0.707,
+    "ai_low": 0.655,
+    "ai_high": 0.758,
+    "ai_sigma": 0.013,
+    "confident": true,
+    "exact_score": 0.721,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 15.36,
+     "slope_p90": 30.288,
+     "tri_ruggedness": 107.98,
+     "temp_min_c": -36.8,
+     "temp_max_c": 12.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 83.375,
+    "ai_score": 0.706,
+    "ai_low": 0.643,
+    "ai_high": 0.769,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.712,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 12.63,
+     "slope_p90": 17.697,
+     "tri_ruggedness": 98.051,
+     "temp_min_c": -24.8,
+     "temp_max_c": 18.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 36.625,
+    "lon": 88.125,
+    "ai_score": 0.714,
+    "ai_low": 0.629,
+    "ai_high": 0.798,
+    "ai_sigma": 0.021,
+    "confident": false,
+    "exact_score": 0.705,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 16.231,
+     "slope_p90": 24.902,
+     "tri_ruggedness": 51.139,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": 35.875,
+    "lon": 91.125,
+    "ai_score": 0.689,
+    "ai_low": 0.64,
+    "ai_high": 0.739,
+    "ai_sigma": 0.012,
+    "confident": true,
+    "exact_score": 0.685,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 16.141,
+     "slope_p90": 21.531,
+     "tri_ruggedness": 57.692,
+     "temp_min_c": -24.2,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 80.375,
+    "lon": -94.125,
+    "ai_score": 0.684,
+    "ai_low": 0.635,
+    "ai_high": 0.732,
+    "ai_sigma": 0.012,
+    "confident": true,
+    "exact_score": 0.666,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 11.71,
+     "slope_p90": 24.243,
+     "tri_ruggedness": 55.133,
+     "temp_min_c": -33.2,
+     "temp_max_c": 9.4,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": 37.875,
+    "lon": 97.625,
+    "ai_score": 0.699,
+    "ai_low": 0.64,
+    "ai_high": 0.759,
+    "ai_sigma": 0.015,
+    "confident": true,
+    "exact_score": 0.662,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 8.891,
+     "slope_p90": 18.012,
+     "tri_ruggedness": 74.067,
+     "temp_min_c": -26.6,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.218
+    }
+   },
+   {
+    "lat": 75.375,
+    "lon": -85.125,
+    "ai_score": 0.685,
+    "ai_low": 0.624,
+    "ai_high": 0.746,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.646,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 11.182,
+     "slope_p90": 19.582,
+     "tri_ruggedness": 49.283,
+     "temp_min_c": -39.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.706,
+    "ai_low": 0.645,
+    "ai_high": 0.766,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.593,
+    "inside_interval": false,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 78.875,
+    "lon": -92.375,
+    "ai_score": 0.703,
+    "ai_low": 0.625,
+    "ai_high": 0.782,
+    "ai_sigma": 0.02,
+    "confident": false,
+    "exact_score": 0.552,
+    "inside_interval": false,
+    "would_rank_among_named": 11,
+    "measured": {
+     "slope_mean": 20.54,
+     "slope_p90": 34.098,
+     "tri_ruggedness": 107.789,
+     "temp_min_c": -34.4,
+     "temp_max_c": 13.6,
+     "ndvi_season_max": 0.148
+    }
+   }
+  ],
+  "moon_connecting_ridge": [
+   {
+    "lat": 81.875,
+    "lon": -34.375,
+    "ai_score": 0.763,
+    "ai_low": 0.647,
+    "ai_high": 0.879,
+    "ai_sigma": 0.021,
+    "confident": false,
+    "exact_score": 0.76,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 10.218,
+     "slope_p90": 23.488,
+     "tri_ruggedness": 69.734,
+     "temp_min_c": -36.2,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.088
+    }
+   },
+   {
+    "lat": 34.875,
+    "lon": 65.875,
+    "ai_score": 0.715,
+    "ai_low": 0.653,
+    "ai_high": 0.778,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.751,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 13.464,
+     "slope_p90": 20.795,
+     "tri_ruggedness": 45.136,
+     "temp_min_c": -23.6,
+     "temp_max_c": 35.1,
+     "ndvi_season_max": 0.198
+    }
+   },
+   {
+    "lat": 37.875,
+    "lon": 97.625,
+    "ai_score": 0.729,
+    "ai_low": 0.662,
+    "ai_high": 0.795,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.724,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 8.891,
+     "slope_p90": 18.012,
+     "tri_ruggedness": 74.067,
+     "temp_min_c": -26.6,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.218
+    }
+   },
+   {
+    "lat": 12.125,
+    "lon": 41.375,
+    "ai_score": 0.703,
+    "ai_low": 0.648,
+    "ai_high": 0.757,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.717,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 9.148,
+     "slope_p90": 20.509,
+     "tri_ruggedness": 38.312,
+     "temp_min_c": 23.8,
+     "temp_max_c": 44.8,
+     "ndvi_season_max": 0.178
+    }
+   },
+   {
+    "lat": 80.875,
+    "lon": -64.625,
+    "ai_score": 0.704,
+    "ai_low": 0.649,
+    "ai_high": 0.758,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.706,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 10.852,
+     "slope_p90": 20.049,
+     "tri_ruggedness": 68.077,
+     "temp_min_c": -33.2,
+     "temp_max_c": 5.1,
+     "ndvi_season_max": 0.125
+    }
+   },
+   {
+    "lat": 29.125,
+    "lon": -2.375,
+    "ai_score": 0.703,
+    "ai_low": 0.648,
+    "ai_high": 0.758,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.703,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.204,
+     "slope_p90": 15.776,
+     "tri_ruggedness": 39.666,
+     "temp_min_c": 5.8,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.763,
+    "ai_low": 0.658,
+    "ai_high": 0.868,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.699,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 83.375,
+    "ai_score": 0.745,
+    "ai_low": 0.651,
+    "ai_high": 0.838,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.676,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 12.63,
+     "slope_p90": 17.697,
+     "tri_ruggedness": 98.051,
+     "temp_min_c": -24.8,
+     "temp_max_c": 18.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 26.375,
+    "lon": 44.625,
+    "ai_score": 0.704,
+    "ai_low": 0.648,
+    "ai_high": 0.76,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.668,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 7.32,
+     "slope_p90": 14.84,
+     "tri_ruggedness": 30.445,
+     "temp_min_c": 9.4,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": 10.375,
+    "ai_score": 0.707,
+    "ai_low": 0.651,
+    "ai_high": 0.763,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.628,
+    "inside_interval": false,
+    "would_rank_among_named": 14,
+    "measured": {
+     "slope_mean": 6.894,
+     "slope_p90": 12.472,
+     "tri_ruggedness": 32.545,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.128
+    }
+   }
+  ],
+  "moon_faustini_rim": [
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.833,
+    "ai_low": 0.704,
+    "ai_high": 0.962,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.787,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 20.625,
+    "lon": 53.375,
+    "ai_score": 0.756,
+    "ai_low": 0.688,
+    "ai_high": 0.824,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.786,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 5.269,
+     "slope_p90": 11.891,
+     "tri_ruggedness": 21.983,
+     "temp_min_c": 14.8,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 80.375,
+    "lon": -60.625,
+    "ai_score": 0.799,
+    "ai_low": 0.694,
+    "ai_high": 0.904,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.765,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 5.292,
+     "slope_p90": 10.953,
+     "tri_ruggedness": 38.192,
+     "temp_min_c": -36.8,
+     "temp_max_c": 11.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 28.875,
+    "lon": 39.875,
+    "ai_score": 0.757,
+    "ai_low": 0.687,
+    "ai_high": 0.826,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.751,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 5.104,
+     "slope_p90": 9.187,
+     "tri_ruggedness": 16.683,
+     "temp_min_c": 5.8,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 84.875,
+    "ai_score": 0.756,
+    "ai_low": 0.688,
+    "ai_high": 0.824,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.738,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 4.967,
+     "slope_p90": 8.779,
+     "tri_ruggedness": 40.385,
+     "temp_min_c": -23.6,
+     "temp_max_c": 26.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 17.875,
+    "lon": 47.875,
+    "ai_score": 0.752,
+    "ai_low": 0.684,
+    "ai_high": 0.82,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.733,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 3.291,
+     "slope_p90": 7.086,
+     "tri_ruggedness": 17.116,
+     "temp_min_c": 16.0,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 34.875,
+    "lon": 90.875,
+    "ai_score": 0.759,
+    "ai_low": 0.691,
+    "ai_high": 0.827,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.725,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 7.181,
+     "slope_p90": 11.747,
+     "tri_ruggedness": 56.458,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 75.375,
+    "lon": -87.375,
+    "ai_score": 0.779,
+    "ai_low": 0.711,
+    "ai_high": 0.847,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.699,
+    "inside_interval": false,
+    "would_rank_among_named": 13,
+    "measured": {
+     "slope_mean": 7.476,
+     "slope_p90": 14.291,
+     "tri_ruggedness": 44.641,
+     "temp_min_c": -39.2,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 35.375,
+    "lon": 87.625,
+    "ai_score": 0.758,
+    "ai_low": 0.686,
+    "ai_high": 0.83,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.688,
+    "inside_interval": true,
+    "would_rank_among_named": 14,
+    "measured": {
+     "slope_mean": 8.569,
+     "slope_p90": 15.305,
+     "tri_ruggedness": 69.098,
+     "temp_min_c": -25.4,
+     "temp_max_c": 17.8,
+     "ndvi_season_max": 0.173
+    }
+   },
+   {
+    "lat": 18.625,
+    "lon": -13.125,
+    "ai_score": 0.753,
+    "ai_low": 0.684,
+    "ai_high": 0.821,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.676,
+    "inside_interval": false,
+    "would_rank_among_named": 15,
+    "measured": {
+     "slope_mean": 2.483,
+     "slope_p90": 4.673,
+     "tri_ruggedness": 13.028,
+     "temp_min_c": 14.8,
+     "temp_max_c": 46.0,
+     "ndvi_season_max": 0.123
+    }
+   }
+  ],
+  "moon_cabeus_psr": [
+   {
+    "lat": -42.875,
+    "lon": -69.125,
+    "ai_score": 0.695,
+    "ai_low": 0.641,
+    "ai_high": 0.749,
+    "ai_sigma": 0.012,
+    "confident": true,
+    "exact_score": 0.757,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 9.347,
+     "slope_p90": 16.222,
+     "tri_ruggedness": 71.902,
+     "temp_min_c": -3.2,
+     "temp_max_c": 35.8,
+     "ndvi_season_max": 0.218
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 82.625,
+    "ai_score": 0.7,
+    "ai_low": 0.637,
+    "ai_high": 0.764,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.712,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 10.264,
+     "slope_p90": 19.622,
+     "tri_ruggedness": 72.476,
+     "temp_min_c": -24.8,
+     "temp_max_c": 19.0,
+     "ndvi_season_max": 0.193
+    }
+   },
+   {
+    "lat": 37.875,
+    "lon": 97.625,
+    "ai_score": 0.707,
+    "ai_low": 0.663,
+    "ai_high": 0.751,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.677,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 8.891,
+     "slope_p90": 18.012,
+     "tri_ruggedness": 74.067,
+     "temp_min_c": -26.6,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.218
+    }
+   },
+   {
+    "lat": 71.625,
+    "lon": -79.625,
+    "ai_score": 0.733,
+    "ai_low": 0.65,
+    "ai_high": 0.816,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.664,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 7.335,
+     "slope_p90": 11.403,
+     "tri_ruggedness": 55.474,
+     "temp_min_c": -40.4,
+     "temp_max_c": 8.8,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 29.125,
+    "lon": -2.375,
+    "ai_score": 0.678,
+    "ai_low": 0.634,
+    "ai_high": 0.722,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.662,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 7.204,
+     "slope_p90": 15.776,
+     "tri_ruggedness": 39.666,
+     "temp_min_c": 5.8,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 27.875,
+    "lon": 3.625,
+    "ai_score": 0.674,
+    "ai_low": 0.63,
+    "ai_high": 0.718,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.651,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 11.021,
+     "slope_p90": 28.058,
+     "tri_ruggedness": 43.978,
+     "temp_min_c": 8.1,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 79.125,
+    "lon": -80.875,
+    "ai_score": 0.713,
+    "ai_low": 0.64,
+    "ai_high": 0.786,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.632,
+    "inside_interval": false,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 15.36,
+     "slope_p90": 30.288,
+     "tri_ruggedness": 107.98,
+     "temp_min_c": -36.8,
+     "temp_max_c": 12.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": 10.375,
+    "ai_score": 0.682,
+    "ai_low": 0.636,
+    "ai_high": 0.728,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.617,
+    "inside_interval": false,
+    "would_rank_among_named": 13,
+    "measured": {
+     "slope_mean": 6.894,
+     "slope_p90": 12.472,
+     "tri_ruggedness": 32.545,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 81.125,
+    "lon": -27.375,
+    "ai_score": 0.727,
+    "ai_low": 0.63,
+    "ai_high": 0.824,
+    "ai_sigma": 0.022,
+    "confident": false,
+    "exact_score": 0.584,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 6.799,
+     "slope_p90": 14.288,
+     "tri_ruggedness": 45.155,
+     "temp_min_c": -34.4,
+     "temp_max_c": 8.1,
+     "ndvi_season_max": 0.078
+    }
+   },
+   {
+    "lat": 72.875,
+    "lon": -82.625,
+    "ai_score": 0.717,
+    "ai_low": 0.632,
+    "ai_high": 0.802,
+    "ai_sigma": 0.019,
+    "confident": false,
+    "exact_score": 0.583,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 8.975,
+     "slope_p90": 16.24,
+     "tri_ruggedness": 63.467,
+     "temp_min_c": -38.0,
+     "temp_max_c": 10.0,
+     "ndvi_season_max": 0.273
+    }
+   }
+  ],
+  "moon_aristarchus_plateau": [
+   {
+    "lat": 43.375,
+    "lon": 57.375,
+    "ai_score": 0.62,
+    "ai_low": 0.57,
+    "ai_high": 0.671,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.691,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.431,
+     "slope_p90": 0.772,
+     "tri_ruggedness": 0.388,
+     "temp_min_c": -12.2,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": 39.125,
+    "lon": 80.375,
+    "ai_score": 0.636,
+    "ai_low": 0.569,
+    "ai_high": 0.703,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.661,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 2.341,
+     "slope_p90": 4.14,
+     "tri_ruggedness": 1.745,
+     "temp_min_c": -17.6,
+     "temp_max_c": 49.0,
+     "ndvi_season_max": 0.058
+    }
+   },
+   {
+    "lat": 38.375,
+    "lon": 77.875,
+    "ai_score": 0.64,
+    "ai_low": 0.571,
+    "ai_high": 0.71,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.655,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.646,
+     "slope_p90": 7.745,
+     "tri_ruggedness": 2.593,
+     "temp_min_c": -15.9,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 40.375,
+    "lon": 79.625,
+    "ai_score": 0.631,
+    "ai_low": 0.577,
+    "ai_high": 0.685,
+    "ai_sigma": 0.011,
+    "confident": true,
+    "exact_score": 0.643,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.308,
+     "slope_p90": 0.564,
+     "tri_ruggedness": 0.439,
+     "temp_min_c": -18.2,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.093
+    }
+   },
+   {
+    "lat": 40.625,
+    "lon": 83.375,
+    "ai_score": 0.648,
+    "ai_low": 0.577,
+    "ai_high": 0.719,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.578,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 1.277,
+     "slope_p90": 2.668,
+     "tri_ruggedness": 2.04,
+     "temp_min_c": -18.2,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.048
+    }
+   },
+   {
+    "lat": 41.125,
+    "lon": 81.625,
+    "ai_score": 0.62,
+    "ai_low": 0.571,
+    "ai_high": 0.668,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.557,
+    "inside_interval": false,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 0.478,
+     "slope_p90": 0.948,
+     "tri_ruggedness": 0.601,
+     "temp_min_c": -18.2,
+     "temp_max_c": 49.0,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": 41.875,
+    "lon": 100.625,
+    "ai_score": 0.619,
+    "ai_low": 0.571,
+    "ai_high": 0.668,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.546,
+    "inside_interval": false,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 0.867,
+     "slope_p90": 1.816,
+     "tri_ruggedness": 1.135,
+     "temp_min_c": -15.9,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 40.625,
+    "lon": 90.375,
+    "ai_score": 0.651,
+    "ai_low": 0.574,
+    "ai_high": 0.729,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.542,
+    "inside_interval": false,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 0.408,
+     "slope_p90": 0.956,
+     "tri_ruggedness": 0.578,
+     "temp_min_c": -17.0,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.048
+    }
+   },
+   {
+    "lat": 41.625,
+    "lon": 85.375,
+    "ai_score": 0.652,
+    "ai_low": 0.579,
+    "ai_high": 0.726,
+    "ai_sigma": 0.015,
+    "confident": false,
+    "exact_score": 0.536,
+    "inside_interval": false,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 0.697,
+     "slope_p90": 1.442,
+     "tri_ruggedness": 1.131,
+     "temp_min_c": -20.0,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.048
+    }
+   },
+   {
+    "lat": 40.625,
+    "lon": 88.375,
+    "ai_score": 0.654,
+    "ai_low": 0.578,
+    "ai_high": 0.73,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.53,
+    "inside_interval": false,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 1.113,
+     "slope_p90": 2.905,
+     "tri_ruggedness": 1.722,
+     "temp_min_c": -18.2,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.043
+    }
+   }
+  ],
+  "moon_marius_hills": [
+   {
+    "lat": 32.625,
+    "lon": 52.625,
+    "ai_score": 0.714,
+    "ai_low": 0.634,
+    "ai_high": 0.793,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.711,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 1.458,
+     "slope_p90": 1.756,
+     "tri_ruggedness": 12.6,
+     "temp_min_c": -2.6,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.078
+    }
+   },
+   {
+    "lat": 18.375,
+    "lon": 18.625,
+    "ai_score": 0.708,
+    "ai_low": 0.632,
+    "ai_high": 0.783,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.703,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 1.859,
+     "slope_p90": 4.163,
+     "tri_ruggedness": 5.129,
+     "temp_min_c": 16.6,
+     "temp_max_c": 47.8,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": 29.875,
+    "lon": 31.125,
+    "ai_score": 0.714,
+    "ai_low": 0.639,
+    "ai_high": 0.79,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.681,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 2.232,
+     "slope_p90": 4.182,
+     "tri_ruggedness": 10.389,
+     "temp_min_c": 11.1,
+     "temp_max_c": 47.8,
+     "ndvi_season_max": 0.098
+    }
+   },
+   {
+    "lat": 23.875,
+    "lon": -15.125,
+    "ai_score": 0.712,
+    "ai_low": 0.637,
+    "ai_high": 0.788,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.68,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 1.932,
+     "slope_p90": 5.307,
+     "tri_ruggedness": 11.469,
+     "temp_min_c": 12.4,
+     "temp_max_c": 40.0,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 29.875,
+    "lon": 19.125,
+    "ai_score": 0.712,
+    "ai_low": 0.637,
+    "ai_high": 0.788,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.664,
+    "inside_interval": true,
+    "would_rank_among_named": 8,
+    "measured": {
+     "slope_mean": 1.651,
+     "slope_p90": 3.758,
+     "tri_ruggedness": 8.598,
+     "temp_min_c": 8.1,
+     "temp_max_c": 43.0,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": 32.375,
+    "lon": 22.625,
+    "ai_score": 0.715,
+    "ai_low": 0.639,
+    "ai_high": 0.79,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.66,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 1.131,
+     "slope_p90": 2.272,
+     "tri_ruggedness": 8.63,
+     "temp_min_c": 7.0,
+     "temp_max_c": 44.8,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 20.375,
+    "lon": 57.875,
+    "ai_score": 0.711,
+    "ai_low": 0.635,
+    "ai_high": 0.787,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.635,
+    "inside_interval": false,
+    "would_rank_among_named": 15,
+    "measured": {
+     "slope_mean": 1.494,
+     "slope_p90": 3.246,
+     "tri_ruggedness": 3.184,
+     "temp_min_c": 19.0,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.098
+    }
+   },
+   {
+    "lat": 26.125,
+    "lon": 30.375,
+    "ai_score": 0.711,
+    "ai_low": 0.636,
+    "ai_high": 0.787,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.619,
+    "inside_interval": false,
+    "would_rank_among_named": 16,
+    "measured": {
+     "slope_mean": 4.053,
+     "slope_p90": 7.831,
+     "tri_ruggedness": 8.45,
+     "temp_min_c": 8.1,
+     "temp_max_c": 43.6,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": 28.125,
+    "lon": 30.875,
+    "ai_score": 0.711,
+    "ai_low": 0.635,
+    "ai_high": 0.787,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.578,
+    "inside_interval": false,
+    "would_rank_among_named": 21,
+    "measured": {
+     "slope_mean": 2.893,
+     "slope_p90": 7.807,
+     "tri_ruggedness": 10.72,
+     "temp_min_c": 7.6,
+     "temp_max_c": 43.0,
+     "ndvi_season_max": 0.083
+    }
+   },
+   {
+    "lat": 20.375,
+    "lon": 37.125,
+    "ai_score": 0.711,
+    "ai_low": 0.636,
+    "ai_high": 0.787,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.544,
+    "inside_interval": false,
+    "would_rank_among_named": 22,
+    "measured": {
+     "slope_mean": 0.736,
+     "slope_p90": 1.133,
+     "tri_ruggedness": 6.492,
+     "temp_min_c": 19.6,
+     "temp_max_c": 49.6,
+     "ndvi_season_max": 0.093
+    }
+   }
+  ],
+  "moon_schrodinger_basin": [
+   {
+    "lat": 77.125,
+    "lon": -116.625,
+    "ai_score": 0.849,
+    "ai_low": 0.722,
+    "ai_high": 0.975,
+    "ai_sigma": 0.016,
+    "confident": false,
+    "exact_score": 0.858,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 3.985,
+     "slope_p90": 7.242,
+     "tri_ruggedness": 11.79,
+     "temp_min_c": -36.2,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.248
+    }
+   },
+   {
+    "lat": 28.875,
+    "lon": 24.875,
+    "ai_score": 0.797,
+    "ai_low": 0.716,
+    "ai_high": 0.879,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.829,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 3.731,
+     "slope_p90": 8.249,
+     "tri_ruggedness": 12.999,
+     "temp_min_c": 8.1,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": -40.875,
+    "lon": -67.625,
+    "ai_score": 0.809,
+    "ai_low": 0.729,
+    "ai_high": 0.89,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.821,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 2.502,
+     "slope_p90": 5.92,
+     "tri_ruggedness": 14.652,
+     "temp_min_c": -2.6,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.243
+    }
+   },
+   {
+    "lat": -42.125,
+    "lon": -65.875,
+    "ai_score": 0.808,
+    "ai_low": 0.724,
+    "ai_high": 0.892,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.816,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 2.277,
+     "slope_p90": 3.916,
+     "tri_ruggedness": 11.142,
+     "temp_min_c": -0.2,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.233
+    }
+   },
+   {
+    "lat": 17.875,
+    "lon": 20.375,
+    "ai_score": 0.792,
+    "ai_low": 0.712,
+    "ai_high": 0.871,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.779,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 3.251,
+     "slope_p90": 6.157,
+     "tri_ruggedness": 14.394,
+     "temp_min_c": 15.4,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": -50.625,
+    "lon": -71.125,
+    "ai_score": 0.834,
+    "ai_low": 0.726,
+    "ai_high": 0.942,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.778,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 1.873,
+     "slope_p90": 5.309,
+     "tri_ruggedness": 8.862,
+     "temp_min_c": -9.2,
+     "temp_max_c": 30.4,
+     "ndvi_season_max": 0.223
+    }
+   },
+   {
+    "lat": 72.125,
+    "lon": -113.625,
+    "ai_score": 0.858,
+    "ai_low": 0.719,
+    "ai_high": 0.997,
+    "ai_sigma": 0.018,
+    "confident": false,
+    "exact_score": 0.717,
+    "inside_interval": false,
+    "would_rank_among_named": 15,
+    "measured": {
+     "slope_mean": 2.293,
+     "slope_p90": 4.02,
+     "tri_ruggedness": 9.916,
+     "temp_min_c": -38.0,
+     "temp_max_c": 19.0,
+     "ndvi_season_max": 0.253
+    }
+   },
+   {
+    "lat": 39.375,
+    "lon": 91.875,
+    "ai_score": 0.802,
+    "ai_low": 0.723,
+    "ai_high": 0.882,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.716,
+    "inside_interval": false,
+    "would_rank_among_named": 15,
+    "measured": {
+     "slope_mean": 3.169,
+     "slope_p90": 8.094,
+     "tri_ruggedness": 15.385,
+     "temp_min_c": -17.0,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": -10.375,
+    "ai_score": 0.791,
+    "ai_low": 0.711,
+    "ai_high": 0.87,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.685,
+    "inside_interval": false,
+    "would_rank_among_named": 16,
+    "measured": {
+     "slope_mean": 4.169,
+     "slope_p90": 8.309,
+     "tri_ruggedness": 12.837,
+     "temp_min_c": 10.6,
+     "temp_max_c": 44.8,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 72.875,
+    "lon": -105.875,
+    "ai_score": 0.847,
+    "ai_low": 0.742,
+    "ai_high": 0.953,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.608,
+    "inside_interval": false,
+    "would_rank_among_named": 21,
+    "measured": {
+     "slope_mean": 1.802,
+     "slope_p90": 3.876,
+     "tri_ruggedness": 7.268,
+     "temp_min_c": -35.6,
+     "temp_max_c": 15.4,
+     "ndvi_season_max": 0.288
+    }
+   }
+  ],
+  "moon_peary_rim": [
+   {
+    "lat": 34.875,
+    "lon": 90.875,
+    "ai_score": 0.734,
+    "ai_low": 0.659,
+    "ai_high": 0.809,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.757,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 7.181,
+     "slope_p90": 11.747,
+     "tri_ruggedness": 56.458,
+     "temp_min_c": -24.8,
+     "temp_max_c": 16.6,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.795,
+    "ai_low": 0.702,
+    "ai_high": 0.888,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.747,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 19.125,
+    "lon": 53.625,
+    "ai_score": 0.71,
+    "ai_low": 0.636,
+    "ai_high": 0.785,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.728,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 5.784,
+     "slope_p90": 15.288,
+     "tri_ruggedness": 23.829,
+     "temp_min_c": 17.8,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 22.875,
+    "lon": 54.375,
+    "ai_score": 0.706,
+    "ai_low": 0.631,
+    "ai_high": 0.78,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.725,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 4.71,
+     "slope_p90": 9.249,
+     "tri_ruggedness": 17.438,
+     "temp_min_c": 16.0,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 21.375,
+    "lon": 55.375,
+    "ai_score": 0.707,
+    "ai_low": 0.632,
+    "ai_high": 0.781,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.719,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 7.347,
+     "slope_p90": 19.184,
+     "tri_ruggedness": 26.646,
+     "temp_min_c": 17.1,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 33.375,
+    "lon": 83.375,
+    "ai_score": 0.707,
+    "ai_low": 0.63,
+    "ai_high": 0.784,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.717,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 4.023,
+     "slope_p90": 5.516,
+     "tri_ruggedness": 38.797,
+     "temp_min_c": -24.8,
+     "temp_max_c": 21.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 34.125,
+    "lon": 84.875,
+    "ai_score": 0.722,
+    "ai_low": 0.651,
+    "ai_high": 0.794,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.709,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 4.967,
+     "slope_p90": 8.779,
+     "tri_ruggedness": 40.385,
+     "temp_min_c": -23.6,
+     "temp_max_c": 26.1,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 20.375,
+    "lon": 54.375,
+    "ai_score": 0.702,
+    "ai_low": 0.63,
+    "ai_high": 0.773,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.698,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 5.063,
+     "slope_p90": 17.214,
+     "tri_ruggedness": 20.438,
+     "temp_min_c": 16.6,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 81.625,
+    "lon": -30.625,
+    "ai_score": 0.798,
+    "ai_low": 0.647,
+    "ai_high": 0.949,
+    "ai_sigma": 0.021,
+    "confident": false,
+    "exact_score": 0.689,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 2.928,
+     "slope_p90": 5.829,
+     "tri_ruggedness": 21.625,
+     "temp_min_c": -35.6,
+     "temp_max_c": 9.4,
+     "ndvi_season_max": 0.088
+    }
+   },
+   {
+    "lat": 35.375,
+    "lon": 87.625,
+    "ai_score": 0.733,
+    "ai_low": 0.646,
+    "ai_high": 0.821,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.619,
+    "inside_interval": false,
+    "would_rank_among_named": 18,
+    "measured": {
+     "slope_mean": 8.569,
+     "slope_p90": 15.305,
+     "tri_ruggedness": 69.098,
+     "temp_min_c": -25.4,
+     "temp_max_c": 17.8,
+     "ndvi_season_max": 0.173
+    }
+   }
+  ],
+  "moon_von_karman": [
+   {
+    "lat": 36.875,
+    "lon": 65.875,
+    "ai_score": 0.674,
+    "ai_low": 0.618,
+    "ai_high": 0.731,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.768,
+    "inside_interval": false,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 0.627,
+     "slope_p90": 1.098,
+     "tri_ruggedness": 1.193,
+     "temp_min_c": -2.0,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 29.125,
+    "lon": 46.125,
+    "ai_score": 0.673,
+    "ai_low": 0.615,
+    "ai_high": 0.732,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.708,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 0.301,
+     "slope_p90": 0.53,
+     "tri_ruggedness": 0.702,
+     "temp_min_c": 8.8,
+     "temp_max_c": 56.1,
+     "ndvi_season_max": 0.148
+    }
+   },
+   {
+    "lat": 27.875,
+    "lon": 63.125,
+    "ai_score": 0.675,
+    "ai_low": 0.615,
+    "ai_high": 0.735,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.694,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 0.621,
+     "slope_p90": 1.077,
+     "tri_ruggedness": 3.611,
+     "temp_min_c": 3.4,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.048
+    }
+   },
+   {
+    "lat": 31.375,
+    "lon": 64.125,
+    "ai_score": 0.671,
+    "ai_low": 0.614,
+    "ai_high": 0.727,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.66,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 0.301,
+     "slope_p90": 0.593,
+     "tri_ruggedness": 0.587,
+     "temp_min_c": 0.4,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 36.125,
+    "lon": 42.625,
+    "ai_score": 0.671,
+    "ai_low": 0.614,
+    "ai_high": 0.727,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.626,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 0.624,
+     "slope_p90": 1.239,
+     "tri_ruggedness": 2.139,
+     "temp_min_c": 2.1,
+     "temp_max_c": 58.6,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 30.125,
+    "lon": 47.375,
+    "ai_score": 0.673,
+    "ai_low": 0.617,
+    "ai_high": 0.73,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.622,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 0.315,
+     "slope_p90": 0.543,
+     "tri_ruggedness": 0.688,
+     "temp_min_c": 9.4,
+     "temp_max_c": 57.4,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 31.125,
+    "lon": 61.875,
+    "ai_score": 0.672,
+    "ai_low": 0.614,
+    "ai_high": 0.729,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.618,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 0.228,
+     "slope_p90": 0.412,
+     "tri_ruggedness": 0.361,
+     "temp_min_c": -1.4,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 33.625,
+    "lon": 45.375,
+    "ai_score": 0.674,
+    "ai_low": 0.616,
+    "ai_high": 0.733,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.615,
+    "inside_interval": false,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 0.328,
+     "slope_p90": 0.581,
+     "tri_ruggedness": 0.637,
+     "temp_min_c": 6.4,
+     "temp_max_c": 56.8,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 32.375,
+    "lon": 42.125,
+    "ai_score": 0.672,
+    "ai_low": 0.615,
+    "ai_high": 0.728,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.589,
+    "inside_interval": false,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 0.445,
+     "slope_p90": 0.799,
+     "tri_ruggedness": 0.587,
+     "temp_min_c": 5.8,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.173
+    }
+   },
+   {
+    "lat": 41.625,
+    "lon": 57.125,
+    "ai_score": 0.671,
+    "ai_low": 0.615,
+    "ai_high": 0.728,
+    "ai_sigma": 0.01,
+    "confident": true,
+    "exact_score": 0.58,
+    "inside_interval": false,
+    "would_rank_among_named": 12,
+    "measured": {
+     "slope_mean": 0.34,
+     "slope_p90": 0.595,
+     "tri_ruggedness": 0.752,
+     "temp_min_c": -10.4,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.133
+    }
+   }
+  ],
+  "mars_jezero_crater": [
+   {
+    "lat": 32.375,
+    "lon": 9.875,
+    "ai_score": 0.861,
+    "ai_low": 0.767,
+    "ai_high": 0.954,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.924,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 3.466,
+     "slope_p90": 7.383,
+     "tri_ruggedness": 8.744,
+     "temp_min_c": 5.1,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 42.375,
+    "lon": 90.375,
+    "ai_score": 0.862,
+    "ai_low": 0.769,
+    "ai_high": 0.956,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.908,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 1.205,
+     "slope_p90": 1.676,
+     "tri_ruggedness": 9.488,
+     "temp_min_c": -16.4,
+     "temp_max_c": 56.1,
+     "ndvi_season_max": 0.068
+    }
+   },
+   {
+    "lat": -41.875,
+    "lon": -65.625,
+    "ai_score": 0.865,
+    "ai_low": 0.771,
+    "ai_high": 0.958,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.886,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 2.733,
+     "slope_p90": 5.158,
+     "tri_ruggedness": 13.152,
+     "temp_min_c": -0.2,
+     "temp_max_c": 37.6,
+     "ndvi_season_max": 0.213
+    }
+   },
+   {
+    "lat": 26.875,
+    "lon": 30.375,
+    "ai_score": 0.862,
+    "ai_low": 0.766,
+    "ai_high": 0.958,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.885,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 2.417,
+     "slope_p90": 4.505,
+     "tri_ruggedness": 12.736,
+     "temp_min_c": 8.1,
+     "temp_max_c": 44.8,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 20.875,
+    "lon": -10.125,
+    "ai_score": 0.863,
+    "ai_low": 0.769,
+    "ai_high": 0.956,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.883,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 2.481,
+     "slope_p90": 4.424,
+     "tri_ruggedness": 11.433,
+     "temp_min_c": 10.6,
+     "temp_max_c": 44.1,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 39.375,
+    "lon": 91.875,
+    "ai_score": 0.864,
+    "ai_low": 0.769,
+    "ai_high": 0.959,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.864,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 3.169,
+     "slope_p90": 8.094,
+     "tri_ruggedness": 15.385,
+     "temp_min_c": -17.0,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 28.875,
+    "lon": 24.875,
+    "ai_score": 0.861,
+    "ai_low": 0.767,
+    "ai_high": 0.954,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.856,
+    "inside_interval": true,
+    "would_rank_among_named": 7,
+    "measured": {
+     "slope_mean": 3.731,
+     "slope_p90": 8.249,
+     "tri_ruggedness": 12.999,
+     "temp_min_c": 8.1,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": -43.625,
+    "lon": -67.125,
+    "ai_score": 0.867,
+    "ai_low": 0.77,
+    "ai_high": 0.963,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.826,
+    "inside_interval": true,
+    "would_rank_among_named": 11,
+    "measured": {
+     "slope_mean": 1.788,
+     "slope_p90": 3.155,
+     "tri_ruggedness": 11.535,
+     "temp_min_c": -3.9,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": -50.625,
+    "lon": -71.125,
+    "ai_score": 0.874,
+    "ai_low": 0.778,
+    "ai_high": 0.969,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.807,
+    "inside_interval": true,
+    "would_rank_among_named": 13,
+    "measured": {
+     "slope_mean": 1.873,
+     "slope_p90": 5.309,
+     "tri_ruggedness": 8.862,
+     "temp_min_c": -9.2,
+     "temp_max_c": 30.4,
+     "ndvi_season_max": 0.223
+    }
+   },
+   {
+    "lat": 72.125,
+    "lon": -113.625,
+    "ai_score": 0.892,
+    "ai_low": 0.767,
+    "ai_high": 1.0,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.746,
+    "inside_interval": false,
+    "would_rank_among_named": 18,
+    "measured": {
+     "slope_mean": 2.293,
+     "slope_p90": 4.02,
+     "tri_ruggedness": 9.916,
+     "temp_min_c": -38.0,
+     "temp_max_c": 19.0,
+     "ndvi_season_max": 0.253
+    }
+   }
+  ],
+  "mars_arcadia_planitia": [
+   {
+    "lat": 38.375,
+    "lon": 77.625,
+    "ai_score": 0.826,
+    "ai_low": 0.745,
+    "ai_high": 0.907,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.971,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 1.794,
+     "slope_p90": 3.316,
+     "tri_ruggedness": 1.368,
+     "temp_min_c": -16.4,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.078
+    }
+   },
+   {
+    "lat": 39.125,
+    "lon": 87.625,
+    "ai_score": 0.831,
+    "ai_low": 0.738,
+    "ai_high": 0.924,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.963,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.267,
+     "slope_p90": 0.494,
+     "tri_ruggedness": 0.748,
+     "temp_min_c": -15.2,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.058
+    }
+   },
+   {
+    "lat": 40.375,
+    "lon": 79.625,
+    "ai_score": 0.832,
+    "ai_low": 0.749,
+    "ai_high": 0.914,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.955,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.308,
+     "slope_p90": 0.564,
+     "tri_ruggedness": 0.439,
+     "temp_min_c": -18.2,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.093
+    }
+   },
+   {
+    "lat": 40.625,
+    "lon": 91.125,
+    "ai_score": 0.836,
+    "ai_low": 0.752,
+    "ai_high": 0.919,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.887,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.67,
+     "slope_p90": 1.389,
+     "tri_ruggedness": 1.526,
+     "temp_min_c": -18.8,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 37.625,
+    "lon": 80.625,
+    "ai_score": 0.823,
+    "ai_low": 0.742,
+    "ai_high": 0.904,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.845,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.491,
+     "slope_p90": 0.874,
+     "tri_ruggedness": 0.776,
+     "temp_min_c": -17.0,
+     "temp_max_c": 49.0,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 44.625,
+    "lon": 89.375,
+    "ai_score": 0.831,
+    "ai_low": 0.738,
+    "ai_high": 0.924,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.793,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 0.69,
+     "slope_p90": 1.262,
+     "tri_ruggedness": 1.756,
+     "temp_min_c": -26.6,
+     "temp_max_c": 57.4,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": 40.875,
+    "lon": 83.625,
+    "ai_score": 0.821,
+    "ai_low": 0.74,
+    "ai_high": 0.902,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.778,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 0.666,
+     "slope_p90": 1.356,
+     "tri_ruggedness": 0.893,
+     "temp_min_c": -18.8,
+     "temp_max_c": 49.0,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": 41.875,
+    "lon": 101.375,
+    "ai_score": 0.837,
+    "ai_low": 0.744,
+    "ai_high": 0.929,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.769,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 1.619,
+     "slope_p90": 3.235,
+     "tri_ruggedness": 1.55,
+     "temp_min_c": -17.6,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.053
+    }
+   },
+   {
+    "lat": 39.375,
+    "lon": 81.625,
+    "ai_score": 0.829,
+    "ai_low": 0.744,
+    "ai_high": 0.914,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.765,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 0.805,
+     "slope_p90": 1.518,
+     "tri_ruggedness": 1.136,
+     "temp_min_c": -18.2,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.058
+    }
+   },
+   {
+    "lat": 40.875,
+    "lon": 87.625,
+    "ai_score": 0.843,
+    "ai_low": 0.74,
+    "ai_high": 0.946,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.736,
+    "inside_interval": false,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 1.065,
+     "slope_p90": 2.158,
+     "tri_ruggedness": 1.356,
+     "temp_min_c": -18.2,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.048
+    }
+   }
+  ],
+  "mars_gale_crater": [
+   {
+    "lat": 45.125,
+    "lon": 87.875,
+    "ai_score": 0.697,
+    "ai_low": 0.621,
+    "ai_high": 0.773,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.923,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 6.376,
+     "slope_p90": 11.922,
+     "tri_ruggedness": 8.413,
+     "temp_min_c": -27.2,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 44.375,
+    "lon": 89.875,
+    "ai_score": 0.688,
+    "ai_low": 0.612,
+    "ai_high": 0.764,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.88,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.942,
+     "slope_p90": 8.764,
+     "tri_ruggedness": 4.589,
+     "temp_min_c": -27.2,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 39.125,
+    "lon": 79.875,
+    "ai_score": 0.716,
+    "ai_low": 0.616,
+    "ai_high": 0.816,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.876,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 3.822,
+     "slope_p90": 6.716,
+     "tri_ruggedness": 4.456,
+     "temp_min_c": -18.2,
+     "temp_max_c": 49.6,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 42.625,
+    "lon": 66.875,
+    "ai_score": 0.688,
+    "ai_low": 0.611,
+    "ai_high": 0.764,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.739,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 2.431,
+     "slope_p90": 4.54,
+     "tri_ruggedness": 3.996,
+     "temp_min_c": -12.9,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.173
+    }
+   },
+   {
+    "lat": 27.875,
+    "lon": 7.125,
+    "ai_score": 0.698,
+    "ai_low": 0.613,
+    "ai_high": 0.782,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.735,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 6.321,
+     "slope_p90": 12.037,
+     "tri_ruggedness": 26.298,
+     "temp_min_c": 6.4,
+     "temp_max_c": 52.0,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 25.375,
+    "lon": 13.375,
+    "ai_score": 0.695,
+    "ai_low": 0.611,
+    "ai_high": 0.779,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.731,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 5.53,
+     "slope_p90": 9.898,
+     "tri_ruggedness": 30.792,
+     "temp_min_c": 6.4,
+     "temp_max_c": 47.8,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 28.125,
+    "lon": 11.875,
+    "ai_score": 0.695,
+    "ai_low": 0.619,
+    "ai_high": 0.771,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.715,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 7.444,
+     "slope_p90": 13.734,
+     "tri_ruggedness": 25.17,
+     "temp_min_c": 5.1,
+     "temp_max_c": 49.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 28.375,
+    "lon": 39.875,
+    "ai_score": 0.697,
+    "ai_low": 0.621,
+    "ai_high": 0.773,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.674,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 6.821,
+     "slope_p90": 12.703,
+     "tri_ruggedness": 25.041,
+     "temp_min_c": 6.4,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 29.125,
+    "lon": -2.375,
+    "ai_score": 0.691,
+    "ai_low": 0.615,
+    "ai_high": 0.768,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.649,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 7.204,
+     "slope_p90": 15.776,
+     "tri_ruggedness": 39.666,
+     "temp_min_c": 5.8,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 39.375,
+    "lon": 81.875,
+    "ai_score": 0.722,
+    "ai_low": 0.618,
+    "ai_high": 0.827,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.628,
+    "inside_interval": true,
+    "would_rank_among_named": 11,
+    "measured": {
+     "slope_mean": 0.926,
+     "slope_p90": 1.674,
+     "tri_ruggedness": 1.652,
+     "temp_min_c": -18.2,
+     "temp_max_c": 50.8,
+     "ndvi_season_max": 0.058
+    }
+   }
+  ],
+  "mars_oxia_planum": [
+   {
+    "lat": 28.875,
+    "lon": 24.875,
+    "ai_score": 0.887,
+    "ai_low": 0.794,
+    "ai_high": 0.979,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.919,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 3.731,
+     "slope_p90": 8.249,
+     "tri_ruggedness": 12.999,
+     "temp_min_c": 8.1,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": 23.875,
+    "lon": -15.125,
+    "ai_score": 0.887,
+    "ai_low": 0.794,
+    "ai_high": 0.979,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.913,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 1.932,
+     "slope_p90": 5.307,
+     "tri_ruggedness": 11.469,
+     "temp_min_c": 12.4,
+     "temp_max_c": 40.0,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": -42.125,
+    "lon": -65.875,
+    "ai_score": 0.89,
+    "ai_low": 0.798,
+    "ai_high": 0.983,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.901,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 2.277,
+     "slope_p90": 3.916,
+     "tri_ruggedness": 11.142,
+     "temp_min_c": -0.2,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.233
+    }
+   },
+   {
+    "lat": -40.875,
+    "lon": -67.625,
+    "ai_score": 0.89,
+    "ai_low": 0.798,
+    "ai_high": 0.983,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.899,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 2.502,
+     "slope_p90": 5.92,
+     "tri_ruggedness": 14.652,
+     "temp_min_c": -2.6,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.243
+    }
+   },
+   {
+    "lat": 24.625,
+    "lon": -13.125,
+    "ai_score": 0.888,
+    "ai_low": 0.796,
+    "ai_high": 0.98,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.877,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 3.777,
+     "slope_p90": 8.022,
+     "tri_ruggedness": 15.358,
+     "temp_min_c": 11.8,
+     "temp_max_c": 41.8,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": -50.625,
+    "lon": -71.125,
+    "ai_score": 0.905,
+    "ai_low": 0.813,
+    "ai_high": 0.998,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.863,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 1.873,
+     "slope_p90": 5.309,
+     "tri_ruggedness": 8.862,
+     "temp_min_c": -9.2,
+     "temp_max_c": 30.4,
+     "ndvi_season_max": 0.223
+    }
+   },
+   {
+    "lat": -43.625,
+    "lon": -67.125,
+    "ai_score": 0.895,
+    "ai_low": 0.802,
+    "ai_high": 0.987,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.861,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 1.788,
+     "slope_p90": 3.155,
+     "tri_ruggedness": 11.535,
+     "temp_min_c": -3.9,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": 31.875,
+    "lon": 13.875,
+    "ai_score": 0.891,
+    "ai_low": 0.794,
+    "ai_high": 0.988,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.853,
+    "inside_interval": true,
+    "would_rank_among_named": 11,
+    "measured": {
+     "slope_mean": 1.634,
+     "slope_p90": 3.756,
+     "tri_ruggedness": 5.682,
+     "temp_min_c": 7.0,
+     "temp_max_c": 43.0,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": -48.375,
+    "lon": -68.375,
+    "ai_score": 0.907,
+    "ai_low": 0.814,
+    "ai_high": 0.999,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.791,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 3.159,
+     "slope_p90": 6.218,
+     "tri_ruggedness": 7.721,
+     "temp_min_c": -5.0,
+     "temp_max_c": 31.0,
+     "ndvi_season_max": 0.178
+    }
+   },
+   {
+    "lat": 72.125,
+    "lon": -113.625,
+    "ai_score": 0.914,
+    "ai_low": 0.815,
+    "ai_high": 1.0,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.788,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 2.293,
+     "slope_p90": 4.02,
+     "tri_ruggedness": 9.916,
+     "temp_min_c": -38.0,
+     "temp_max_c": 19.0,
+     "ndvi_season_max": 0.253
+    }
+   }
+  ],
+  "mars_mawrth_vallis": [
+   {
+    "lat": 26.625,
+    "lon": 44.625,
+    "ai_score": 0.838,
+    "ai_low": 0.758,
+    "ai_high": 0.918,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.912,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.582,
+     "slope_p90": 9.484,
+     "tri_ruggedness": 19.582,
+     "temp_min_c": 8.8,
+     "temp_max_c": 55.0,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 22.875,
+    "lon": 54.375,
+    "ai_score": 0.838,
+    "ai_low": 0.759,
+    "ai_high": 0.917,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.896,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.71,
+     "slope_p90": 9.249,
+     "tri_ruggedness": 17.438,
+     "temp_min_c": 16.0,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.886,
+    "ai_low": 0.807,
+    "ai_high": 0.966,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.875,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 15.125,
+    "lon": 13.875,
+    "ai_score": 0.84,
+    "ai_low": 0.756,
+    "ai_high": 0.924,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.874,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 4.621,
+     "slope_p90": 7.727,
+     "tri_ruggedness": 21.245,
+     "temp_min_c": 16.6,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.178
+    }
+   },
+   {
+    "lat": 17.875,
+    "lon": 48.375,
+    "ai_score": 0.84,
+    "ai_low": 0.758,
+    "ai_high": 0.922,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.858,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 3.493,
+     "slope_p90": 7.364,
+     "tri_ruggedness": 19.134,
+     "temp_min_c": 16.6,
+     "temp_max_c": 53.1,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 15.125,
+    "lon": 15.375,
+    "ai_score": 0.839,
+    "ai_low": 0.759,
+    "ai_high": 0.918,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.856,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 3.668,
+     "slope_p90": 6.041,
+     "tri_ruggedness": 17.881,
+     "temp_min_c": 16.0,
+     "temp_max_c": 47.8,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 20.625,
+    "lon": 53.375,
+    "ai_score": 0.84,
+    "ai_low": 0.757,
+    "ai_high": 0.922,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.85,
+    "inside_interval": true,
+    "would_rank_among_named": 8,
+    "measured": {
+     "slope_mean": 5.269,
+     "slope_p90": 11.891,
+     "tri_ruggedness": 21.983,
+     "temp_min_c": 14.8,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 28.875,
+    "lon": 39.875,
+    "ai_score": 0.842,
+    "ai_low": 0.762,
+    "ai_high": 0.921,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.817,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 5.104,
+     "slope_p90": 9.187,
+     "tri_ruggedness": 16.683,
+     "temp_min_c": 5.8,
+     "temp_max_c": 52.6,
+     "ndvi_season_max": 0.143
+    }
+   },
+   {
+    "lat": 28.625,
+    "lon": 41.625,
+    "ai_score": 0.838,
+    "ai_low": 0.759,
+    "ai_high": 0.917,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.811,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 4.902,
+     "slope_p90": 9.342,
+     "tri_ruggedness": 15.94,
+     "temp_min_c": 6.4,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.158
+    }
+   },
+   {
+    "lat": 18.625,
+    "lon": 49.625,
+    "ai_score": 0.839,
+    "ai_low": 0.76,
+    "ai_high": 0.919,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.762,
+    "inside_interval": true,
+    "would_rank_among_named": 15,
+    "measured": {
+     "slope_mean": 3.076,
+     "slope_p90": 5.351,
+     "tri_ruggedness": 18.116,
+     "temp_min_c": 16.6,
+     "temp_max_c": 53.8,
+     "ndvi_season_max": 0.133
+    }
+   }
+  ],
+  "mars_hellas_planitia": [
+   {
+    "lat": 17.875,
+    "lon": 20.375,
+    "ai_score": 0.821,
+    "ai_low": 0.732,
+    "ai_high": 0.911,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.883,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 3.251,
+     "slope_p90": 6.157,
+     "tri_ruggedness": 14.394,
+     "temp_min_c": 15.4,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.103
+    }
+   },
+   {
+    "lat": 15.375,
+    "lon": 12.375,
+    "ai_score": 0.815,
+    "ai_low": 0.726,
+    "ai_high": 0.903,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.866,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 2.688,
+     "slope_p90": 5.363,
+     "tri_ruggedness": 10.084,
+     "temp_min_c": 15.4,
+     "temp_max_c": 46.0,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": -40.875,
+    "lon": -67.625,
+    "ai_score": 0.826,
+    "ai_low": 0.731,
+    "ai_high": 0.92,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.832,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 2.502,
+     "slope_p90": 5.92,
+     "tri_ruggedness": 14.652,
+     "temp_min_c": -2.6,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.243
+    }
+   },
+   {
+    "lat": 28.375,
+    "lon": 25.625,
+    "ai_score": 0.819,
+    "ai_low": 0.736,
+    "ai_high": 0.903,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.826,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 3.34,
+     "slope_p90": 5.891,
+     "tri_ruggedness": 10.734,
+     "temp_min_c": 8.1,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": -42.125,
+    "lon": -65.875,
+    "ai_score": 0.818,
+    "ai_low": 0.726,
+    "ai_high": 0.909,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.825,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 2.277,
+     "slope_p90": 3.916,
+     "tri_ruggedness": 11.142,
+     "temp_min_c": -0.2,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.233
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.863,
+    "ai_low": 0.762,
+    "ai_high": 0.964,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.814,
+    "inside_interval": true,
+    "would_rank_among_named": 8,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 30.875,
+    "lon": 80.375,
+    "ai_score": 0.892,
+    "ai_low": 0.751,
+    "ai_high": 1.0,
+    "ai_sigma": 0.017,
+    "confident": false,
+    "exact_score": 0.781,
+    "inside_interval": true,
+    "would_rank_among_named": 11,
+    "measured": {
+     "slope_mean": 1.861,
+     "slope_p90": 2.022,
+     "tri_ruggedness": 13.892,
+     "temp_min_c": -22.4,
+     "temp_max_c": 32.1,
+     "ndvi_season_max": 0.163
+    }
+   },
+   {
+    "lat": 39.375,
+    "lon": 91.875,
+    "ai_score": 0.831,
+    "ai_low": 0.748,
+    "ai_high": 0.915,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.734,
+    "inside_interval": false,
+    "would_rank_among_named": 18,
+    "measured": {
+     "slope_mean": 3.169,
+     "slope_p90": 8.094,
+     "tri_ruggedness": 15.385,
+     "temp_min_c": -17.0,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.063
+    }
+   },
+   {
+    "lat": 27.375,
+    "lon": -10.375,
+    "ai_score": 0.812,
+    "ai_low": 0.729,
+    "ai_high": 0.896,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.676,
+    "inside_interval": false,
+    "would_rank_among_named": 19,
+    "measured": {
+     "slope_mean": 4.169,
+     "slope_p90": 8.309,
+     "tri_ruggedness": 12.837,
+     "temp_min_c": 10.6,
+     "temp_max_c": 44.8,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 33.125,
+    "lon": 81.625,
+    "ai_score": 0.836,
+    "ai_low": 0.752,
+    "ai_high": 0.919,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.643,
+    "inside_interval": false,
+    "would_rank_among_named": 21,
+    "measured": {
+     "slope_mean": 10.685,
+     "slope_p90": 23.344,
+     "tri_ruggedness": 43.144,
+     "temp_min_c": -21.2,
+     "temp_max_c": 31.6,
+     "ndvi_season_max": 0.113
+    }
+   }
+  ],
+  "mars_utopia_planitia": [
+   {
+    "lat": -18.375,
+    "lon": -68.875,
+    "ai_score": 0.881,
+    "ai_low": 0.797,
+    "ai_high": 0.964,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.935,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 4.083,
+     "slope_p90": 10.864,
+     "tri_ruggedness": 23.488,
+     "temp_min_c": -5.6,
+     "temp_max_c": 40.0,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 29.375,
+    "lon": 16.625,
+    "ai_score": 0.845,
+    "ai_low": 0.761,
+    "ai_high": 0.929,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.878,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 4.222,
+     "slope_p90": 10.471,
+     "tri_ruggedness": 10.663,
+     "temp_min_c": 8.1,
+     "temp_max_c": 46.0,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 28.375,
+    "lon": 25.625,
+    "ai_score": 0.848,
+    "ai_low": 0.764,
+    "ai_high": 0.932,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.872,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 3.34,
+     "slope_p90": 5.891,
+     "tri_ruggedness": 10.734,
+     "temp_min_c": 8.1,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 17.875,
+    "lon": -10.375,
+    "ai_score": 0.846,
+    "ai_low": 0.762,
+    "ai_high": 0.93,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.87,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 4.252,
+     "slope_p90": 8.111,
+     "tri_ruggedness": 14.522,
+     "temp_min_c": 13.6,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.153
+    }
+   },
+   {
+    "lat": 81.875,
+    "lon": -55.625,
+    "ai_score": 0.887,
+    "ai_low": 0.803,
+    "ai_high": 0.971,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.854,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 4.406,
+     "slope_p90": 6.368,
+     "tri_ruggedness": 37.35,
+     "temp_min_c": -36.8,
+     "temp_max_c": 7.6,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 81.625,
+    "lon": -30.625,
+    "ai_score": 0.889,
+    "ai_low": 0.769,
+    "ai_high": 1.0,
+    "ai_sigma": 0.014,
+    "confident": false,
+    "exact_score": 0.854,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 2.928,
+     "slope_p90": 5.829,
+     "tri_ruggedness": 21.625,
+     "temp_min_c": -35.6,
+     "temp_max_c": 9.4,
+     "ndvi_season_max": 0.088
+    }
+   },
+   {
+    "lat": 15.375,
+    "lon": 15.125,
+    "ai_score": 0.848,
+    "ai_low": 0.764,
+    "ai_high": 0.932,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.827,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 3.11,
+     "slope_p90": 5.264,
+     "tri_ruggedness": 14.423,
+     "temp_min_c": 16.6,
+     "temp_max_c": 48.4,
+     "ndvi_season_max": 0.133
+    }
+   },
+   {
+    "lat": 15.375,
+    "lon": 11.625,
+    "ai_score": 0.85,
+    "ai_low": 0.766,
+    "ai_high": 0.934,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.822,
+    "inside_interval": true,
+    "would_rank_among_named": 10,
+    "measured": {
+     "slope_mean": 2.897,
+     "slope_p90": 4.927,
+     "tri_ruggedness": 13.66,
+     "temp_min_c": 16.0,
+     "temp_max_c": 46.0,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": 18.625,
+    "lon": -13.125,
+    "ai_score": 0.852,
+    "ai_low": 0.768,
+    "ai_high": 0.936,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.811,
+    "inside_interval": true,
+    "would_rank_among_named": 12,
+    "measured": {
+     "slope_mean": 2.483,
+     "slope_p90": 4.673,
+     "tri_ruggedness": 13.028,
+     "temp_min_c": 14.8,
+     "temp_max_c": 46.0,
+     "ndvi_season_max": 0.123
+    }
+   },
+   {
+    "lat": 20.875,
+    "lon": 55.875,
+    "ai_score": 0.845,
+    "ai_low": 0.761,
+    "ai_high": 0.929,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.71,
+    "inside_interval": false,
+    "would_rank_among_named": 20,
+    "measured": {
+     "slope_mean": 0.921,
+     "slope_p90": 1.354,
+     "tri_ruggedness": 4.165,
+     "temp_min_c": 17.8,
+     "temp_max_c": 51.4,
+     "ndvi_season_max": 0.138
+    }
+   }
+  ],
+  "mars_melas_chasma": [
+   {
+    "lat": -50.625,
+    "lon": -71.125,
+    "ai_score": 0.902,
+    "ai_low": 0.802,
+    "ai_high": 1.0,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.946,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 1.873,
+     "slope_p90": 5.309,
+     "tri_ruggedness": 8.862,
+     "temp_min_c": -9.2,
+     "temp_max_c": 30.4,
+     "ndvi_season_max": 0.223
+    }
+   },
+   {
+    "lat": -27.875,
+    "lon": 134.375,
+    "ai_score": 0.877,
+    "ai_low": 0.777,
+    "ai_high": 0.976,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.943,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 1.755,
+     "slope_p90": 3.592,
+     "tri_ruggedness": 7.666,
+     "temp_min_c": 7.6,
+     "temp_max_c": 43.6,
+     "ndvi_season_max": 0.138
+    }
+   },
+   {
+    "lat": -47.625,
+    "lon": -66.375,
+    "ai_score": 0.898,
+    "ai_low": 0.781,
+    "ai_high": 1.0,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.936,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 2.097,
+     "slope_p90": 4.284,
+     "tri_ruggedness": 7.389,
+     "temp_min_c": -3.9,
+     "temp_max_c": 29.8,
+     "ndvi_season_max": 0.208
+    }
+   },
+   {
+    "lat": -42.125,
+    "lon": -65.875,
+    "ai_score": 0.88,
+    "ai_low": 0.78,
+    "ai_high": 0.98,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.911,
+    "inside_interval": true,
+    "would_rank_among_named": 3,
+    "measured": {
+     "slope_mean": 2.277,
+     "slope_p90": 3.916,
+     "tri_ruggedness": 11.142,
+     "temp_min_c": -0.2,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.233
+    }
+   },
+   {
+    "lat": 23.875,
+    "lon": -15.125,
+    "ai_score": 0.882,
+    "ai_low": 0.776,
+    "ai_high": 0.988,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.902,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 1.932,
+     "slope_p90": 5.307,
+     "tri_ruggedness": 11.469,
+     "temp_min_c": 12.4,
+     "temp_max_c": 40.0,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": -43.625,
+    "lon": -67.125,
+    "ai_score": 0.884,
+    "ai_low": 0.777,
+    "ai_high": 0.992,
+    "ai_sigma": 0.011,
+    "confident": false,
+    "exact_score": 0.888,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 1.788,
+     "slope_p90": 3.155,
+     "tri_ruggedness": 11.535,
+     "temp_min_c": -3.9,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.183
+    }
+   },
+   {
+    "lat": -48.375,
+    "lon": -68.375,
+    "ai_score": 0.901,
+    "ai_low": 0.801,
+    "ai_high": 1.0,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.884,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 3.159,
+     "slope_p90": 6.218,
+     "tri_ruggedness": 7.721,
+     "temp_min_c": -5.0,
+     "temp_max_c": 31.0,
+     "ndvi_season_max": 0.178
+    }
+   },
+   {
+    "lat": -40.875,
+    "lon": -67.625,
+    "ai_score": 0.881,
+    "ai_low": 0.781,
+    "ai_high": 0.981,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.881,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 2.502,
+     "slope_p90": 5.92,
+     "tri_ruggedness": 14.652,
+     "temp_min_c": -2.6,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.243
+    }
+   },
+   {
+    "lat": 77.125,
+    "lon": -116.625,
+    "ai_score": 0.897,
+    "ai_low": 0.776,
+    "ai_high": 1.0,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.815,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 3.985,
+     "slope_p90": 7.242,
+     "tri_ruggedness": 11.79,
+     "temp_min_c": -36.2,
+     "temp_max_c": 11.8,
+     "ndvi_season_max": 0.248
+    }
+   },
+   {
+    "lat": 39.375,
+    "lon": 91.875,
+    "ai_score": 0.882,
+    "ai_low": 0.778,
+    "ai_high": 0.986,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.747,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 3.169,
+     "slope_p90": 8.094,
+     "tri_ruggedness": 15.385,
+     "temp_min_c": -17.0,
+     "temp_max_c": 50.1,
+     "ndvi_season_max": 0.063
+    }
+   }
+  ],
+  "mars_olympus_lava_tubes": [
+   {
+    "lat": 32.375,
+    "lon": 9.875,
+    "ai_score": 0.874,
+    "ai_low": 0.784,
+    "ai_high": 0.963,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.923,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 3.466,
+     "slope_p90": 7.383,
+     "tri_ruggedness": 8.744,
+     "temp_min_c": 5.1,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": 23.875,
+    "lon": -15.125,
+    "ai_score": 0.876,
+    "ai_low": 0.786,
+    "ai_high": 0.965,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.901,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 1.932,
+     "slope_p90": 5.307,
+     "tri_ruggedness": 11.469,
+     "temp_min_c": 12.4,
+     "temp_max_c": 40.0,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 20.875,
+    "lon": -10.125,
+    "ai_score": 0.877,
+    "ai_low": 0.787,
+    "ai_high": 0.967,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.898,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 2.481,
+     "slope_p90": 4.424,
+     "tri_ruggedness": 11.433,
+     "temp_min_c": 10.6,
+     "temp_max_c": 44.1,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 28.875,
+    "lon": 24.875,
+    "ai_score": 0.873,
+    "ai_low": 0.784,
+    "ai_high": 0.963,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.885,
+    "inside_interval": true,
+    "would_rank_among_named": 4,
+    "measured": {
+     "slope_mean": 3.731,
+     "slope_p90": 8.249,
+     "tri_ruggedness": 12.999,
+     "temp_min_c": 8.1,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.113
+    }
+   },
+   {
+    "lat": -40.875,
+    "lon": -67.625,
+    "ai_score": 0.875,
+    "ai_low": 0.785,
+    "ai_high": 0.964,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.869,
+    "inside_interval": true,
+    "would_rank_among_named": 7,
+    "measured": {
+     "slope_mean": 2.502,
+     "slope_p90": 5.92,
+     "tri_ruggedness": 14.652,
+     "temp_min_c": -2.6,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.243
+    }
+   },
+   {
+    "lat": -42.125,
+    "lon": -65.875,
+    "ai_score": 0.875,
+    "ai_low": 0.785,
+    "ai_high": 0.964,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.866,
+    "inside_interval": true,
+    "would_rank_among_named": 7,
+    "measured": {
+     "slope_mean": 2.277,
+     "slope_p90": 3.916,
+     "tri_ruggedness": 11.142,
+     "temp_min_c": -0.2,
+     "temp_max_c": 37.0,
+     "ndvi_season_max": 0.233
+    }
+   },
+   {
+    "lat": -50.625,
+    "lon": -71.125,
+    "ai_score": 0.889,
+    "ai_low": 0.799,
+    "ai_high": 0.978,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.853,
+    "inside_interval": true,
+    "would_rank_among_named": 8,
+    "measured": {
+     "slope_mean": 1.873,
+     "slope_p90": 5.309,
+     "tri_ruggedness": 8.862,
+     "temp_min_c": -9.2,
+     "temp_max_c": 30.4,
+     "ndvi_season_max": 0.223
+    }
+   },
+   {
+    "lat": 24.625,
+    "lon": -13.125,
+    "ai_score": 0.876,
+    "ai_low": 0.783,
+    "ai_high": 0.97,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.843,
+    "inside_interval": true,
+    "would_rank_among_named": 9,
+    "measured": {
+     "slope_mean": 3.777,
+     "slope_p90": 8.022,
+     "tri_ruggedness": 15.358,
+     "temp_min_c": 11.8,
+     "temp_max_c": 41.8,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 72.125,
+    "lon": -113.625,
+    "ai_score": 0.9,
+    "ai_low": 0.788,
+    "ai_high": 1.0,
+    "ai_sigma": 0.013,
+    "confident": false,
+    "exact_score": 0.785,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 2.293,
+     "slope_p90": 4.02,
+     "tri_ruggedness": 9.916,
+     "temp_min_c": -38.0,
+     "temp_max_c": 19.0,
+     "ndvi_season_max": 0.253
+    }
+   },
+   {
+    "lat": -48.375,
+    "lon": -68.375,
+    "ai_score": 0.891,
+    "ai_low": 0.783,
+    "ai_high": 0.998,
+    "ai_sigma": 0.012,
+    "confident": false,
+    "exact_score": 0.779,
+    "inside_interval": false,
+    "would_rank_among_named": 17,
+    "measured": {
+     "slope_mean": 3.159,
+     "slope_p90": 6.218,
+     "tri_ruggedness": 7.721,
+     "temp_min_c": -5.0,
+     "temp_max_c": 31.0,
+     "ndvi_season_max": 0.178
+    }
+   }
+  ],
+  "mars_phoenix_polar": [
+   {
+    "lat": 42.375,
+    "lon": 90.375,
+    "ai_score": 0.866,
+    "ai_low": 0.763,
+    "ai_high": 0.97,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.97,
+    "inside_interval": false,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 1.205,
+     "slope_p90": 1.676,
+     "tri_ruggedness": 9.488,
+     "temp_min_c": -16.4,
+     "temp_max_c": 56.1,
+     "ndvi_season_max": 0.068
+    }
+   },
+   {
+    "lat": 21.125,
+    "lon": -10.375,
+    "ai_score": 0.86,
+    "ai_low": 0.757,
+    "ai_high": 0.964,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.928,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 1.549,
+     "slope_p90": 2.84,
+     "tri_ruggedness": 6.13,
+     "temp_min_c": 10.6,
+     "temp_max_c": 44.1,
+     "ndvi_season_max": 0.108
+    }
+   },
+   {
+    "lat": 31.625,
+    "lon": 59.125,
+    "ai_score": 0.865,
+    "ai_low": 0.761,
+    "ai_high": 0.968,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.924,
+    "inside_interval": true,
+    "would_rank_among_named": 1,
+    "measured": {
+     "slope_mean": 0.669,
+     "slope_p90": 0.885,
+     "tri_ruggedness": 6.517,
+     "temp_min_c": 1.0,
+     "temp_max_c": 54.4,
+     "ndvi_season_max": 0.073
+    }
+   },
+   {
+    "lat": 32.375,
+    "lon": 9.875,
+    "ai_score": 0.861,
+    "ai_low": 0.757,
+    "ai_high": 0.964,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.907,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 3.466,
+     "slope_p90": 7.383,
+     "tri_ruggedness": 8.744,
+     "temp_min_c": 5.1,
+     "temp_max_c": 47.1,
+     "ndvi_season_max": 0.128
+    }
+   },
+   {
+    "lat": -43.125,
+    "lon": -65.625,
+    "ai_score": 0.861,
+    "ai_low": 0.758,
+    "ai_high": 0.965,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.898,
+    "inside_interval": true,
+    "would_rank_among_named": 2,
+    "measured": {
+     "slope_mean": 0.931,
+     "slope_p90": 2.142,
+     "tri_ruggedness": 3.955,
+     "temp_min_c": -1.4,
+     "temp_max_c": 37.6,
+     "ndvi_season_max": 0.193
+    }
+   },
+   {
+    "lat": 32.125,
+    "lon": 21.625,
+    "ai_score": 0.861,
+    "ai_low": 0.758,
+    "ai_high": 0.965,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.863,
+    "inside_interval": true,
+    "would_rank_among_named": 5,
+    "measured": {
+     "slope_mean": 1.779,
+     "slope_p90": 3.139,
+     "tri_ruggedness": 8.903,
+     "temp_min_c": 6.4,
+     "temp_max_c": 46.0,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 29.375,
+    "lon": 19.375,
+    "ai_score": 0.861,
+    "ai_low": 0.757,
+    "ai_high": 0.965,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.836,
+    "inside_interval": true,
+    "would_rank_among_named": 6,
+    "measured": {
+     "slope_mean": 1.885,
+     "slope_p90": 4.099,
+     "tri_ruggedness": 5.923,
+     "temp_min_c": 7.0,
+     "temp_max_c": 44.1,
+     "ndvi_season_max": 0.118
+    }
+   },
+   {
+    "lat": 46.625,
+    "lon": 65.625,
+    "ai_score": 0.861,
+    "ai_low": 0.757,
+    "ai_high": 0.965,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.828,
+    "inside_interval": true,
+    "would_rank_among_named": 7,
+    "measured": {
+     "slope_mean": 1.055,
+     "slope_p90": 1.847,
+     "tri_ruggedness": 8.039,
+     "temp_min_c": -17.6,
+     "temp_max_c": 44.1,
+     "ndvi_season_max": 0.193
+    }
+   },
+   {
+    "lat": 44.625,
+    "lon": 94.875,
+    "ai_score": 0.862,
+    "ai_low": 0.758,
+    "ai_high": 0.965,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.789,
+    "inside_interval": true,
+    "would_rank_among_named": 14,
+    "measured": {
+     "slope_mean": 1.071,
+     "slope_p90": 1.353,
+     "tri_ruggedness": 9.799,
+     "temp_min_c": -18.2,
+     "temp_max_c": 46.6,
+     "ndvi_season_max": 0.068
+    }
+   },
+   {
+    "lat": 32.375,
+    "lon": 55.875,
+    "ai_score": 0.86,
+    "ai_low": 0.757,
+    "ai_high": 0.964,
+    "ai_sigma": 0.01,
+    "confident": false,
+    "exact_score": 0.735,
+    "inside_interval": false,
+    "would_rank_among_named": 18,
+    "measured": {
+     "slope_mean": 0.383,
+     "slope_p90": 0.709,
+     "tri_ruggedness": 2.734,
+     "temp_min_c": -0.9,
+     "temp_max_c": 55.6,
+     "ndvi_season_max": 0.068
+    }
+   }
+  ]
+ },
+ "verification": {
+  "candidates": 280,
+  "exact_inside_ai_interval": 0.796
+ }
+}

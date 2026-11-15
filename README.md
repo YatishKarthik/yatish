@@ -60,6 +60,17 @@ The model resamples the LOLA 120 m polar DEM (NASA PDS) onto a 400 m grid reachi
 
 Three older targets were 2022 Artemis candidates dropped from the 2024 list (Peak Near Shackleton, Connecting Ridge, Faustini Rim A); they stay in the app, labelled as dropped.
 
+## AI discovery: searching all of Earth's bare land
+
+The exact score needs a 2 km, 30 m terrain tile per place, so it cannot run everywhere. `data-pipeline/06_ai_discovery.py` makes a whole-planet search possible:
+
+1. **Candidates.** Earth's land on a 0.25° grid (about 28 km), kept where the greenest-month MODIS NDVI is at most 0.25 and the land is not an ice cap: **48,455 cells**. Global MODIS land-surface temperature and NDVI maps come from NASA Worldview (`ai_rasters.py`, decoded with the published colour maps); terrain statistics from the Copernicus DEM GLO-90 (read at about 360 m, for the whole cell and the ~5 km around its centre).
+2. **Labels.** The exact Celestra score against all 28 targets, computed with the real pipeline (Copernicus GLO-30 2 km tile plus MODIS) for 3,972 random candidate cells. The probe reproduces the app's scores for named sites to within 0.001.
+3. **Model.** A deep ensemble of 7 small neural networks (bootstrapped, PyTorch) learns the 28 scores from the 14 coarse inputs. Split-conformal calibration on 794 held-out cells gives every prediction a 90% interval. On 795 further held-out cells: **coverage 92%** (target 90%), **R² 0.58**, mean absolute error **7 points**.
+4. **Sweep and verification.** The ensemble scores every candidate cell. Per target, the 10 cells with the highest lower bound, at least 150 km apart and 50 km from any named site, are re-scored with the exact pipeline. The exact score fell inside the AI's interval for **80%** of the 280 verified candidates (below 90% because the search deliberately picks the most extreme predictions); **76 of 280** verified candidates would rank first among the 60 named sites.
+
+What the model learns is Celestra's scoring, not ground truth: it is a fast emulator that makes a global search possible, and every candidate in the app shows its exact score beside the AI estimate. Composition is not part of the search. Candidates are unnamed places, shown by coordinates; access and land status are not checked.
+
 ## Does the score mean anything?
 
 `python data-pipeline/03_validate.py` (results in `data/processed/validation.json`), over all 28 targets:
@@ -124,6 +135,8 @@ python data-pipeline/04_polar_illumination.py  # ~20 min: sunlight model, places
 python data-pipeline/02_fetch_real_data.py     # ~5-10 min, cached in data/real/
 python data-pipeline/01_fetch_and_extract.py   # features and terrain assets
 python data-pipeline/03_validate.py            # controls, benchmarks, baseline, sensitivity, calibration
+python data-pipeline/ai_rasters.py             # global MODIS maps from NASA Worldview (~5 min)
+python data-pipeline/06_ai_discovery.py        # AI search of all bare land (~5 min; needs torch)
 ```
 
 ## Layout
@@ -131,6 +144,7 @@ python data-pipeline/03_validate.py            # controls, benchmarks, baseline,
 ```
 backend/        FastAPI app, terrain assets, simulator physics, field brief, live custom targets
 ml_engine/      similarity on measured features only, bare-ground rule, score ranges, per-use rankings
+                (the AI discovery model is trained offline in data-pipeline/06_ai_discovery.py; the app reads its results)
 data/           site registry, real-data cache (data/real), features, validation results
 data-pipeline/  sources_listed.py readers, 04 sunlight + Artemis placement, 02 fetch real data, 01 build features, 03 validate
 frontend/       Next.js 16 + React 19 + react-three-fiber

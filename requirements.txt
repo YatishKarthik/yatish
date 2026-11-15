@@ -14,3 +14,5 @@ pyproj>=3.6.0
 mgrs>=1.4.6
 scikit-image>=0.24.0
 Pillow>=10.4.0
+# AI discovery training (data-pipeline/06_ai_discovery.py only; the app does not need it)
+torch>=2.4.0
