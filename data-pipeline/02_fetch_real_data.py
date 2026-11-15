@@ -261,7 +261,8 @@ def _finish_dem(rec: dict, h: np.ndarray, meta: dict) -> None:
 def fetch_moon(site: dict) -> None:
     sid = site["id"]
     f = OUT / f"{sid}.json"
-    if f.exists() and "PDS" in json.loads(f.read_text()).get("dem", {}).get("dataset", ""):
+    # cached Moon terrain is reused only if it was read with interpolation (older caches drew stair-steps)
+    if f.exists() and "bicubic" in json.loads(f.read_text()).get("dem", {}).get("resampling", ""):
         return
     lat, lon = float(site["lat"]), float(site["lon"])
     rec = {"id": sid, "body": "moon", "lat": lat, "lon": lon, "extent_m": EXTENT_M, "grid": GRID}

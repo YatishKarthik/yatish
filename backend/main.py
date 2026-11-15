@@ -130,7 +130,11 @@ def custom_target(body: str, lat: float, lon: float, top_k: int = 60):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except LookupError as e:
-        raise HTTPException(status_code=404, detail=f"No elevation data near this point: {e}")
+        msg = str(e)
+        if "too slowly" in msg or "timed out" in msg.lower() or "curl" in msg.lower():
+            # a slow or unreachable archive is not the same as missing data: say which it is
+            raise HTTPException(status_code=504, detail=f"NASA's archive did not answer in time, so this point could not be measured yet (the data does exist). Try again in a moment. ({msg[:160]})")
+        raise HTTPException(status_code=404, detail=f"No elevation data near this point: {msg}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)[:300])
 

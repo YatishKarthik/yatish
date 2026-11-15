@@ -2,7 +2,7 @@
  "earth_sites": 60,
  "negative_controls_without_vegetation_rule": {
   "median_rank": 24.0,
-  "share_in_bottom_half": 0.335,
+  "share_in_bottom_half": 0.339,
   "best_rank_seen": 1
  },
  "negative_controls": {
@@ -14,38 +14,38 @@
  "benchmarks": {
   "count": 12,
   "median_rank": 25.0,
-  "share_in_top_half": 0.685
+  "share_in_top_half": 0.682
  },
  "weight_sensitivity": {
   "perturbation": "each pillar weight x0.8 and x1.2, renormalised",
-  "mean_top5_kept": 4.36,
-  "min_top5_kept": 4
+  "mean_top5_kept": 4.25,
+  "min_top5_kept": 3
  },
  "score_range": {
-  "median_width": 0.049,
+  "median_width": 0.048,
   "method": "For every target-site pair the score is recomputed with each compared measurement left out in turn and with each group weight moved by 20%; the range is the lowest to highest result."
  },
  "baseline": {
   "description": "Unweighted distance across the 14 standardised features (no groups, no weights)",
   "plain": {
-   "control_median_rank": 19.0,
-   "control_share_bottom_half": 0.281,
-   "benchmark_median_rank": 30.0,
-   "benchmark_share_top_half": 0.509
+   "control_median_rank": 21.0,
+   "control_share_bottom_half": 0.29,
+   "benchmark_median_rank": 29.5,
+   "benchmark_share_top_half": 0.53
   },
   "plain_with_bare_ground_rule": {
    "control_median_rank": 56.5,
    "control_share_bottom_half": 1.0,
    "benchmark_median_rank": 24.5,
-   "benchmark_share_top_half": 0.652
+   "benchmark_share_top_half": 0.655
   },
   "celestra": {
    "control_median_rank": 56.5,
    "control_share_bottom_half": 1.0,
    "benchmark_median_rank": 25.0,
-   "benchmark_share_top_half": 0.685
+   "benchmark_share_top_half": 0.682
   },
-  "rank_correlation_with_celestra": 0.252
+  "rank_correlation_with_celestra": 0.27
  },
  "bare_ground_threshold_sensitivity": [
   {
@@ -118,7 +118,7 @@
    "top3": [
     "Roter Kamm Impact Crater (Namibia)",
     "Richat Eye Structure (Mauritania)",
-    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)"
+    "Tenoumer Desert Crater (Mauritania)"
    ],
    "control_ranks": [
     53,
@@ -131,17 +131,17 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 24.5,
-   "top5_kept_under_weight_changes": 4
+   "benchmark_median_rank": 23.0,
+   "top5_kept_under_weight_changes": 3
   },
   {
    "target": "moon_a3_haworth",
    "name": "Artemis III: Haworth",
    "body": "moon",
    "top3": [
-    "Atacama Yungay Hyper-Arid Core (Chile)",
     "Sossusvlei Ferric Dunes (Namibia)",
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)"
+    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
+    "Tabernas Arid Badlands (Spain)"
    ],
    "control_ranks": [
     53,
@@ -154,7 +154,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 17.5,
+   "benchmark_median_rank": 18.0,
    "top5_kept_under_weight_changes": 5
   },
   {
@@ -162,8 +162,8 @@
    "name": "Artemis III: Malapert Massif",
    "body": "moon",
    "top3": [
-    "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)",
+    "Tabernas Arid Badlands (Spain)",
     "Sossusvlei Ferric Dunes (Namibia)"
    ],
    "control_ranks": [
@@ -177,7 +177,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 17.5,
+   "benchmark_median_rank": 17.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -185,9 +185,9 @@
    "name": "Artemis III: Mons Mouton",
    "body": "moon",
    "top3": [
-    "Roter Kamm Impact Crater (Namibia)",
+    "Sossusvlei Ferric Dunes (Namibia)",
     "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)",
-    "Richat Eye Structure (Mauritania)"
+    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)"
    ],
    "control_ranks": [
     53,
@@ -200,7 +200,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 23.5,
+   "benchmark_median_rank": 21.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -208,9 +208,9 @@
    "name": "Artemis III: Mons Mouton Plateau",
    "body": "moon",
    "top3": [
-    "Sossusvlei Ferric Dunes (Namibia)",
     "Tabernas Arid Badlands (Spain)",
-    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)"
+    "Sossusvlei Ferric Dunes (Namibia)",
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)"
    ],
    "control_ranks": [
     53,
@@ -223,7 +223,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 15.0,
+   "benchmark_median_rank": 15.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -246,7 +246,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 18.0,
+   "benchmark_median_rank": 19.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -256,7 +256,7 @@
    "top3": [
     "Haughton Impact Crater (Devon Island, Canada)",
     "Chajnantor Cold Plateau (Atacama, Chile)",
-    "Sossusvlei Ferric Dunes (Namibia)"
+    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)"
    ],
    "control_ranks": [
     53,
@@ -269,7 +269,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 21.5,
+   "benchmark_median_rank": 22.5,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -277,9 +277,9 @@
    "name": "Artemis III: de Gerlache Rim 2",
    "body": "moon",
    "top3": [
-    "Atacama Yungay Hyper-Arid Core (Chile)",
     "Sossusvlei Ferric Dunes (Namibia)",
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)"
+    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
+    "Atacama Yungay Hyper-Arid Core (Chile)"
    ],
    "control_ranks": [
     53,
@@ -292,154 +292,16 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 18.0,
-   "top5_kept_under_weight_changes": 5
+   "benchmark_median_rank": 18.5,
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "moon_a3_slater_plain",
    "name": "Artemis III: Slater Plain",
    "body": "moon",
    "top3": [
-    "Roter Kamm Impact Crater (Namibia)",
-    "Richat Eye Structure (Mauritania)",
-    "Chajnantor Cold Plateau (Atacama, Chile)"
-   ],
-   "control_ranks": [
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60
-   ],
-   "best_control_rank": 53,
-   "benchmark_median_rank": 19.0,
-   "top5_kept_under_weight_changes": 4
-  },
-  {
-   "target": "moon_shackleton_rim",
-   "name": "Shackleton Crater Rim",
-   "body": "moon",
-   "top3": [
-    "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Mauna Kea Volcanic Tephra (Hawaii, USA)",
-    "Al Wahbah Maar Crater (Saudi Arabia)"
-   ],
-   "control_ranks": [
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60
-   ],
-   "best_control_rank": 53,
-   "benchmark_median_rank": 22.0,
-   "top5_kept_under_weight_changes": 4
-  },
-  {
-   "target": "moon_connecting_ridge",
-   "name": "Connecting Ridge (Shackleton - de Gerlache)",
-   "body": "moon",
-   "top3": [
     "Sossusvlei Ferric Dunes (Namibia)",
-    "Lanzarote Basalt Tubes (Canary Islands, Spain)",
-    "Mauna Kea Volcanic Tephra (Hawaii, USA)"
-   ],
-   "control_ranks": [
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60
-   ],
-   "best_control_rank": 53,
-   "benchmark_median_rank": 15.5,
-   "top5_kept_under_weight_changes": 5
-  },
-  {
-   "target": "moon_faustini_rim",
-   "name": "Faustini Crater Rim A",
-   "body": "moon",
-   "top3": [
-    "Haughton Impact Crater (Devon Island, Canada)",
-    "Roter Kamm Impact Crater (Namibia)",
-    "Chajnantor Cold Plateau (Atacama, Chile)"
-   ],
-   "control_ranks": [
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60
-   ],
-   "best_control_rank": 53,
-   "benchmark_median_rank": 26.0,
-   "top5_kept_under_weight_changes": 5
-  },
-  {
-   "target": "moon_cabeus_psr",
-   "name": "Cabeus Crater PSR Floor",
-   "body": "moon",
-   "top3": [
-    "Atacama Yungay Hyper-Arid Core (Chile)",
-    "Mauna Kea Volcanic Tephra (Hawaii, USA)",
-    "Sossusvlei Ferric Dunes (Namibia)"
-   ],
-   "control_ranks": [
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60
-   ],
-   "best_control_rank": 53,
-   "benchmark_median_rank": 16.0,
-   "top5_kept_under_weight_changes": 5
-  },
-  {
-   "target": "moon_aristarchus_plateau",
-   "name": "Aristarchus Plateau (Vallis Schr\u00f6teri)",
-   "body": "moon",
-   "top3": [
-    "Simpson Red Ferric Plains (Australia)",
-    "Qaidam Basin Yardangs (Tibetan Plateau, China)",
-    "Makgadikgadi Salt Pan (Botswana)"
-   ],
-   "control_ranks": [
-    53,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60
-   ],
-   "best_control_rank": 53,
-   "benchmark_median_rank": 27.5,
-   "top5_kept_under_weight_changes": 4
-  },
-  {
-   "target": "moon_marius_hills",
-   "name": "Marius Hills Lava Skylight",
-   "body": "moon",
-   "top3": [
-    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
-    "Makgadikgadi Salt Pan (Botswana)",
+    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)",
     "Haughton Impact Crater (Devon Island, Canada)"
    ],
    "control_ranks": [
@@ -453,7 +315,145 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 27.5,
+   "benchmark_median_rank": 16.5,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "moon_shackleton_rim",
+   "name": "Shackleton Crater Rim",
+   "body": "moon",
+   "top3": [
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)",
+    "Atacama Yungay Hyper-Arid Core (Chile)",
+    "Al Wahbah Maar Crater (Saudi Arabia)"
+   ],
+   "control_ranks": [
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 53,
+   "benchmark_median_rank": 21.5,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "moon_connecting_ridge",
+   "name": "Connecting Ridge (Shackleton - de Gerlache)",
+   "body": "moon",
+   "top3": [
+    "Sossusvlei Ferric Dunes (Namibia)",
+    "Tabernas Arid Badlands (Spain)",
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)"
+   ],
+   "control_ranks": [
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 53,
+   "benchmark_median_rank": 17.5,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "moon_faustini_rim",
+   "name": "Faustini Crater Rim A",
+   "body": "moon",
+   "top3": [
+    "Roter Kamm Impact Crater (Namibia)",
+    "Richat Eye Structure (Mauritania)",
+    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)"
+   ],
+   "control_ranks": [
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 53,
+   "benchmark_median_rank": 25.5,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "moon_cabeus_psr",
+   "name": "Cabeus Crater PSR Floor",
+   "body": "moon",
+   "top3": [
+    "Mauna Kea Volcanic Tephra (Hawaii, USA)",
+    "Atacama Yungay Hyper-Arid Core (Chile)",
+    "Sossusvlei Ferric Dunes (Namibia)"
+   ],
+   "control_ranks": [
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 53,
+   "benchmark_median_rank": 17.0,
+   "top5_kept_under_weight_changes": 4
+  },
+  {
+   "target": "moon_aristarchus_plateau",
+   "name": "Aristarchus Plateau (Vallis Schr\u00f6teri)",
+   "body": "moon",
+   "top3": [
+    "Qaidam Basin Yardangs (Tibetan Plateau, China)",
+    "Makgadikgadi Salt Pan (Botswana)",
+    "Simpson Red Ferric Plains (Australia)"
+   ],
+   "control_ranks": [
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 53,
+   "benchmark_median_rank": 28.5,
+   "top5_kept_under_weight_changes": 5
+  },
+  {
+   "target": "moon_marius_hills",
+   "name": "Marius Hills Lava Skylight",
+   "body": "moon",
+   "top3": [
+    "Aouelloul Impact Crater (Mauritania)",
+    "Bardenas Reales Clay Badlands (Spain)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
+   ],
+   "control_ranks": [
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+   ],
+   "best_control_rank": 53,
+   "benchmark_median_rank": 28.0,
    "top5_kept_under_weight_changes": 4
   },
   {
@@ -462,8 +462,8 @@
    "body": "moon",
    "top3": [
     "Haughton Impact Crater (Devon Island, Canada)",
-    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
-    "Harrat Khaybar Lava Tubes (Saudi Arabia)"
+    "Richat Eye Structure (Mauritania)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)"
    ],
    "control_ranks": [
     53,
@@ -485,8 +485,8 @@
    "body": "moon",
    "top3": [
     "Roter Kamm Impact Crater (Namibia)",
-    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
-    "Richat Eye Structure (Mauritania)"
+    "Richat Eye Structure (Mauritania)",
+    "Chajnantor Cold Plateau (Atacama, Chile)"
    ],
    "control_ranks": [
     53,
@@ -499,7 +499,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 22.0,
+   "benchmark_median_rank": 21.0,
    "top5_kept_under_weight_changes": 5
   },
   {
@@ -507,9 +507,9 @@
    "name": "Von K\u00e1rm\u00e1n Crater (South Pole-Aitken)",
    "body": "moon",
    "top3": [
-    "Simpson Red Ferric Plains (Australia)",
-    "Qaidam Basin Yardangs (Tibetan Plateau, China)",
-    "Makgadikgadi Salt Pan (Botswana)"
+    "Harrat Khaybar Lava Tubes (Saudi Arabia)",
+    "Al Wathba Inland Sabkha (Abu Dhabi, UAE)",
+    "Aouelloul Impact Crater (Mauritania)"
    ],
    "control_ranks": [
     53,
@@ -523,7 +523,7 @@
    ],
    "best_control_rank": 53,
    "benchmark_median_rank": 27.5,
-   "top5_kept_under_weight_changes": 5
+   "top5_kept_under_weight_changes": 4
   },
   {
    "target": "mars_jezero_crater",
@@ -577,8 +577,8 @@
    "body": "mars",
    "top3": [
     "Richat Eye Structure (Mauritania)",
-    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)",
-    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)"
+    "Wadi Jizzi Ophiolite (Hajar Mts, Oman/UAE)",
+    "Hatta Ultramafic Ridge (Dubai/Oman Border, UAE)"
    ],
    "control_ranks": [
     53,
@@ -624,7 +624,7 @@
    "top3": [
     "Chajnantor Cold Plateau (Atacama, Chile)",
     "Haughton Impact Crater (Devon Island, Canada)",
-    "Hanksville Clay-Sulfate Badlands (Utah, USA)"
+    "Richat Eye Structure (Mauritania)"
    ],
    "control_ranks": [
     53,
@@ -645,8 +645,8 @@
    "name": "Hellas Planitia Deep Basin",
    "body": "mars",
    "top3": [
-    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
     "Pisgah Crater & Lava Field (California, USA)",
+    "Liwa Empty Quarter Dunes (Abu Dhabi, UAE)",
     "Aouelloul Impact Crater (Mauritania)"
    ],
    "control_ranks": [
@@ -752,7 +752,7 @@
     60
    ],
    "best_control_rank": 53,
-   "benchmark_median_rank": 27.5,
+   "benchmark_median_rank": 27.0,
    "top5_kept_under_weight_changes": 5
   }
  ]

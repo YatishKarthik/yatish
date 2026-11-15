@@ -58,6 +58,29 @@ def _window(url: str, lon: float, lat: float, extent_m: float, grid: int, scale:
         h = extent_m / 2
         w = from_bounds(x - h, y - h, x + h, y + h, ds.transform)
         n = grid * sub if sub else grid
+        # Upsampling (the raster is coarser than the output grid, e.g. LOLA's 29.6 m tiles onto 15.6 m cells) must
+        # interpolate: averaging repeats each source height in about two cells, which draws regular stair-steps and
+        # inflates slope and roughness. Downsampling keeps the area average.
+        up = w.width < n
+        if up and not sub:
+            # read the native heights (as floats: some products are integers in 0.5 m steps, and resampling inside the
+            # reader would round the blended values back onto those steps), then fit a smooth cubic surface through them
+            from rasterio.windows import Window
+            from scipy.ndimage import map_coordinates
+            c0, r0 = int(math.floor(w.col_off)) - 2, int(math.floor(w.row_off)) - 2
+            w2 = Window(c0, r0, int(math.ceil(w.width)) + 5, int(math.ceil(w.height)) + 5)
+            fill = ds.nodata if ds.nodata is not None else -32768
+            nat = ds.read(1, window=w2, boundless=True, fill_value=fill).astype(np.float64)
+            bad = np.isclose(nat, fill) | (nat < -1e30)
+            if ds.nodata is not None:
+                bad |= np.isclose(nat, ds.nodata)
+            cols = (w.col_off - c0) + (np.arange(n) + 0.5) * w.width / n - 0.5
+            rows = (w.row_off - r0) + (np.arange(n) + 0.5) * w.height / n - 0.5
+            rr, cc = np.meshgrid(rows, cols, indexing="ij")
+            filled = np.where(bad, np.nanmean(np.where(bad, np.nan, nat)) if (~bad).any() else 0.0, nat)
+            a = map_coordinates(filled, [rr, cc], order=3, mode="nearest")
+            a[map_coordinates(bad.astype(np.float64), [rr, cc], order=1, mode="nearest") > 0.25] = np.nan
+            return a * scale * unit_m
         a = ds.read(1, window=w, out_shape=(n, n), boundless=True, fill_value=np.nan,
                     resampling=rasterio.enums.Resampling.nearest if sub else rasterio.enums.Resampling.average).astype(np.float64)
         if ds.nodata is not None:
@@ -89,7 +112,7 @@ def _window_rows(url: str, lon: float, lat: float, extent_m: float, grid: int, s
                         fill_value=np.nan, resampling=rasterio.enums.Resampling.nearest)
         return a[0].astype(np.float64)
 
-    with ThreadPoolExecutor(32) as ex:
+    with ThreadPoolExecutor(48) as ex:
         a = np.array(list(ex.map(read_row, rows)))
     if nodata is not None:
         a[np.isclose(a, nodata) | (a < -1e30)] = np.nan
@@ -123,7 +146,7 @@ def lola_terrain(lat: float, lon: float, extent_m: float, grid: int) -> tuple[np
     url, res, scale, unit = lola_product(lat, lon)
     h = _window(url, lon, lat, extent_m, grid, scale, unit)
     return h, {"dataset": "LRO LOLA gridded DEM (NASA PDS Geosciences Node, LRO-L-LOLA-4-GDR)", "product": url.rsplit("/", 1)[-1].replace(".lbl", "").upper(),
-               "url": url, "native_res_m": res, "offset_km": 0.0}
+               "url": url, "native_res_m": res, "offset_km": 0.0, "resampling": "bicubic when upsampling"}
 
 
 # ---------------------------------------------------------------- Moon temperature: Diviner GCP (PDS)
@@ -192,7 +215,7 @@ def _gc_km(lat1, lon1, lat2, lon2, r_km):
     return r_km * math.acos(max(-1.0, min(1.0, math.sin(a) * math.sin(c) + math.cos(a) * math.cos(c) * math.cos(b - d))))
 
 
-def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: float = 400.0, budget_s: float = 90.0) -> tuple[np.ndarray, dict]:
+def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: float = 400.0, budget_s: float = 150.0) -> tuple[np.ndarray, dict]:
     """The nearest HiRISE DTM: a window on the site if the DTM covers it, otherwise on the DTM's own centre (offset reported)."""
     lon360 = lon % 360.0
     cands = []
@@ -209,12 +232,21 @@ def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: f
         if time.time() - t_start > budget_s:
             raise RuntimeError(f"the HiRISE archive answered too slowly (over {budget_s:.0f} s); try again or pick another point")
         url = f"{HIRISE}/{d['file']}"
-        tries = [(lat, lon360)] if inside else []
+        # inside a strip: the point itself, then the same point moved halfway towards the strip centre (HiRISE DTMs
+        # are narrow, so a 2 km window at a point near the edge runs off the data)
+        tries = [(lat, lon360), (lat + (clat - lat) * 0.5, lon360 + (clon - lon360) * 0.5)] if inside else []
         # along the strip: centre and two points along its long axis
         tries += [(clat, clon), (d["lat0"] + (d["lat1"] - d["lat0"]) * 0.3, clon), (d["lat0"] + (d["lat1"] - d["lat0"]) * 0.7, clon)]
         for tl, tn in tries:
             if time.time() - t_start > budget_s:
                 raise RuntimeError(f"the HiRISE archive answered too slowly (over {budget_s:.0f} s); try again or pick another point")
+            # cheap 16-row probe first: skip windows that run off the DTM before paying for the full read
+            try:
+                probe = _window(url, tn if tn <= 180 else tn - 360, tl, extent_m, 16, sub=1)
+                if np.mean(~np.isfinite(probe)) > 0.1:
+                    continue
+            except Exception:
+                pass
             try:
                 h = _window(url, tn if tn <= 180 else tn - 360, tl, extent_m, grid, sub=3)
             except Exception:

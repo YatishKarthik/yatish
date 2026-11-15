@@ -146,7 +146,7 @@ export default function Home() {
     if (!customPoint || !selectedBody) return;
     setCustomBusy(true); setCustomError(null); setBusySecs(0);
     const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 150000);
+    const timer = window.setTimeout(() => ctrl.abort(), 200000);
     try {
       const res = await fetch(`${API}/api/custom_target?body=${selectedBody}&lat=${customPoint.lat.toFixed(3)}&lon=${customPoint.lon.toFixed(3)}&top_k=200`, { signal: ctrl.signal });
       const body = await res.json().catch(() => null);
@@ -161,7 +161,7 @@ export default function Home() {
       setMatchResult(body as MatchPayload);
     } catch (e) {
       setCustomError((e as Error)?.name === "AbortError"
-        ? "NASA's data server took more than 2.5 minutes to answer, so the search was stopped. Try again, or pick a point nearby."
+        ? "NASA's data server took more than 3 minutes to answer, so the search was stopped. The point does have data; try again, or pick a point nearby."
         : "Could not reach the backend. Check that it is running, then try again.");
     } finally {
       window.clearTimeout(timer);

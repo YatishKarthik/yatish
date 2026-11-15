@@ -77,6 +77,7 @@ const ROVER_CONTACTS: [number, number, number][] = [
   [0, -0.05, 0],
 ];
 const CONTACT_TMP = new THREE.Vector3();
+const CAM_DIR_TMP = new THREE.Vector3();
 const LANDER_FOOT = 0.6;   // lander origin above its footpads
 const LANDER_FEET: [number, number][] = [[0, -1.0], [-0.87, 0.5], [0.87, 0.5]];   // the three footpads of the model, in metres from its centre
 
@@ -545,6 +546,12 @@ function SimScene(p: {
     st.slip = Math.round(slipRatio * 100); st.peakSlip = Math.max(st.peakSlip, st.slip);
     const moving = Math.abs(st.speed) > 0.2;
     st.yaw += steer * (body === "earth" ? 1.5 : body === "mars" ? 1.25 : 1.05) * rover.grip * dt * (moving ? 1 : 0.6) * (st.grabbing ? 0 : 1);
+    // driver's seat: W and S are relative to where you look. While you drive, the rover turns to face the view
+    // (the view itself stays put in the world, so looking back and pressing W turns the rover round and drives that way)
+    if (!thirdPerson && fwd !== 0 && !st.grabbing && Math.abs(lookRef.current.yaw) > 0.01) {
+      const turn = THREE.MathUtils.clamp(lookRef.current.yaw, -2.6 * dt, 2.6 * dt);
+      st.yaw += turn; lookRef.current.yaw -= turn;
+    }
     const envGrip = body === "earth" ? 1 : body === "mars" ? 0.78 : 0.62;
     const penalty = Math.max(0, (slopeDeg - 12) * 0.028) / (envGrip * rover.grip);
     const maxSpd = (st.hot ? 0.3 : 1) * rover.topSpeed * (1 - slipRatio * 0.7);
@@ -662,8 +669,10 @@ function SimScene(p: {
       const ahead = sample(grid, relief, cx - Math.sin(vy) * 3, cz - Math.cos(vy) * 3).h;
       camera.lookAt(cx - Math.sin(vy) * 8, Math.max(camY + Math.sin(pitch) * 4, ahead + 0.5) + lookRef.current.pitch * 6, cz - Math.cos(vy) * 8);
     }
+    // the arrow to the next waypoint is relative to where the camera looks (orbit or driver's seat), not the rover body
+    const camDir = camera.getWorldDirection(CAM_DIR_TMP), camYaw = Math.atan2(-camDir.x, -camDir.z);
     const nx = layout.route[st.wp]; let bearing = 0, dist = 0;
-    if (nx) { const dx = nx.x - st.rx, dz = nx.z - st.rz; dist = Math.hypot(dx, dz); bearing = THREE.MathUtils.radToDeg(Math.atan2(dx * Math.cos(st.yaw) - dz * Math.sin(st.yaw), -dx * Math.sin(st.yaw) - dz * Math.cos(st.yaw))); }
+    if (nx) { const dx = nx.x - st.rx, dz = nx.z - st.rz; dist = Math.hypot(dx, dz); bearing = THREE.MathUtils.radToDeg(Math.atan2(dx * Math.cos(camYaw) - dz * Math.sin(camYaw), -dx * Math.sin(camYaw) - dz * Math.cos(camYaw))); }
     if (st.t - st.emit > 0.08) { st.emit = st.t; onTelemetry({ time: st.t.toFixed(1), mode: "drive", speed: v.toFixed(1), wheel: st.wheel.toFixed(0), motor: st.motor.toFixed(0), hot: st.hot, wp: st.wp, dist: dist.toFixed(0), bearing, slope: slopeDeg.toFixed(0), slip: st.slip, peakSlip: st.peakSlip, sliding: st.sliding, nearRock: near >= 0, grabbing: st.grabbing, cursor: st.grabbing ? Math.sin(st.grabT * 3.0) : 0, traction: st.stuckFor / STUCK_SECONDS, nearStation: nearStation >= 0, ground: groundTempAt(st.rx, st.rz).toFixed(0) }); }
   });
 
