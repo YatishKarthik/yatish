@@ -254,13 +254,13 @@ function System({ hovered, setHovered, onPick, zoomingRef, nodes }: {
   );
 }
 
-export default function SystemPicker({ onPick }: { onPick: (w: World) => void }) {
+export default function SystemPicker({ onPick, full = false }: { onPick: (w: World) => void; full?: boolean }) {
   const [hovered, setHovered] = useState<BodyId | null>(null);
   const zoomingRef = useRef<BodyId | null>(null);
   const nodes = useRef(new Map<string, HTMLDivElement>());
   const facts = hovered ? FACTS[hovered] : null;
   return (
-    <div className="relative w-full h-[560px] md:h-[640px]" data-tour="worlds" style={{ background: "#01030a" }}>
+    <div className={full ? "absolute inset-0" : "relative w-full h-[560px] md:h-[640px]"} data-tour="worlds" style={{ background: full ? "transparent" : "#01030a" }}>
       <Canvas camera={{ position: [0, 6.8, 15.5], fov: 42 }} dpr={[1, 2]} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}>
         <color attach="background" args={["#01030a"]} />
         <React.Suspense fallback={null}>
@@ -275,11 +275,11 @@ export default function SystemPicker({ onPick }: { onPick: (w: World) => void })
           </div>
         ))}
       </div>
-      <div className="absolute right-4 bottom-4 flex gap-2">
-        <button type="button" className="btn btn-sm" style={{ background: "rgba(8, 20, 34, 0.7)", color: "#e2f4ff", borderColor: "rgba(125, 211, 252, 0.4)" }} onClick={() => { zoomingRef.current = "moon"; }}>Open the Moon</button>
-        <button type="button" className="btn btn-sm" style={{ background: "rgba(8, 20, 34, 0.7)", color: "#e2f4ff", borderColor: "rgba(125, 211, 252, 0.4)" }} onClick={() => { zoomingRef.current = "mars"; }}>Open Mars</button>
+      <div className={full ? "absolute left-1/2 -translate-x-1/2 bottom-8 flex gap-3" : "absolute right-4 bottom-4 flex gap-2"}>
+        <button type="button" className={full ? "btn" : "btn btn-sm"} style={{ background: "rgba(8, 20, 34, 0.7)", color: "#e2f4ff", borderColor: "rgba(125, 211, 252, 0.4)" }} onClick={() => { zoomingRef.current = "moon"; }}>Open the Moon</button>
+        <button type="button" className={full ? "btn" : "btn btn-sm"} style={{ background: "rgba(8, 20, 34, 0.7)", color: "#e2f4ff", borderColor: "rgba(125, 211, 252, 0.4)" }} onClick={() => { zoomingRef.current = "mars"; }}>Open Mars</button>
       </div>
-      <div className="pointer-events-none absolute left-4 top-4 max-w-md on-canvas px-4 py-3 text-[13px] leading-relaxed rise" key={hovered ?? "none"}>
+      <div className={`pointer-events-none absolute max-w-md on-canvas px-4 py-3 text-[13px] leading-relaxed rise ${full ? "left-5 bottom-8 hidden md:block" : "left-4 top-4"}`} key={hovered ?? "none"}>
         {facts ? (<><b>{facts.title}.</b> {facts.detail}</>) : (<>Crews are going back to the Moon and on to Mars. Before any hardware flies it is tested on Earth, at places where the ground behaves like the destination. <b>Pick the Moon or Mars to start.</b> Drag to look around, scroll to zoom.</>)}
       </div>
     </div>

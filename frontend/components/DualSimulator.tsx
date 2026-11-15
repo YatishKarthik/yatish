@@ -71,6 +71,12 @@ function sample(grid: number[], relief: number, wx: number, wz: number, ve = 1):
   const grad = Math.hypot(H(wx + d, wz) - H(wx - d, wz), H(wx, wz + d) - H(wx, wz - d)) / (2 * d);
   return { h, slopeDeg: THREE.MathUtils.radToDeg(Math.atan(grad / ve)) };   // slope of the real ground, whatever the drawing exaggeration
 }
+// points on the rover (model frame, metres) that must stay above the ground: six wheel bottoms, the nose, the tail and the belly
+const ROVER_CONTACTS: [number, number, number][] = [
+  [-0.62, -0.27, -0.62], [-0.62, -0.27, 0], [-0.62, -0.27, 0.62], [0.62, -0.27, -0.62], [0.62, -0.27, 0], [0.62, -0.27, 0.62],
+  [0, -0.12, -0.88], [0, -0.12, 0.88], [0, -0.1, 0], [-0.45, -0.12, -0.88], [0.45, -0.12, -0.88], [-0.45, -0.12, 0.88], [0.45, -0.12, 0.88],
+];
+const CONTACT_TMP = new THREE.Vector3();
 const LANDER_FOOT = 0.6;   // lander origin above its footpads
 const LANDER_FEET: [number, number][] = [[0, -1.0], [-0.87, 0.5], [0.87, 0.5]];   // the three footpads of the model, in metres from its centre
 
@@ -606,8 +612,15 @@ function SimScene(p: {
     if (roverRef.current) {
       const g = roverRef.current;
       g.position.set(st.rx, THREE.MathUtils.lerp(g.position.y || bodyY, bodyY, 0.35), st.rz);
-      st.pitchS = THREE.MathUtils.lerp(st.pitchS, THREE.MathUtils.clamp(pitch, -0.6, 0.6), 0.2); st.rollS = THREE.MathUtils.lerp(st.rollS, THREE.MathUtils.clamp(roll, -0.6, 0.6), 0.2);
+      st.pitchS = THREE.MathUtils.lerp(st.pitchS, THREE.MathUtils.clamp(pitch, -1.1, 1.1), 0.3); st.rollS = THREE.MathUtils.lerp(st.rollS, THREE.MathUtils.clamp(roll, -1.1, 1.1), 0.3);
       g.rotation.set(0, st.yaw, 0); g.rotateX(st.pitchS); g.rotateZ(st.rollS);
+      // never let a wheel or the chassis sink into the drawn ground: lift the body until every contact point is above it
+      let need = -Infinity;
+      for (const [lx, ly, lz] of ROVER_CONTACTS) {
+        const pt = CONTACT_TMP.set(lx, ly, lz).applyQuaternion(g.quaternion);
+        need = Math.max(need, sample(grid, relief, st.rx + pt.x, st.rz + pt.z).h + 0.03 - pt.y);
+      }
+      if (g.position.y < need) g.position.y = need;
     }
     if (thirdPerson && controls.current) {
       const focus = new THREE.Vector3(st.rx, bodyY + 0.3, st.rz);
@@ -853,8 +866,8 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
         <div className="absolute top-3 left-3 z-10 on-canvas px-3.5 py-2.5 text-xs flex flex-wrap gap-x-5 gap-y-1 pointer-events-none" data-tour="sim-hud">
           <span>Time <b>{tele.time || "0.0"} s</b></span>
           {phase === "land" && (<>
-            <span>Height <b>{tele.alt ?? "22.0"} m</b></span>
-            <span>Falling at <b style={{ color: Number(tele.vspeed ?? 0) < -LAND_SPEED_LIMIT ? "#fca5a5" : "#86efac" }}>{Math.abs(Number(tele.vspeed ?? 0)).toFixed(1)} m/s</b><span className="opacity-80"> (limit {LAND_SPEED_LIMIT})</span></span>
+            <span className="sr-only">Height <b>{tele.alt ?? "22.0"} m</b></span>
+            <span className="sr-only">Falling at <b style={{ color: Number(tele.vspeed ?? 0) < -LAND_SPEED_LIMIT ? "#fca5a5" : "#86efac" }}>{Math.abs(Number(tele.vspeed ?? 0)).toFixed(1)} m/s</b><span className="opacity-80"> (limit {LAND_SPEED_LIMIT.toFixed(1)})</span></span>
             <span>Fuel <b>{tele.fuel ?? 100}%</b></span>
             <span>Pad <b>{tele.pad ?? "10.4"} m</b> away</span>
           </>)}
@@ -872,6 +885,23 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
           </>)}
         </div>
 
+        {/* landing gauge, next to the lander so the player never looks away */}
+        {phase === "land" && (() => {
+          const v = Math.abs(Number(tele.vspeed ?? 0)), alt = Number(tele.alt ?? 22), over = v > LAND_SPEED_LIMIT;
+          const col = !over ? "#86efac" : alt < 8 ? "#fca5a5" : "#fde68a";
+          return (
+            <div className="absolute z-10 pointer-events-none on-canvas px-4 py-3 text-center" style={{ left: "calc(50% + 110px)", top: "38%", minWidth: 150 }} aria-live="off">
+              <div className="text-[11px] uppercase tracking-wider opacity-80">Falling speed</div>
+              <div className="font-mono font-semibold leading-none mt-1" style={{ color: col, fontSize: 40 }}>{v.toFixed(1)}<span className="text-sm font-normal opacity-80"> m/s</span></div>
+              <div className="relative h-1.5 rounded-full mt-2" style={{ background: "rgba(255,255,255,0.18)" }}>
+                <div className="absolute left-0 top-0 h-full rounded-full" style={{ width: `${Math.min(100, (v / (LAND_SPEED_LIMIT * 2)) * 100)}%`, background: col }} />
+                <div className="absolute top-[-3px] h-[12px] w-[2px]" style={{ left: "50%", background: "#fff" }} title="limit" />
+              </div>
+              <div className="text-[11px] mt-1.5 opacity-90">Land under <b>{LAND_SPEED_LIMIT.toFixed(1)}</b> · height <b>{tele.alt ?? "22.0"} m</b></div>
+            </div>
+          );
+        })()}
+
         {/* score */}
         {phase !== "brief-land" && (
           <div className="absolute top-3 right-3 z-10 on-canvas px-3 py-2 text-xs pointer-events-none" data-tour="sim-score">
@@ -883,7 +913,7 @@ export default function DualSimulator({ matchData, selectedMatch, onBack }: { ma
 
         {/* first-time coaching */}
         {phase === "land" && !coached.land && Number(tele.time ?? 0) < 9 && !tele.blind && (
-          <Coach title="First landing">Hold <b>SPACE</b> (or the button) to fire the engine and slow the fall. Keep the falling speed under {LAND_SPEED_LIMIT} m/s, and steer with <b>W A S D</b> until the yellow ring sits on the green pad.</Coach>
+          <Coach title="First landing">Hold <b>SPACE</b> (or the button) to fire the engine and slow the fall. Keep the falling speed under {LAND_SPEED_LIMIT.toFixed(1)} m/s (shown big in the middle), and steer with <b>W A S D</b> until the yellow ring sits on the green pad.</Coach>
         )}
         {phase === "drive" && !docked && !result && !coached.rock && tele.nearRock && !tele.grabbing && (
           <Coach title="Your first sample">Stop next to the flagged rock and <b>hold E</b>. The arm reaches out and a bar appears: <b>let go of E</b> when the white marker is in the green.</Coach>

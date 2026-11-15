@@ -303,7 +303,13 @@ class PlanetaryAnalogEngine:
         target_row = target_row.iloc[0]
         target_meta = self.meta_by_id[target_site_id]
         target_norm = self.norm_df.loc[target_row.name].values
-        extra = self._ai_rows(target_site_id) if include_ai else []
+        extra = []
+        if include_ai:
+            # the places the AI found for this destination (with its estimate), then every other AI find on the same world,
+            # all scored exactly, so a listed destination and a picked point see the same set of places
+            extra = self._ai_rows(target_site_id)
+            own = {r[0]["site_id"] for r in extra}
+            extra += [r for r in self.ai_pool_rows(target_row["body"]) if r[0]["site_id"] not in own]
         return self.match_row(target_row, target_meta, target_norm, top_k, extra_rows=extra)
 
     def _ai_rows(self, target_id: str) -> list:

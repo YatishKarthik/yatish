@@ -71,7 +71,7 @@ The exact score needs a 2 km, 30 m terrain tile per place, so it cannot run ever
 
 What the model learns is Celestra's scoring, not ground truth: it is a fast emulator that makes a global search possible, and every candidate in the app shows its exact score beside the AI estimate. Composition is not part of the search. Candidates are unnamed places, shown by coordinates; access and land status are not checked.
 
-In the app, verified AI finds appear in the ranked list beside the named sites (purple pins and an "AI find" badge, togglable on the globe), with the full analysis tabs, and the simulator can fly them on their real 30 m terrain. For a point you pick yourself, all AI finds on that world are scored exactly against it (the AI model only estimates scores for the 28 listed destinations, so those rows show the exact score alone).
+In the app, verified AI finds appear in the ranked list beside the named sites (purple pins and an "AI find" badge, togglable on the globe), with the full analysis tabs, and the simulator can fly them on their real 30 m terrain. Every destination, listed or picked, is ranked against all AI finds on its world (106 for the Moon, 76 for Mars), each scored exactly; the 10 found specifically for a listed destination also show the AI's estimate. The AI model only estimates scores for the 28 listed destinations, so other rows show the exact score alone.
 
 **Limits of the search:** bare land only (NDVI ≤ 0.25; forests, farmland, ocean and ice caps are excluded by design); 0.25° cells, so small outcrops inside green land are missed; composition is not used; no access, permits or land-status check.
 

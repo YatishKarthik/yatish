@@ -161,7 +161,7 @@ export default function Home() {
     setIsSearching(true);
     setSearchError(null);
     try {
-      const [res] = await Promise.all([fetch(`${API}/api/match/${selectedTarget.id}?top_k=100&include_ai=true`), new Promise((r) => setTimeout(r, 500))]);
+      const [res] = await Promise.all([fetch(`${API}/api/match/${selectedTarget.id}?top_k=200&include_ai=true`), new Promise((r) => setTimeout(r, 500))]);
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.matches) {
         setSearchError(typeof data?.detail === "string" ? data.detail : `The server could not rank this site (error ${res.status}).`);
@@ -177,7 +177,7 @@ export default function Home() {
 
   return (
     <main className={`min-h-screen relative flex flex-col ${selectedBody ? "app-bg" : "space-page"}`}>
-      <header className="relative z-10 flex items-center justify-between gap-4 px-5 py-3 border-b line">
+      <header className={`relative z-10 flex items-center justify-between gap-4 px-5 py-3 ${selectedBody ? "border-b line" : ""}`}>
         <div className="flex items-center gap-3" data-tour="brand">
           <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />
           <div>
@@ -204,15 +204,16 @@ export default function Home() {
       )}
 
       {!selectedBody && (
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-5">
-          <div className="text-center max-w-2xl mb-5">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: "#eef2f7" }}>Where do you want to go?</h2>
-            <p className="text-sm mt-2" style={{ color: "#a3adbb" }}>Pick a destination. You will see its candidate base sites on a globe (on the Moon, including NASA&apos;s Artemis III landing regions), or pick any point yourself. Then find the Earth places that behave most like it, and test hardware on both.</p>
+        <>
+          {/* the whole screen is space: the solar system fills the window behind the header and title */}
+          <div className="fixed inset-0 z-0" style={{ background: "radial-gradient(1200px 700px at 50% 0%, #0b1a33 0%, #04070d 55%, #01030a 100%) #01030a" }}>
+            <SystemPicker full onPick={(w) => setSelectedBody(w)} />
           </div>
-          <div className="w-full max-w-5xl overflow-hidden" style={{ borderRadius: 24, border: "1px solid rgba(125, 211, 252, 0.18)", boxShadow: "0 30px 80px -30px rgba(0,0,0,0.9)" }}>
-            <SystemPicker onPick={(w) => setSelectedBody(w)} />
+          <div className="relative z-10 pointer-events-none text-center max-w-2xl mx-auto px-5 pt-8">
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight" style={{ color: "#eef2f7", textShadow: "0 2px 18px rgba(0,0,0,0.8)" }}>Where do you want to go?</h2>
+            <p className="text-sm mt-2" style={{ color: "#c3cbd6", textShadow: "0 1px 10px rgba(0,0,0,0.9)" }}>Pick a destination. You will see its candidate base sites on a globe (on the Moon, including NASA&apos;s Artemis III landing regions), or pick any point yourself. Then find the Earth places that behave most like it, and test hardware on both.</p>
           </div>
-        </div>
+        </>
       )}
 
       {selectedBody && !matchResult && (
