@@ -291,7 +291,7 @@ def fetch_mars(site: dict) -> None:
         h, meta = hirise_terrain(lat, lon, EXTENT_M, GRID)
         _finish_dem(rec, h, meta)
     except Exception as e:
-        rec["dem"] = {"status": "missing", "error": str(e)[:200]}
+        rec["dem"] = {"status": "missing", "error": str(e)[:400]}
     save(sid, rec)
     print(f"mars {sid}: {rec['dem'].get('product', 'MISSING')} ({rec['dem'].get('offset_km', '?')} km from the nominal site)", flush=True)
 

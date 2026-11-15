@@ -132,6 +132,8 @@ Open http://localhost:3000.
 
 Picking your own point on the Moon or Mars fetches terrain live, so it also needs the pipeline packages (`pip install -r requirements.txt`) and internet access; without them the app says so and everything else still works. The field brief is served by the backend at `/api/brief/<target id>`.
 
+If a picked Mars point fails, run `python data-pipeline/diagnose_mars.py <lat> <lon>`. It checks the connection to NASA's HiRISE archive, the nearest terrain models and the read the app makes, with timings, and says which step fails. HiRISE has mapped only small patches of Mars, so a point more than 400 km from every HiRISE terrain model cannot be measured. Mars points are measured one at a time (a second request waits for the first), and every download now times out instead of hanging.
+
 ## Rebuild the data from source (optional)
 
 ```bash

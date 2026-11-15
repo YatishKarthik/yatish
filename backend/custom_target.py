@@ -59,12 +59,17 @@ def build_target(engine, body: str, lat: float, lon: float) -> tuple[dict, dict,
             "elevation_m": 0, "gravity_m_s2": 1.62 if body == "moon" else 3.72, "pressure_bar": 0.0 if body == "moon" else 0.006,
             "morphology": nearest["morphology"], "mineral_profile": nearest["mineral_profile"], "frost": nearest.get("frost", 0.0)}
 
+    import time as _time
+    t0 = _time.time()
     if body == "moon":
         fetch.fetch_moon_any(site)
     else:
         fetch.fetch_mars(site)
     real = extract.load_real(sid)
     hm = extract.to_heightmap(real)
+    # one line per request in the backend window, so a failing point can be diagnosed
+    print(f"[custom {body}] {lat:.3f}, {lon:.3f}: {'ok' if hm is not None else 'FAILED'} in {_time.time() - t0:.0f} s"
+          + ("" if hm is not None else f" ({real.get('dem', {}).get('error', 'no product')})"), flush=True)
     if hm is None:
         raise LookupError(real.get("dem", {}).get("error", "no elevation product covers this point"))
     heightmap, relief = hm

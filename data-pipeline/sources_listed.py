@@ -28,6 +28,9 @@ os.environ.setdefault("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 os.environ.setdefault("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", ".img,.IMG,.lbl,.LBL,.tif")
 os.environ.setdefault("GDAL_HTTP_MAX_RETRY", "4")
 os.environ.setdefault("GDAL_HTTP_RETRY_DELAY", "2")
+# every HTTP request gives up instead of hanging: without these a stalled range request waits forever
+os.environ.setdefault("GDAL_HTTP_TIMEOUT", "30")
+os.environ.setdefault("GDAL_HTTP_CONNECTTIMEOUT", "15")
 if Path("/root/.ccr/ca-bundle.crt").exists():
     os.environ.setdefault("CURL_CA_BUNDLE", "/root/.ccr/ca-bundle.crt")
 
@@ -112,7 +115,7 @@ def _window_rows(url: str, lon: float, lat: float, extent_m: float, grid: int, s
                         fill_value=np.nan, resampling=rasterio.enums.Resampling.nearest)
         return a[0].astype(np.float64)
 
-    with ThreadPoolExecutor(48) as ex:
+    with ThreadPoolExecutor(24) as ex:
         a = np.array(list(ex.map(read_row, rows)))
     if nodata is not None:
         a[np.isclose(a, nodata) | (a < -1e30)] = np.nan
@@ -215,8 +218,23 @@ def _gc_km(lat1, lon1, lat2, lon2, r_km):
     return r_km * math.acos(max(-1.0, min(1.0, math.sin(a) * math.sin(c) + math.cos(a) * math.cos(c) * math.cos(b - d))))
 
 
+_HIRISE_LOCK = __import__("threading").Lock()
+
+
 def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: float = 400.0, budget_s: float = 150.0) -> tuple[np.ndarray, dict]:
-    """The nearest HiRISE DTM: a window on the site if the DTM covers it, otherwise on the DTM's own centre (offset reported)."""
+    """The nearest HiRISE DTM: a window on the site if the DTM covers it, otherwise on the DTM's own centre (offset reported).
+    One HiRISE read runs at a time: parallel requests (a second click while the first is still working) made the
+    archive throttle both until they timed out."""
+    t_wait = time.time()
+    if not _HIRISE_LOCK.acquire(timeout=budget_s):
+        raise RuntimeError("another Mars point is still being measured; try again in a moment (the archive answered too slowly)")
+    try:
+        return _hirise_terrain(lat, lon, extent_m, grid, max_km, budget_s - (time.time() - t_wait))
+    finally:
+        _HIRISE_LOCK.release()
+
+
+def _hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: float, budget_s: float) -> tuple[np.ndarray, dict]:
     lon360 = lon % 360.0
     cands = []
     for d in hirise_index():
@@ -226,6 +244,10 @@ def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: f
         cands.append((dist, d["res"], d, inside, clat, clon))
     cands.sort(key=lambda c: (c[0], c[1]))
     t_start = time.time()
+    if not cands or cands[0][0] > max_km:
+        raise RuntimeError(f"no HiRISE terrain model lies within {max_km:.0f} km of this point (HiRISE has mapped only small patches of Mars; "
+                           f"the nearest is {cands[0][0]:.0f} km away). Try a point nearer a landing site, crater or channel." if cands else "the HiRISE index is empty")
+    tried = []
     for dist, _, d, inside, clat, clon in cands[:4]:
         if dist > max_km:
             break
@@ -259,7 +281,7 @@ def hirise_terrain(lat: float, lon: float, extent_m: float, grid: int, max_km: f
                 return h, {"dataset": "MRO HiRISE stereo DTM (NASA PDS, HiRISE team)", "product": d["file"].split("/")[-1].replace(".IMG", ""),
                            "url": url, "native_res_m": d["res"], "offset_km": round(off, 1), "window_centre": {"lat": round(tl, 3), "lon": round(((tn + 180) % 360) - 180, 3)},
                            "dtm_rationale": d["why"]}
-    raise RuntimeError("no HiRISE DTM gives a clean window within reach")
+    raise RuntimeError("the HiRISE terrain models near this point do not give a complete 2 km window (they are narrow strips with gaps); try a point nearby")
 
 
 # ---------------------------------------------------------------- Earth temperature: MODIS LST via NASA Worldview (GIBS)
