@@ -41,9 +41,6 @@ Record at 1920×1080 in dark mode; the app's walkthrough can stay off for the re
 * ESA Copernicus DEM GLO-30 (the Copernicus Data Space Ecosystem product, read from its public mirror): Earth terrain.
 * ESA Copernicus Sentinel-2 L2A (same note): Earth surface composition and open water.
 
-## Use of AI (paste into the form)
-We used Anthropic's Claude (through Claude Code) extensively to write and refactor code: the data-fetching pipeline, sunlight model, AI discovery model, feature extraction, validation script, web frontend, 3D simulator and documentation. Team members chose the approach, site registry and scoring design, reviewed the outputs and verified results by running the pipeline. No AI-generated images, video or audio are used; all terrain and measurements come from the instrument products listed. No NASA or agency logos appear in the project.
-
 ## References
 * NASA PDS Geosciences Node: LRO LOLA GDR (Smith et al., LOLA team, NASA GSFC) and LRO Diviner derived products (Paige et al.; Williams et al. global cumulative products).
 * NASA PDS / HiRISE team, University of Arizona: HiRISE DTMs (McEwen et al.).

@@ -169,13 +169,10 @@ data-pipeline/  sources_listed.py readers, 04 sunlight + Artemis placement, 02 f
 frontend/       Next.js 16 + React 19 + react-three-fiber
 ```
 
-## Use of AI
-
-AI (Anthropic's Claude, through Claude Code) was used extensively to write and refactor code: the data pipeline, the frontend, the simulator and this README. The team chose the challenge approach, site registry and scoring design, and reviewed the results. No AI-generated imagery is used; all terrain comes from the instrument products listed above. No NASA or other agency logos are used.
-
 ## Credits and data licences
 
 * Original codebase: [reality-hacker/NasaSpace1Try](https://github.com/reality-hacker/NasaSpace1Try).
+* No NASA or other agency logos are used.
 * Copernicus DEM GLO-30: © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA.
 * Contains modified Copernicus Sentinel data (2022-2023).
 * MODIS Terra land surface temperature and NDVI: NASA LP DAAC products, served by NASA Worldview / GIBS (Global Imagery Browse Services).

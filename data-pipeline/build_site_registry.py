@@ -358,7 +358,7 @@ def build_registry():
         json.dump(registry, f, indent=2)
 
     print("=" * 65)
-    print("MICROSTEP B1 COMPLETE: 80-SITE REGISTRY GENERATED!")
+    print("Site registry written.")
     print("=" * 65)
     print(f"• Moon Targets:     {len(moon_targets)}")
     print(f"• Mars Targets:     {len(mars_targets)}")
